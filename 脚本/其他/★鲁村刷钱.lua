@@ -1,0 +1,297 @@
+脚本支持发蓝和艾尔莎岛启动，支持传送羽毛，请设置好自动战斗,谢谢支持魔力辅助程序
+
+
+补魔值 = 50--用户输入框("多少魔以下补魔", "50")
+补血值=430--用户输入框("多少血以下补血", "430")
+宠补血值=50--用户输入框( "宠多少血以下补血", "50")
+宠补魔值=100--用户输入框( "宠多少魔以下补血", "100")
+卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶|口袋龙的卡片|地狱看门犬的卡片"		--可以增加多个 不影响速度
+oldGold = 人物("金币")
+allGoldNum=0	--累计获得金币
+练级前时间=os.time() 
+走路加速值=125	
+走路还原值=100	
+卡对话检测次数=0
+function logbackG()
+	当前地图名 = 取当前地图名()
+	x,y=取当前坐标()		
+	if (当前地图名=="哥拉尔镇" and x==120 )then return end			
+	回城()	
+	等待(3000)
+end
+
+function statistics(beginTime)
+	local playerinfo = 人物信息()
+	local nowTime = os.time() 
+	local time = math.floor((nowTime - beginTime)/60)--已持续练级时间
+	if(time == 0)then
+		time=1
+	end	
+	local goldContent =""
+	if(oldGold~=0 ) then
+		local nowGold = 人物("金币")
+		local getGold = nowGold - oldGold
+		allGoldNum=allGoldNum+getGold
+		local avgGold = math.floor(60 * allGoldNum/time)
+		goldContent = "已持续刷钱【"..time.."】分钟，共获得".."【"..allGoldNum.."】金币，平均每小时【"..avgGold.."】金币"
+		日志(goldContent)
+		oldGold=人物("金币")
+	-- else
+		-- oldGold = 人物("金币")
+		-- allGoldNum=0	--累计获得金币
+	end
+end
+
+function checkSupply()
+	local needSupply = false
+	if(人物("血") < 人物("最大血") or 人物("魔") < 人物("最大魔")) then
+		needSupply=true
+	end
+	if(宠物("血") < 宠物("最大血") or 宠物("魔") < 宠物("最大魔")) then
+		needSupply=true
+	end
+	if(needSupply == false)then
+		return
+	end
+	if (取当前地图名()~="哥拉尔镇" )then logbackG() end			
+	移动(165,91,"医院")
+	移动(29,26)	
+	回复(30,26)
+	logbackG()
+end
+function recallSoul()
+	if( 人物("灵魂") > 0 )then
+		日志("触发登出补给:人物掉魂")
+		logbackG()
+		转向(0)
+		等待(1000)
+		移动(140,214,"白之宫殿")
+		移动(47, 36, 43210)
+		移动(61, 46)
+		对话选是(2)
+		等待(1000)
+		logbackG()
+	end
+end
+
+function healPlayer()
+	if( 人物("健康") > 0  or 宠物("健康") > 0)then
+		logbackG()
+		日志("人物受伤")
+		移动(165,91,"医院")
+		移动(29,15)
+		转向(2)
+		等待服务器返回()
+		对话选择(-1,6)
+		移动(29,26)
+		回复(30,26)
+		logbackG()
+	end      
+
+end
+
+function buyCrystal(crystalName,buyCount)
+	喊话("买水晶")
+	if(buyCount==nil) then buyCount=1 end
+	if(crystalName == nil)then  crystalName = "水火的水晶（5：5）" end
+	if(取包裹空格() < 1) then
+		回城()
+		移动(147,79,"杂货店")
+		移动(11,18)
+		卖(0,卖店物品列表)			
+		移动(18,30,"哥拉尔镇")
+	end
+	if(取包裹空格() < 1) then
+		日志("背包没有空格，买水晶中断！")
+		回城()	
+		return
+	end
+	if(取包裹空格() < buyCount) then
+		日志("背包空格数量不够，买水晶中断！")
+		回城()	
+		return
+	end
+	
+	移动(146,117,"魔法店")	
+	移动(18,12)
+	等待(1000)
+	转向(2)
+	等待服务器返回()
+	对话选择(0,0) --第二个参数0 0买 1卖 2不用了
+	local dlg = 等待服务器返回()
+	local buyData = 解析购买列表(dlg.message)
+	local itemList = buyData.items
+	local dstItem = nil
+	for i,item in ipairs(itemList)do
+		if( item.name == crystalName) then
+			dstItem={index=i-1,count=buyCount}			
+		end
+	end
+	if (dstItem ~= nil)then
+		买(dstItem.index,dstItem.count)
+		等待(1000)
+		return true
+	else
+		日志("购买水晶失败！")
+		return false
+	end
+	return false
+end
+function checkCrystal(crystalName,equipsProtectValue)
+	if(equipsProtectValue==nil)then equipsProtectValue =100 end
+	if(crystalName == nil)then  crystalName = "水火的水晶（5：5）" end
+	local itemList = 物品信息()
+	local crystal = nil
+	for i,item in ipairs(itemList)do
+		if(item.pos == 7)then
+			crystal = item
+			break
+		end
+	end
+	--当前水晶不需要更换
+	--喊话(crystal.name.."耐久"..crystal.durability.."设置值"..equipsProtectValue)
+	if(crystal~=nil and crystal.name == crystalName and crystal.durability > equipsProtectValue) then
+		return
+	end
+	crystal=nil
+	--需要更换 检查身上是否有备用水晶
+	for i,item in ipairs(itemList)do
+		if(item.name == crystalName and item.durability > equipsProtectValue)then
+			crystal = item
+			break
+		end
+	end
+
+	if(crystal~=nil ) then
+		交换物品(crystal.pos,7,-1)
+		return
+	end
+	logbackG()	
+	--买水晶
+	buyCrystal(crystalName)
+	扔(7)--扔旧的
+	等待(1000)	--等待刷新
+	使用物品(crystalName)
+    logbackG()	
+end
+
+function checkHealth()
+	local health = 人物("健康")
+	local petinfo = 宠物信息()
+	if( 人物("健康") > 0 or 人物("灵魂") > 0 or 宠物("健康") > 0)then
+		--登出 去治疗 招魂		
+		recallSoul()	
+		healPlayer()		
+	end           
+end
+
+function checkGold()
+	if(人物("金币") > 990000)then
+		日志("钱包快满了：" .. 人物("金币") .."去银行存钱")
+		logbackG()
+		移动(167,66,"银行")
+		移动(25,10)
+		转向(2)
+		等待(2000)
+		转向(2)
+		日志("银行现有【"..银行("金币").."】金币",1)
+		银行("存钱",100000)	
+		银行("存钱",100000)	
+		银行("存钱",100000)	
+		银行("存钱",100000)	
+		银行("存钱",100000)	
+		银行("存钱",100000)	
+		银行("存钱",100000)	
+		银行("存钱",100000)	
+		银行("存钱",100000)	
+		等待(3000)
+		转向(2)
+		日志("银行存后还有【"..银行("金币").."】金币",1)
+		if(人物("金币") > 990000)then
+			日志("钱包满了，银行也放不下了，脚本结束")
+			return
+		end
+		oldGold = 人物("金币")	--重新记录金币
+	end
+
+end
+
+function battle()
+	移动(310,883)
+	开始遇敌()
+	while true do
+		if(人物("血") < 补血值)then break end
+		if(人物("魔") < 补魔值)then break end
+		if(宠物("血") < 宠补血值)then break end
+		if(宠物("魔") < 宠补魔值)then break end
+		if(取包裹空格() < 1)then break end
+		if( 人物("健康") > 0 or 人物("灵魂") > 0 or 宠物("健康") > 0)then break end
+		if(是否战斗中()) then 等待战斗结束() end		
+		等待(5000)
+	end
+	停止遇敌()
+	checkHealth()
+	移动(322,883,"鲁米那斯")
+	等待(1000)
+end
+
+function 卡对话检测()
+	
+	while true do
+		if(人物("血") < 补血值)then break end
+		if(人物("魔") < 补魔值)then break end
+		if(宠物("血") < 宠补血值)then break end
+		if(宠物("魔") < 宠补魔值)then break end
+		if(取包裹空格() < 1)then break end
+	end
+
+end
+function main()
+	日志("脚本启动，初始金币："..oldGold.." 总获得金币:"..allGoldNum)
+
+::begin::
+	等待空闲()
+	当前地图名 = 取当前地图名()
+	x,y=取当前坐标()	
+	地图编号=取当前地图编号()	
+	if (当前地图名=="艾尔莎岛" )then	
+		
+	elseif (当前地图名=="里谢里雅堡" )then	
+		  	
+	elseif(当前地图名=="库鲁克斯岛" and (x >= 290 and x <= 350) and (y >= 870 and y <= 890)) then
+		battle()
+	elseif(当前地图名=="鲁米那斯")then
+		移动(88, 51, "杂货店")
+	elseif(当前地图名=="杂货店")then
+		移动(11, 12)
+		卖(2,卖店物品列表)	
+		checkGold()
+		checkCrystal()
+		移动(4,13,"鲁米那斯")
+		移动(87,35,"医院")		
+	elseif(当前地图名=="医院")then
+		移动(17, 16)
+		回复(2)
+		移动(4,14,"鲁米那斯")
+		statistics(练级前时间)	--统计脚本效率		
+		移动(60,29,"库鲁克斯岛")
+		移动(310, 883)		
+	else
+		设置("移动速度",走路加速值)
+		logbackG()
+		checkHealth()
+		checkSupply()
+		设置("遇敌全跑",1)
+		移动(176,105,"库鲁克斯岛")
+        移动(476,526)
+        对话选是(477,526)
+        移动(322,883,"鲁米那斯")
+		设置("移动速度",走路还原值)
+		设置("遇敌全跑",0)
+	end	
+	--回城()
+	等待(1000)
+	goto  begin
+
+end
+main()
