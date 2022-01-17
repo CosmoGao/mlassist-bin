@@ -1396,14 +1396,7 @@ function common.autoLearnSkill(skillName)
 		移动(15,6)
 		等待到指定地图("竞技场", 34,67)
 		移动(15,57)			
-		common.learnPlayerSkill(15,56)		
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		common.learnPlayerSkill(15,56)			
 	end
 	if(skillName=="乾坤一掷")then
 		if(取队伍人数()>1)then
@@ -1415,14 +1408,7 @@ function common.autoLearnSkill(skillName)
 		common.gotoFaLanCity("w2")
 		移动(102,131,"安其摩酒吧")	
 		移动(10,13)			
-		common.learnPlayerSkill(11, 13)	
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		common.learnPlayerSkill(11, 13)			
 	end
 	if(skillName=="调教")then
 		if(取队伍人数()>1)then
@@ -1436,14 +1422,7 @@ function common.autoLearnSkill(skillName)
 		移动(27,20,"酒吧里面")			
 		移动(10,6,"客房")	
 		移动(10,5)			
-		common.learnPlayerSkill(11, 5)	
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		common.learnPlayerSkill(11, 5)			
 	end
 	if(skillName=="宠物强化")then
 		if(取队伍人数()>1)then
@@ -1455,14 +1434,7 @@ function common.autoLearnSkill(skillName)
 		common.outCastle("n")
 		移动(122, 36,"饲养师之家")
 		移动(13,4)				
-		common.learnPlayerSkill(14, 4)	
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		common.learnPlayerSkill(14, 4)			
 	end
 	if(skillName=="治疗")then
 		if(取队伍人数()>1)then
@@ -1473,14 +1445,7 @@ function common.autoLearnSkill(skillName)
 		end
 		common.gotoFaLanCity("whospital")		
 		移动(10,6)				
-		common.learnPlayerSkill(10, 5)	
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		common.learnPlayerSkill(10, 5)			
 	end
 	if(skillName=="补血魔法")then
 		if(人物("职称") ~= "传教士")then
@@ -1505,14 +1470,7 @@ function common.autoLearnSkill(skillName)
 ::map1208::
 		等待到指定地图(1208)	
 		移动(14, 11)		
-		common.learnPlayerSkill(14, 10)	
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		common.learnPlayerSkill(14, 10)			
 	end
 	if(skillName=="强力补血魔法")then
 		if(人物("职称") ~= "传教士")then
@@ -1537,14 +1495,7 @@ function common.autoLearnSkill(skillName)
 ::map1208::
 		等待到指定地图(1208)	
 		移动(19, 13)		
-		common.learnPlayerSkill(19, 12)	
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		common.learnPlayerSkill(19, 12)			
 	end
 	if(skillName=="石化魔法")then
 		if(取队伍人数()>1)then
@@ -1555,14 +1506,7 @@ function common.autoLearnSkill(skillName)
 		end
 		common.outCastle("w")
 		移动(120, 65)							
-		common.learnPlayerSkill(120, 64)	
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		common.learnPlayerSkill(120, 64)			
 	end
 	if(skillName=="抗中毒" or skillName=="抗昏睡" or skillName=="抗石化" or skillName=="抗酒醉" or skillName=="抗混乱" or skillName=="抗遗忘")then		
 		if(取队伍人数()>1)then
@@ -1603,14 +1547,7 @@ function common.autoLearnSkill(skillName)
 		elseif(skillName=="抗遗忘")then 
 			移动(15,8)		
 			common.learnPlayerSkillDir(3)	
-		end
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
-		end
+		end		
 	end
 	if(skillName=="气绝回复")then		
 		if(取队伍人数()>1)then
@@ -1641,14 +1578,82 @@ function common.autoLearnSkill(skillName)
 		移动(8, 3,"村长的家")		
 		移动(6, 13,"亚留特村")
 		移动(48,71)
-		common.learnPlayerSkillDir(4)	
-		if(common.findSkillData(skillName) ~=nil)then		
-			喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
-			return
-		else
-			喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
-			return	
+		common.learnPlayerSkillDir(4)			
+	end
+	if(skillName=="挖掘")then		
+		if(取队伍人数()>1)then
+			离开队伍()
 		end
+		if(人物("金币") < 100)then
+			common.getMoneyFromBank(100)				
+		end			
+		common.gotoFaLanCity()	
+		移动(200,132,"基尔的家")
+		移动(9,3)
+		common.learnPlayerSkill(9,2)	
+	end
+	if(skillName=="挖掘")then		
+		if(取队伍人数()>1)then
+			离开队伍()
+		end
+		if(人物("金币") < 100)then
+			common.getMoneyFromBank(100)				
+		end			
+		common.gotoFaLanCity()	
+		移动(200,132,"基尔的家")
+		移动(9,3)
+		common.learnPlayerSkill(9,2)	
+	end
+	if(skillName=="伐木")then		
+		if(取队伍人数()>1)then
+			离开队伍()
+		end
+		if(人物("金币") < 100)then
+			common.getMoneyFromBank(100)				
+		end			
+		common.outFaLan("e")
+		移动(509, 153,"山男的家")	
+		移动(10,8)		
+		common.learnPlayerSkill(10,7)	
+	end
+	if(skillName=="狩猎")then		
+		if(取队伍人数()>1)then
+			离开队伍()
+		end
+		if(人物("金币") < 100)then
+			common.getMoneyFromBank(100)				
+		end			
+		common.outFaLan("e")
+		移动(485,199)
+		local searchList={{485,199},{486,209},{496,208},{481,232}}		
+		for index,pos in ipairs(searchList) do						
+			移动(pos[1],pos[2])	
+			u = 查周围信息("猎人拉修",1)
+			if(u ~= nil)then
+				移动到目标附近(u.x,u.y)
+				common.learnPlayerSkill(u.x,u.y)	
+				break
+			end
+		end		
+	end
+	if(skillName=="治疗")then		
+		if(取队伍人数()>1)then
+			离开队伍()
+		end
+		if(人物("金币") < 100)then
+			common.getMoneyFromBank(100)				
+		end			
+		common.gotoFaLanCity("w1")
+		移动(82,83,"医院")
+		移动(10,6)
+		common.learnPlayerSkill(10,5)			
+	end
+	if(common.findSkillData(skillName) ~=nil)then		
+		喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
+		return
+	else
+		喊话("未能完成技能【"..skillName.."】的学习，请检查！",1,2,5)
+		return	
 	end
 end
 function common.outFaLan(dir)
