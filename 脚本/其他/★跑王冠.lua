@@ -30,6 +30,9 @@ function main()
 	elseif(当前地图名=="雪拉威森塔前庭")then		
 		goto T101
 	end
+	if(人物("金币")<5000)then
+		common.getMoneyFromBank(-300000)
+	end
 	common.healPlayer(doctorName)
 	common.recallSoul()
 	common.supplyCastle()
