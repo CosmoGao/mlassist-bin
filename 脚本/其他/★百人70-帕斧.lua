@@ -74,7 +74,7 @@ common=require("common")
 设置("自动扔",1,"面包")		
 设置("自动扔",1,"特制雕鱼烧")		
 设置("自动扔",1,"生命力回复药（75）")		
-预置交易物品列表={"小护士家庭号","魔力之泉","完全结晶体的紫水晶","完全结晶体的骑士宝石","完全结晶体的绿宝石","火焰鼠闪卡「B4奖」","火焰鼠闪卡「B3奖」","火焰鼠闪卡「B2奖」","火焰鼠闪卡「B1奖」","火焰鼠闪卡「A4奖」","火焰鼠闪卡「A3奖」","火焰鼠闪卡「A2奖」","火焰鼠闪卡「A1奖」","宝石鼠月亮奖","海洋之心","火焰之魂"}
+预置交易物品列表={"小护士家庭号","魔力之泉","完全结晶体的紫水晶","完全结晶体的骑士宝石","完全结晶体的绿宝石","火焰鼠闪卡「B4奖」","火焰鼠闪卡「B3奖」","火焰鼠闪卡「B2奖」","火焰鼠闪卡「B1奖」","火焰鼠闪卡「A4奖」","火焰鼠闪卡「A3奖」","火焰鼠闪卡「A2奖」","火焰鼠闪卡「A1奖」","宝石鼠月亮奖","海洋之心","火焰之魂","天空之枪","帕鲁凯斯之斧","村正","鼠王"}
 	
 	
 local tradeName=nil
@@ -89,7 +89,7 @@ topicList={"百人道场仓库名称","百人道场仓库空格"}
 
 设置("自动战斗", 1)			-- 开启自动战斗，0不自动战斗，1自动战斗
 设置("高速战斗", 1)			-- 高速战斗
-最高楼层=80
+最高楼层=81
 
 中奖物品列表={"魔力之泉","小护士家庭号","天空之枪","帕鲁凯斯之斧","村正","鼠王"}
 
@@ -296,20 +296,25 @@ end
 function exchangeBCH()
 	清除系统消息()
 	local elements = {"地","水","风","火"}
+	local cElements = {"地","水","风"}
 	--四种碎片 去换B奖
-	bNeedCount=0
-	for k,v in ipairs(elements) do
-		if(取物品数量(v.."元素碎片") > 0)then 		
-			bNeedCount=bNeedCount+1
-		end	
-	end 	
-	--这里只换了1次 多的火 下次去换 
-	if(bNeedCount >= 4)then
-		exchangeB()
-	end		
+	while true do
+		bNeedCount=0
+		for k,v in ipairs(elements) do
+			if(取物品数量(v.."元素碎片") > 0)then 		
+				bNeedCount=bNeedCount+1
+			end	
+		end 	
+		--这里只换了1次 多的火 下次去换 
+		if(bNeedCount >= 4)then
+			exchangeB()
+		else
+			break
+		end		
+	end
 	--三种水晶 去换C奖
 	local cNeedCount=0
-	for k,v in ipairs(elements) do
+	for k,v in ipairs(cElements) do
 		if(取物品数量(v.."元素水晶") > 0)then 		
 			cNeedCount=cNeedCount+1
 		end	
@@ -319,7 +324,7 @@ function exchangeBCH()
 		exchangeC()
 	end
 	--换水晶去
-	for k,v in ipairs(elements) do
+	for k,v in ipairs(cElements) do
 		if(取物品数量(v.."元素水晶") < 1)then 		
 			if(取物品叠加数量(v.."元素碎片") >= 4)then
 				移动(28,29)
@@ -331,7 +336,7 @@ function exchangeBCH()
 		end	
 	end 	
 	cNeedCount=0
-	for k,v in ipairs(elements) do
+	for k,v in ipairs(cElements) do
 		if(取物品数量(v.."元素水晶") > 0)then 		
 			cNeedCount=cNeedCount+1
 		end	
