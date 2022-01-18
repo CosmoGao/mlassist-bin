@@ -1,0 +1,87 @@
+
+ 
+common=require("common")
+
+--设置("高速延时",3) 
+设置("自动加血",0)
+设置("高速延时",4)  
+设置("高速战斗",1)  
+设置("自动战斗",1)  
+设置("遇敌全跑",1)  
+设置("自动叠",1,"生命力回复药（100）&3")
+设置("自动叠",1,"苹果薄荷&40")
+设置("自动叠",1,"柠檬草&40")
+
+function 采集苹果薄荷()
+	while true do
+		if(取包裹空格() < 1)then break end	-- 包满回城
+		if(取物品叠加数量('苹果薄荷')>= 400)then break end	
+		if(人物("魔") <  1)then break end	-- 魔无回城
+		if(取当前地图名() ~= "芙蕾雅")then break end	--地图切换 也返回
+		工作("伐木","",6500)	--技能名 物品名 延时时间
+		等待工作返回(6500)
+	end 
+	扔叠加物("苹果薄荷",40)
+end
+function 采集柠檬草()
+	while true do
+		if(取包裹空格() < 1)then break end	-- 包满回城
+		if(取物品叠加数量('柠檬草')>= 40)then break end	
+		if(人物("魔") <  1)then break end	-- 魔无回城
+		if(取当前地图名() ~= "芙蕾雅")then break end	--地图切换 也返回
+		工作("伐木","",6500)	--技能名 物品名 延时时间
+		等待工作返回(6500)
+	end 
+	扔叠加物("柠檬草",40)
+end
+
+function main()
+
+::begin::
+	等待空闲()
+	mapName=取当前地图名()
+	if(mapName=="芙蕾雅")then			--加在这，主要是随时启动脚本原地复原
+		goto 去采集材料
+	end
+	if(取物品叠加数量("生命力回复药（100）") >= 3)then
+		--扔叠加物("生命力回复药（100）",3)
+		common.sellCastle("生命力回复药（100）")		--默认卖
+	end
+	common.supplyCastle()
+	common.checkHealth()
+	common.outFaLan("w")	--西门
+	goto begin
+
+::去采集材料::	
+	if(目标是否可达(500,85) == false)then	--不是西门芙蕾雅 回城
+		回城()
+		goto begin
+	end
+	if(取物品叠加数量('苹果薄荷')< 400)then					
+		移动(500,85)
+		采集苹果薄荷()
+		goto begin
+	end
+	if(取物品叠加数量('柠檬草')< 40)then					
+		移动(515,100)
+		采集柠檬草()
+		goto begin
+	end
+	common.supplyCastle()
+::work::
+	合成("生命力回复药（100）")	
+	if(取物品数量( "奥利哈钢条") >  0)then goto  pause end			-- 物品大于指定值时跳转、
+	if(取包裹空格() < 1) then goto  pause end			-- 物品大于指定值时跳转、
+	if(取物品数量( "生命力回复药（100）") ==40 )then goto begin end			-- 物品大于指定值时跳转
+	if(人物("魔") <  109) then 
+		common.supplyCastle() 		
+	end
+	goto work 
+::pause::	
+	叠("生命力回复药（100）", 3)	
+	叠("苹果薄荷", 40)
+	叠("柠檬草", 40)	
+	goto work 
+end
+main()
+
