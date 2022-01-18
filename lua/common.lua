@@ -1271,6 +1271,36 @@ function common.learnPlayerSkill(x,y)
 	等待服务器返回()
 	对话选择(1,0)
 end
+function common.forgetPlayerSkill(x,y,skillName)
+	if(skillName == nil)then return false end
+	local skill = common.findSkillData(skillName)
+	if(skill == nil)then 
+		日志("没有"..skillName.."技能",1)
+		return false
+	end
+	local playerInfo = 人物信息()
+	local skillInfo = playerInfo.skill 
+	table.sort(skillInfo , function(a , b)
+		return a.pos < b.pos
+	end)  
+	local index=-1
+	for i,value in ipairs(skillInfo) do  
+		日志(i..value.name,1)
+		if(value.name == skillName)then
+			index = i
+			break
+		end
+	end  
+	if(index < 0)then
+		return false
+	end	
+	对话选择(0,index)
+	等待服务器返回()
+	对话选择(4,-1)
+	等待服务器返回()
+	对话选择(0,0)
+end
+
 
 --转方向
 function common.learnPlayerSkillDir(d)
@@ -1436,17 +1466,17 @@ function common.autoLearnSkill(skillName)
 		移动(13,4)				
 		common.learnPlayerSkill(14, 4)			
 	end
-	if(skillName=="治疗")then
-		if(取队伍人数()>1)then
-			离开队伍()
-		end
-		if(人物("金币") < 100)then
-			common.getMoneyFromBank(1000)				
-		end
-		common.gotoFaLanCity("whospital")		
-		移动(10,6)				
-		common.learnPlayerSkill(10, 5)			
-	end
+	-- if(skillName=="治疗")then
+		-- if(取队伍人数()>1)then
+			-- 离开队伍()
+		-- end
+		-- if(人物("金币") < 100)then
+			-- common.getMoneyFromBank(1000)				
+		-- end
+		-- common.gotoFaLanCity("whospital")		
+		-- 移动(10,6)				
+		-- common.learnPlayerSkill(10, 5)			
+	-- end
 	if(skillName=="补血魔法")then
 		if(人物("职称") ~= "传教士")then
 			日志("非传教职业！")

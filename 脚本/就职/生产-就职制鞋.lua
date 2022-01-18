@@ -1,6 +1,12 @@
 
 
 common=require("common")
+设置("timer", 100)			-- 设置定时器，单位毫秒 内置100毫秒 不要太快
+设置("自动战斗", 1)			-- 开启自动战斗，0不自动战斗，1自动战斗
+设置("高速战斗", 1)			-- 高速战斗
+设置("高速延时", 4)			-- 高速战斗速度，0不延时 
+设置("遇敌全跑", 1)			-- 遇敌全跑 
+设置("自动加血", 0)			-- 遇敌全跑 关闭自动加血，脚本对话加血 
 function StartWork()
 	while true do
 		if(取包裹空格() < 1)then break end	-- 包满回城
@@ -46,7 +52,24 @@ function main()
 		移动(32, 70,"装备品店")
 		移动(14, 4,"1楼小房间")
 		移动(9, 3,"地下工房")
-		移动(23, 23)
+		移动(19, 24)
+		转向坐标(19, 25)
+		等待服务器返回()
+		对话选择(0,1)
+		等待服务器返回()
+		对话选择(32,-1)
+		等待服务器返回()
+		对话选择(0,0)
+		等待(2000)
+		if(人物("职业") == "制鞋学徒")then
+			移动(23, 23)
+			删除技能(23,24,"锻造体验")
+			common.learnPlayerSkill(23,24)
+			skill=common.findSkillData("制鞋")
+			if(skill ~= nil)then
+				common.autoLearnSkill("治疗")
+			end			
+		end		
 		return
 	end
 	if(取物品数量("试炼衣") > 0)then
@@ -62,6 +85,9 @@ function main()
 	if(skill == nil)then
 		if(取物品叠加数量("孟宗竹") <20)then
 			日志("提示：没有伐木体验技能！",1)
+			if(取当前地图名()=="职业介绍所")then
+				goto EmploymentAgency
+			end
 			common.checkHealth()
 			common.supplyCastle()
 			common.sellCastle()		--默认卖
@@ -121,15 +147,18 @@ function main()
 	end		
 	移动(8,10)
 	删除技能(8,11,"气功弹")
+	--对话选择(-1,0)	--不管有没有 先取消 在学
 	删除技能(8,11,"石化魔法")
+	删除技能(8,11,"强力补血魔法")
+	--对话选择(-1,0)	--不管有没有 先取消 在学
 	common.learnPlayerSkill(8,11)
 	goto begin
 ::准备材料::
 	if(取物品叠加数量("孟宗竹") <20)then 
 		if(取当前地图名()~="芙蕾雅")then
-			common.outFalan("e")
+			common.outFaLan("e")
 		end
-		common.outFalan("e")
+		common.outFaLan("e")
 		移动(484, 198)
 		设置("移动速度",走路还原值)
 		StartWork()		
