@@ -3,6 +3,10 @@ require('./common').then(cga => {
     leo.monitor.config.keepAlive = false;   //关闭防掉线
     leo.logStatus = false;
     var protect = {
+        //contactType遇敌类型：-1-旧遇敌，0-按地图自适应，1-东西移动，2-南北移动，
+        //3-随机移动，4-画小圈圈，5-画中圈圈，6-画大圈圈，7-画十字，8-画8字
+        contactType: 0,
+        visible: false, 
         minHp: 300,
         minMp: 30,
         minPetHp: 300,
@@ -40,7 +44,8 @@ require('./common').then(cga => {
         return leo.log(content);
     }
 
-    leo.todo().then(() => {
+    leo.todo()
+    .then(() => {
         //登出
         if (isLogBackFirst) {
             return leo.logBack();
@@ -77,6 +82,7 @@ require('./common').then(cga => {
                 //检查是否满魔币
                 var playerinfo = cga.GetPlayerInfo();
                 if (playerinfo.gold >= 990000) {
+                    leo.logServer('鲁村','钱包快满了：' + playerinfo.gold + '去银行存钱');
                     leo.log('钱包快满了：' + playerinfo.gold + '去银行存钱');
                     return leo.goto(n => n.falan.bank)
                     .then(()=>leo.turnDir(0))
@@ -93,10 +99,11 @@ require('./common').then(cga => {
                         playerinfo = cga.GetPlayerInfo();
                         if(playerinfo.gold >= 900000){
                             leo.log('钱包满了，银行也放不下了，脚本结束');
-                            return leo.reject();
+                            return leo.delay(1000*60*60*24);
                         }else{
-                            oldGold = playerinfo.gold;
-                            return leo.next();
+                            //oldGold = playerinfo.gold;
+                            //重启脚本，释放内存占用
+                            return leo.exit();
                         }
                     });
                 }

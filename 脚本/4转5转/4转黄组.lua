@@ -307,7 +307,7 @@ function main()
 		end	
 	end
 	if(取物品数量("622060") > 0)then		--第四次换完
-		playerJob=人物("职称")
+		playerJob=人物("职业")
 		if(playerJob == "药剂师")then			
 		elseif(playerJob == "厨师" )then--and 取物品数量("鳖料理") > 0
 		elseif(playerJob == "樵夫" )then--and 取物品数量("鳖料理") > 0

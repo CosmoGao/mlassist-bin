@@ -1321,7 +1321,7 @@ function common.learnPetSkillDir(d,skillIndex,petIndex,petSkillIndex)
 end
 --就职传教
 function common.joinMissionary()
-	if(人物("职称") == "传教士")then
+	if(人物("职业") == "传教士")then
 		return
 	end
 ::begin::
@@ -1369,7 +1369,7 @@ function common.joinMissionary()
 	等待服务器返回()
 	对话选择(0,0)
 	等待(2000)
-	if(人物("职称") == "传教士")then
+	if(人物("职业") == "传教士")then
 		日志("就职传教成功！")
 	else		
 		日志("就职传教失败，请手动查看原因")				
@@ -1448,7 +1448,7 @@ function common.autoLearnSkill(skillName)
 		common.learnPlayerSkill(10, 5)			
 	end
 	if(skillName=="补血魔法")then
-		if(人物("职称") ~= "传教士")then
+		if(人物("职业") ~= "传教士")then
 			日志("非传教职业！")
 			return
 		end
@@ -1473,7 +1473,7 @@ function common.autoLearnSkill(skillName)
 		common.learnPlayerSkill(14, 10)			
 	end
 	if(skillName=="强力补血魔法")then
-		if(人物("职称") ~= "传教士")then
+		if(人物("职业") ~= "传教士")then
 			日志("非传教职业！")
 			return
 		end

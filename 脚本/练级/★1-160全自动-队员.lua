@@ -38,7 +38,14 @@ end
 喊话(队长名称,2,3,5)
 医生名称={"星落护士","谢谢惠顾☆"}
 半山西门=true	--半山是西门还是里堡二楼
-
+是否是驯兽=false
+是否有完美调教=false
+if(人物("职业") == "驯兽师")then
+	是否是驯兽=true
+end
+if(common.findSkillData("完美调教术") ~= nil)then
+	是否有完美调教=true
+end
 function 营地商店检测水晶(crystalName,equipsProtectValue,buyCount)
 	if(equipsProtectValue==nil)then equipsProtectValue =100 end
 	if(crystalName == nil)then crystalName="水火的水晶（5：5）" end
@@ -698,14 +705,21 @@ function 营地练级(目标等级,练级地名称)
 		对话选择(-1,6)		
 	end
 	--金币满存银行检测
-	if(当前地图名 == "圣骑士营地" and 人物("金币") > 满金币存银行数)then
-		离开队伍()
-		营地存取金币(-身上最少金币数*2)		--留10万指定金币
-		goto begin
-	elseif(当前地图名 == "圣骑士营地" and 人物("金币") < 身上最少金币数)then
-		离开队伍()
-		营地存取金币(-身上最少金币数*2,"取")	--取出后 身上总30万
-		goto begin
+	if(当前地图名 == "圣骑士营地")then
+		if(checkTamerSkillLevel())then		--检测调教技能
+			设置("遇敌全跑",0)				--防止哪个脚本卡了这个 不行的话 重新读取配置	
+			goto begin						--提升阶级后，重新begin
+		end 
+		if(checkCharisma())then goto begin end	--检查魅力
+		if(人物("金币") > 满金币存银行数)then
+			离开队伍()
+			营地存取金币(-身上最少金币数*2)		--留10万指定金币
+			goto begin
+		elseif(人物("金币") < 身上最少金币数)then
+			离开队伍()
+			营地存取金币(-身上最少金币数*2,"取")	--取出后 身上总30万
+			goto begin
+		end	
 	end	
 	等待(2000)
 	goto scriptstart  
@@ -844,9 +858,15 @@ function 矮人练级(目标等级,练级地名称)
 	
 ::scriptstart::
 	leaderSetLv=getLeaderSetLv()
-	if(取当前地图名() == "工房")then
+	mapName=取当前地图名()
+	if(mapName == "工房")then
 		卖(21,23,卖店物品列表)	
-	elseif(取当前地图名() == "矮人城镇")then
+	elseif(mapName == "矮人城镇")then
+		if(checkTamerSkillLevel())then		--检测调教技能
+			设置("遇敌全跑",0)				--防止哪个脚本卡了这个 不行的话 重新读取配置	
+			goto begin						--提升阶级后，重新begin
+		end 
+		if(checkCharisma())then goto begin end	--检查魅力
 		卖(122, 110,卖店物品列表)	
 	end
 	if(leaderSetLv ~= nil and leaderSetLv ~= 目标等级) then
@@ -1032,6 +1052,11 @@ function 半山练级(目标等级)
 ::begin::
 	停止遇敌()	
 	等待空闲()
+	if(checkTamerSkillLevel())then		--检测调教技能
+		设置("遇敌全跑",0)				--防止哪个脚本卡了这个 不行的话 重新读取配置	
+		goto begin						--提升阶级后，重新begin
+	end 
+	if(checkCharisma())then goto begin end	--检查魅力
 	if(人物("金币") < 多少金币去拿钱) then
 		日志("人物金币不够，去银行取钱，当前金币【"..人物("金币").."】")
 		common.getMoneyFromBank(多少金币去拿钱)
@@ -1156,7 +1181,45 @@ function getLeaderSetLv()
 end
 --检测驯兽技能等级 
 function checkTamerSkillLevel()
-
+	if(是否是驯兽 == false)then
+		return false
+	end
+	local nowSkillLv = common.playerSkillLv("调教")
+	if(nowSkillLv == 0)then
+		return false
+	end
+	--4转 5转 不转 这里没有自动调用4转5转任务
+	local rankLv = 人物("职称等级")
+	if(nowSkillLv >= (4 + rankLv*2))then
+		--去提升等价
+		执行脚本("./脚本/★转正/★提升阶级-驯兽.lua")	
+		等待(2000)
+		if(rankLv == 人物("职称等级"))then	
+			-- 【一 二 三转任务】 三转先放一下 这个需要队伍联动
+			if(rankLv == 0)then		--1转树精
+				执行脚本("./脚本/★转正/★树精-星落-单人版不等待.lua")	
+			elseif(rankLv == 1)then --2转神兽
+				执行脚本("./脚本/★转正/★神兽.lua")	
+			else -- 3 4 5先不做
+				return false
+			end
+			执行脚本("./脚本/★转正/★提升阶级-驯兽.lua")
+		end		
+		--不管成功与否 继续回去练级 当然 下次战斗判断 会重复进入此步
+		return true
+	end
+	return false
+end
+--检查魅力 没有完美调教术的 才检查
+function checkCharisma()
+	if(是否有完美调教)then return end
+	if(人物("魅力") < 60 and 宠物("忠诚") < 60)then
+		if(人物("金币") > 400000)then	--40w 金币 去买魅力
+			执行脚本("./脚本/其他/★花钱买魅力.lua")
+			return true
+		end
+	end
+	return false
 end
 function main()    
 	--跟随队长设置切换练级地图		

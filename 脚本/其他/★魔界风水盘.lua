@@ -45,7 +45,7 @@ function 去存风水盘()
 	回城()
 end
 function checkItem()
-	if(人物("职称") == "仙人" or 人物("职称") == "忍者" )then
+	if(人物("职业") == "仙人" or 人物("职业") == "忍者" )then
 		for i,v in ipairs(风水盘名称) do
 			if(取物品数量(v) > 0)then
 				去存风水盘()
@@ -65,7 +65,7 @@ function 技能等级(技能名称)
 	return 0
 end
 function transform()
-	if(人物("职称") == "仙人" or 人物("职称") == "忍者" )then
+	if(人物("职业") == "仙人" or 人物("职业") == "忍者" )then
 		工作("变身","",1)	
 		menus = 等待菜单返回()
 		if(menus ~= nil)then

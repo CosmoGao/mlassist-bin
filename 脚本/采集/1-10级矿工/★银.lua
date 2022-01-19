@@ -63,7 +63,7 @@ function main()
 		return
 	end
 	
-	if(人物("职称")=="矿工" and 取物品数量("矿山钥匙") < 1)then
+	if(人物("职业")=="矿工" and 取物品数量("矿山钥匙") < 1)then
 		NaYaoShi()
 	end
 ::begin::		
