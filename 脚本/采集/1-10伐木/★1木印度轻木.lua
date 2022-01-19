@@ -1,10 +1,10 @@
 ★起始点：艾夏岛-法兰城任一传送石
-function reload( moduleName )  
-	package.loaded[moduleName] = nil  
-	return require(moduleName)  
-end
-common=reload("common")
---common=require("common")
+-- function reload( moduleName )  
+	-- package.loaded[moduleName] = nil  
+	-- return require(moduleName)  
+-- end
+-- common=reload("common")
+common=require("common")
 
 设置("timer", 100)			-- 设置定时器，单位毫秒 内置100毫秒 不要太快
 设置("自动战斗", 1)			-- 开启自动战斗，0不自动战斗，1自动战斗

@@ -1,10 +1,10 @@
 require('./common').then(cga=>{
 	//leo.baseInfoPrint();
-	var doctorName = '绿蔓之殇';
+	var doctorName = '星落护士';
 
 	var playerinfo = cga.GetPlayerInfo();
 	var isDoctor = false;
-	var fightType = 2;
+	var fightType = 1;
 	if(playerinfo.name == doctorName){
 		isDoctor = true;
 	}
@@ -60,7 +60,7 @@ require('./common').then(cga=>{
 							.then(()=>leo.goto(n => n.castle.x))
 							.then(()=>leo.autoWalk([34,89]))
 							.then(()=>leo.supply(35,88))
-							.then(()=>leo.autoWalk([29,87]))
+							.then(()=>leo.autoWalk([29,85]))
 							.then(()=>leo.enterTeam(doctorName))
 							.then(()=>leo.waitUntil(()=>{
 								if(cga.GetPlayerInfo().health==0){
