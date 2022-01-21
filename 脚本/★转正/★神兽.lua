@@ -10,7 +10,7 @@ common=require("common")
 	等待空闲()
 	common.checkHealth()
 	common.checkCrystal(水晶名称)
-	回城()
+	--回城()
 	common.supplyCastle()
 	common.sellCastle()		--默认卖
 ::begin::
@@ -60,6 +60,8 @@ common=require("common")
 	移动(14, 6,"村长的家")	
 	移动(1, 9,"杰诺瓦镇")
 	if(取物品数量("贝兹雷姆之钥") > 0) then
+		移动(44, 39)
+		移动(24, 39,"莎莲娜")
 		goto shaLianLa
 	end
 ::quYiYuan::
@@ -158,7 +160,7 @@ common=require("common")
 	移动(15,15)
 	对话选是(14,14)
 	对话选是(14,14)
-	喊话("任务完成，需要学技能的下去自己学！",2,3,5)
+	日志("任务完成，需要学技能的下去自己学！",1)
 	
 	if(是否学超补==1)then
 		goto chaoBu
