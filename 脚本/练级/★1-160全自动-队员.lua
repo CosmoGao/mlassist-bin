@@ -1185,7 +1185,7 @@ function checkTamerSkillLevel()
 		return false
 	end
 	local nowSkillLv = common.playerSkillLv("调教")
-	if(nowSkillLv == 0 or nowSkillLv==10)then	--3转以后 先屏蔽
+	if(nowSkillLv == 0 or nowSkillLv>=8)then	--3转以后 先屏蔽
 		return false
 	end
 	--4转 5转 不转 这里没有自动调用4转5转任务
