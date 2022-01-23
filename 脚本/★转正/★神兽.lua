@@ -44,6 +44,9 @@ common=require("common")
 	移动(15, 4)	
 	转向(2)
 	dlg=等待服务器返回()
+	if(dlg == nil)then
+		goto warproom
+	end
 	if(string.find(dlg.message,"此传送点的资格")~=nil or string.find(dlg.message,"你不能使用这个传送石")~=nil)then
 		回城()
 		执行脚本("./脚本/直通车/★开传送-杰诺瓦镇.lua")
