@@ -2394,9 +2394,14 @@ function 龙顶练级()
 		if(当前地图名 == "黑龙沼泽")then			
 			移动到目标附近(11,17,1)	
 			移动(11,17)
+			等待(2000)
+			等待空闲()
+			if(取当前地图名()== "黑龙沼泽")then	--还是黑龙沼泽 说明迷宫刷新 稍等会
+				goto dstFloor
+			end
 			break	
 		end
-		if(队伍("人数")<2)then
+		if(队伍("人数")<2)then		--爬楼中途 增加人数判断
 			回城()
 			goto begin
 		end
@@ -2415,6 +2420,7 @@ function 龙顶练级()
 	if(宠物("魔") < 宠补魔值)then goto  ting end	
 	if(string.find(当前地图名,"黑龙沼泽")== nil)then	goto begin end
 	if(string.find(最新系统消息(),"被不可思议的力量送出了")~=nil)then goto  ting2	end	
+	if(string.find(最新系统消息(),"你感觉到一股不可思议的力量")~=nil)then goto  ting3	end	
 	if 是否战斗中() then
 		遇敌总次数=遇敌总次数+1
 		等待战斗结束()
@@ -2433,6 +2439,18 @@ function 龙顶练级()
 	停止遇敌()	
 	清除系统消息()	
 	goto lu4 
+::ting3::
+	停止遇敌()	
+	清除系统消息()
+	移动(outMazeX,outMazeY)	--沼泽坐标
+	等待(3000)		--这个是等指定时间
+	等待空闲()		--这个是等待切图或战斗  状态是正常后，才会退出当前等待
+	if(取当前地图名() == "黑龙沼泽")then
+		日志("呼哈，等待迷宫刷新",1)
+		等待(170000)		--等待迷宫刷新
+		goto dstFloor
+	end
+	goto begin		--不知道在哪 就begin吧
 ::ting::
 	停止遇敌()      
 	等待空闲() 	
