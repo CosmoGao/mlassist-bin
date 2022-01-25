@@ -2387,6 +2387,19 @@ function 龙顶练级()
 	if(string.find(当前地图名,"黑龙沼泽")== nil )then
 		goto begin
 	end
+	--增加一层判断 防止重启脚本一直循环死
+	if(人物("血") < 补血值)then goto  ting end
+	if(人物("魔") < 补魔值)then goto  ting end
+	if(宠物("血") < 宠补血值)then goto  ting end
+	if(宠物("魔") < 宠补魔值)then goto  ting end	
+	if( (人物("健康") > 0 or 人物("灵魂") > 0)  and 是否空闲中())then
+		回城()
+		goto begin
+	end
+	if(取队伍人数() < 3)then			--队友掉线-人数太少 登出回城 
+		脚本日志("队友掉线，回补！")
+		goto ting		
+	end
 ::dstFloor::
 	while true do 
 		当前地图名=取当前地图名()		

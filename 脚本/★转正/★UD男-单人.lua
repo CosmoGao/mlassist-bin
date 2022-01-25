@@ -134,7 +134,7 @@ function main()
 	等待(2000)
 	goto begin
 
-::start::.
+::start::
 	if(取当前地图名() ~= "艾尔莎岛")then
 		goto begin
 	end
