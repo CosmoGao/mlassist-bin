@@ -15,7 +15,7 @@ common=require("common")
 	宠补血值=用户输入框( "宠多少血以下去补给", "400")
 	宠补魔值=用户输入框( "宠多少魔以下去补给", "50")
 
-技能名称="攻击无效"
+技能名称="强力恢复魔法"
 
 function 技能等级()
 	local playerData = 人物信息()
@@ -128,9 +128,12 @@ end
 	等待到指定地图("里谢里雅堡")	
 	移动(34, 89)
 	回复(1)
+	if(人物("金币") < 100000) then
+		common.getMoneyFromBank(300000)		
+	end
 	common.checkHealth()	
 	if(技能等级() >= 10)then
-		读取配置("配置/96练技能强力回复.save")
+		读取配置("配置/96练技能气绝回复.save")
 	end
 	goto saite 
 ::saite1::	

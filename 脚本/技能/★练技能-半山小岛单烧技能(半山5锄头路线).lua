@@ -14,7 +14,7 @@ common=require("common")
 	宠补血值=用户输入框("宠多少血以下补血","100")
 	宠补魔值=用户输入框("宠多少魔以下去补给","400")
 
-技能名称="超强恢复魔法"
+技能名称="强力补血魔法"
 
 function 技能等级()
 	local playerData = 人物信息()
@@ -44,13 +44,17 @@ function 拿钱()
 	end
 	goto begin
 end
+function main()
 ::begin::
 	停止遇敌()	
 	等待空闲()
+	if(人物("金币") < 100000) then
+		common.getMoneyFromBank(300000)		
+	end
 	common.checkHealth()
 	common.supplyCastle()
 	if(技能等级() >= 10)then
-		读取配置("配置/96练技能强力回复.save")
+		读取配置("配置/小岛超补.save")
 	end
 	拿钱()
 	回城()
@@ -98,3 +102,5 @@ end
 	if(宠物("血") < 宠补血值)then goto begin end
 	if(宠物("魔") < 宠补魔值)then goto begin end
 	goto jiance 
+end
+main()
