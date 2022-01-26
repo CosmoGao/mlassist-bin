@@ -111,7 +111,10 @@ end
 	elseif(mapNum >= 24009 and mapNum <= 24018)then goto mapCheck1	
 	elseif(mapNum >= 24019 and mapNum <= 24028)then goto mapCheck2	
 	elseif(mapNum >= 24029 and mapNum <= 24038)then goto mapCheck3		
-	elseif(mapNum == 24039)then goto map24039	
+	elseif(mapNum >= 24039 and mapNum <= 24048)then goto mapCheck4		
+	elseif(mapNum >= 24049 and mapNum <= 24058)then goto mapCheck5		
+	elseif(mapNum >= 24059 and mapNum <= 24068)then goto mapCheck6		
+	elseif(mapNum == 24039)then goto map24039		
 	elseif(当前地图名=="诅咒的迷宫 地下11楼" )then	
 		goto two
 	elseif(当前地图名=="诅咒的迷宫 地下21楼" )then	
@@ -583,30 +586,56 @@ end
 	end 	
 	goto begin
 
+::mapCheck4::
+	if(队伍("人数") < 2)then
+		goto createTeam
+	end
+	mapNum=取当前地图编号()
+	if(mapNum == 24039)then goto map24039	
+	elseif(mapNum == 24040)then goto map24040	
+	elseif(mapNum == 24041)then goto map24041	
+	elseif(mapNum == 24042)then goto map24042	
+	elseif(mapNum == 24043)then goto map24043	
+	elseif(mapNum == 24044)then goto map24044	
+	elseif(mapNum == 24045)then goto map24045	
+	elseif(mapNum == 24046)then goto map24046	
+	elseif(mapNum == 24047)then goto map24047	
+	elseif(mapNum == 24048)then goto map24048	
+	end
+	goto begin
 ::four::
 ::map24039::
 	等待到指定地图("诅咒的迷宫 地下31楼")
 	移动(24, 13)
+::map24040::
 	等待到指定地图("诅咒的迷宫 地下32楼")	
 	移动(15, 12)
+::map24041::
 	等待到指定地图("诅咒的迷宫 地下33楼", 1)
 	移动(24, 12)
+::map24042::
 	等待到指定地图("诅咒的迷宫 地下34楼", 1)
 	移动(23, 4)
 	等待到指定地图("诅咒的迷宫 地下33楼", 1)
 	移动(6, 13)
 	等待到指定地图("诅咒的迷宫 地下34楼", 1)
 	移动(9, 21)
+::map24043::
 	等待到指定地图("诅咒的迷宫 地下35楼", 1)
 	移动(6, 13)
+::map24044::
 	等待到指定地图("诅咒的迷宫 地下36楼", 1)
 	移动(9, 21)
+::map24045::
 	等待到指定地图("诅咒的迷宫 地下37楼", 1)
 	移动(24, 21)
+::map24046::
 	等待到指定地图("诅咒的迷宫 地下38楼", 1)
 	移动(8, 21)
+::map24047::
 	等待到指定地图("诅咒的迷宫 地下39楼", 1)
 	移动(23, 25)
+::map24048::
 	等待到指定地图("第四个难关", 1)        
 	移动(19, 18)
 	等待(2000)
@@ -634,24 +663,50 @@ end
 ::map24072::			
 	移动(29,26)	
 	goto begin
+	
+::mapCheck5::
+	if(队伍("人数") < 2)then
+		goto createTeam
+	end
+	mapNum=取当前地图编号()
+	if(mapNum == 24049)then goto map24049	
+	elseif(mapNum == 24050)then goto map24050	
+	elseif(mapNum == 24051)then goto map24051	
+	elseif(mapNum == 24052)then goto map24052	
+	elseif(mapNum == 24053)then goto map24053	
+	elseif(mapNum == 24054)then goto map24054	
+	elseif(mapNum == 24055)then goto map24055	
+	elseif(mapNum == 24056)then goto map24056	
+	elseif(mapNum == 24057)then goto map24057	
+	elseif(mapNum == 24058)then goto map24058	
+	end
+	goto begin
 ::five::
 ::map24049::
 	等待到指定地图("诅咒的迷宫 地下41楼")	
 	移动(8, 18)
+::map24050::
 	等待到指定地图("诅咒的迷宫 地下42楼")
 	移动(24, 21)
+::map24051::
 	等待到指定地图("诅咒的迷宫 地下43楼")	
 	移动(23, 4)
+::map24052::
 	等待到指定地图("诅咒的迷宫 地下44楼")
 	移动(24, 21)
+::map24053::
 	等待到指定地图("诅咒的迷宫 地下45楼")
 	移动(26, 9)
+::map24054::
 	等待到指定地图("诅咒的迷宫 地下46楼")
 	移动(9, 2)
+::map24055::
 	等待到指定地图("诅咒的迷宫 地下47楼")
 	移动(22, 3)
+::map24056::
 	等待到指定地图("诅咒的迷宫 地下48楼")
 	移动(17, 12)
+::map24057::
 	等待到指定地图("诅咒的迷宫 地下49楼")
 	移动(9, 2)
 ::map24058::
@@ -672,9 +727,8 @@ end
 		if(目标是否可达(24,4))then
 			移动(24,4)
 		else			
-			移动(22, 15)
-			转向(0)
-			对话选择(4,0)
+			移动(22, 15)		
+			对话选是(0)
 		end 	
 	end
 	等待(1000)
@@ -683,51 +737,103 @@ end
 	移动(24,4)
 	goto begin
 
+::mapCheck6::
+	if(队伍("人数") < 2)then
+		goto createTeam
+	end
+	mapNum=取当前地图编号()
+	if(mapNum == 24059)then goto map24059	
+	elseif(mapNum == 24060)then goto map24060	
+	elseif(mapNum == 24061)then goto map24061	
+	elseif(mapNum == 24062)then goto map24062	
+	elseif(mapNum == 24063)then goto map24063	
+	elseif(mapNum == 24064)then goto map24064	
+	elseif(mapNum == 24065)then goto map24065	
+	elseif(mapNum == 24066)then goto map24066	
+	elseif(mapNum == 24067)then goto map24067	
+	elseif(mapNum == 24068)then goto map24068	
+	elseif(mapNum == 24074)then goto map24074	
+	end
+	goto begin
+::map24059::
 ::six::
-	等待到指定地图("诅咒的迷宫 地下51楼", 1)
+	等待到指定地图("诅咒的迷宫 地下51楼")
 	移动(25, 23)
-	等待到指定地图("诅咒的迷宫 地下52楼", 1)
+::map24060::
+	等待到指定地图("诅咒的迷宫 地下52楼")
 	移动(23, 4)
-	等待到指定地图("诅咒的迷宫 地下53楼", 1)
-	移动(25, 23)
-	等待到指定地图("诅咒的迷宫 地下54楼", 1)
-	移动(23, 4)
-	等待到指定地图("诅咒的迷宫 地下55楼", 1)
-	移动(19, 17)
-	等待到指定地图("诅咒的迷宫 地下54楼", 19, 17)
-	移动(13, 14)
-	等待到指定地图("诅咒的迷宫 地下53楼", 13, 14)	
-	移动(15, 5)
-	等待到指定地图("诅咒的迷宫 地下54楼", 15, 5)
-	移动(15, 11)
-	等待到指定地图("诅咒的迷宫 地下55楼", 15, 11)
-	移动(15, 8)
+::map24061::			--诅咒的迷宫 地下53楼
+	if(目标是否可达(25, 23))then
+		移动(25, 23)
+	end
+	if(目标是否可达(15, 5))then
+		移动(15, 5)
+	end
+	goto mapCheck6
+	
+::map24062::	--诅咒的迷宫 地下54楼	
+	if(目标是否可达(23, 4))then
+		移动(23, 4)
+	end
+	if(目标是否可达(13, 14))then
+		移动(13, 14)
+	end	
+	if(目标是否可达(15, 11))then
+		移动(15, 11)
+	end
+	goto mapCheck6
+	
+::map24063::		--诅咒的迷宫 地下55楼
+	if(目标是否可达(19, 17))then
+		移动(19, 17)
+	end	
+	if(目标是否可达(15, 8))then
+		移动(15, 8)
+	end
+	goto mapCheck6	
+::map24064::
 	等待到指定地图("诅咒的迷宫 地下56楼", 15, 8)
 	移动(25, 12)
-	等待到指定地图("诅咒的迷宫 地下57楼", 1)
-	移动(23, 3)
-	等待到指定地图("诅咒的迷宫 地下58楼", 1)
-	移动(18, 25)
-	等待到指定地图("诅咒的迷宫 地下57楼", 1)
-	移动(13, 15)
-	等待到指定地图("诅咒的迷宫 地下58楼", 1)
-	移动(20, 15)
-	等待到指定地图("诅咒的迷宫 地下59楼", 1)	
+	goto mapCheck6	
+::map24065::
+	等待到指定地图("诅咒的迷宫 地下57楼")	
+	if(目标是否可达(23, 3))then
+		移动(23, 3)
+	end	
+	if(目标是否可达(13, 15))then
+		移动(13, 15)
+	end
+	goto mapCheck6	
+::map24066::
+	等待到指定地图("诅咒的迷宫 地下58楼")	
+	if(目标是否可达(18, 25))then
+		移动(18, 25)
+	end	
+	if(目标是否可达(20, 15))then
+		移动(20, 15)
+	end
+	goto mapCheck6	
+::map24067::
+	等待到指定地图("诅咒的迷宫 地下59楼")	
 	移动(8, 13)
-	等待到指定地图("第六个难关", 1)        
-	等待(2000)
+	goto mapCheck6	
+::map24068::
+	等待到指定地图("第六个难关")      	
 	移动(19, 18)
-	等待(2000)
+	日志("打Boss了哦",1)
 	移动(23,19)
 	转向(2)
 	等待(5000)
-	等待战斗结束()
-	
+	if(是否战斗中())then
+		等待战斗结束()
+	end
+	goto mapCheck6	
 ::map24074::	--boss结束
 	if(isTeamLeader)then 
 		移动(20,13)
 		移动(22,13)
 		移动(20,13)
+		对话选是(21,12)
 	else
 		对话选是(21,12)
 	end
