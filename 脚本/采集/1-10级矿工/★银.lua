@@ -106,10 +106,18 @@ function main()
 	goto begin   
 
 ::map100::		
-	if(取物品数量("矿山钥匙") < 1)then
+	if(取物品数量("矿山钥匙") < 1)then	--南门 
+		if(目标是否可达(473,316)==false)then
+			回城()
+			goto begin
+		end
 		移动(473, 316)	
 		对话选是(472,316)		
-	else
+	else								--西门 
+		if(目标是否可达(351, 145)==false)then
+			回城()
+			goto begin
+		end
 		移动(351, 145,11013)	
 	end
 	goto begin   

@@ -49,7 +49,7 @@ end
 if(队长名称==nil or 队长名称=="")then
 	队长名称=用户输入框("请输入队伍名称！","乱￠逍遥")--风依旧￠花依然  乱￠逍遥
 end
-
+日志("队长名称："..队长名称,1)
 
 isTeamLeader=false		--是否队长
 if(人物("名称") == 队长名称)then
@@ -257,8 +257,31 @@ end
 	移动(7,3,4320)	
 	goto begin
 	
-
-	
+::createTeam::
+	if(isTeamLeader)then
+		if(队伍("人数") < 队伍人数)then	--数量不足 等待
+			common.makeTeam(队伍人数)	
+		else		      
+			goto begin
+		end			
+	else
+		等待(2000)
+		if(取队伍人数() > 1)then
+			if(common.judgeTeamLeader(队长名称)==true) then
+				if(sw.teammateAction()==1)then
+					return
+				end
+			else
+				离开队伍()
+			end				
+		end			
+		等待(2000)
+		common.joinTeam(队长名称)
+		if(sw.teammateAction()==1)then
+			return
+		end
+	end  
+	goto begin
 ::map402::	
 	if(取当前地图名() ~= "莎莲娜")then
 		goto begin
@@ -297,6 +320,9 @@ end
 	end  
 	goto begin
 ::mapCheck1::
+	if(队伍("人数") < 2)then
+		goto createTeam
+	end
 	mapNum=取当前地图编号()
 	if(mapNum == 24009)then goto map24009	
 	elseif(mapNum == 24010)then goto map24010	
@@ -357,6 +383,9 @@ end
 	
 
 ::mapCheck2::
+	if(队伍("人数") < 2)then
+		goto createTeam
+	end
 	mapNum=取当前地图编号()
 	if(mapNum == 24019)then goto map24019	
 	elseif(mapNum == 24020)then goto map24020	
@@ -445,6 +474,9 @@ end
 
 
 ::mapCheck3::
+	if(队伍("人数") < 2)then
+		goto createTeam
+	end
 	mapNum=取当前地图编号()
 	if(mapNum == 24029)then goto map24029	
 	elseif(mapNum == 24030)then goto map24030	
@@ -606,16 +638,12 @@ end
 ::map24049::
 	等待到指定地图("诅咒的迷宫 地下41楼")	
 	移动(8, 18)
-
 	等待到指定地图("诅咒的迷宫 地下42楼")
 	移动(24, 21)
-
 	等待到指定地图("诅咒的迷宫 地下43楼")	
 	移动(23, 4)
-
 	等待到指定地图("诅咒的迷宫 地下44楼")
 	移动(24, 21)
-
 	等待到指定地图("诅咒的迷宫 地下45楼")
 	移动(26, 9)
 	等待到指定地图("诅咒的迷宫 地下46楼")

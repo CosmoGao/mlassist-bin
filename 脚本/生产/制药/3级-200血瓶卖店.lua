@@ -1,4 +1,4 @@
-
+3级血卖店，需要16个空格最少
  
 common=require("common")
 
@@ -8,11 +8,13 @@ common=require("common")
 设置("高速战斗",1)  
 设置("自动战斗",1)  
 设置("遇敌全跑",1)  
-设置("自动叠",1,"生命力回复药（100）&3")
+设置("自动叠",1,"生命力回复药（200）&3")
 设置("自动叠",1,"苹果薄荷&40")
 设置("自动叠",1,"柠檬草&40")
-苹果薄荷数量=400
-柠檬草数量=40
+设置("自动叠",1,"蝴蝶花&40")
+苹果薄荷数量=240
+柠檬草数量=240
+蝴蝶花数量=120
 function 采集苹果薄荷()
 	while true do
 		if(取包裹空格() < 1)then break end	-- 包满回城
@@ -35,18 +37,32 @@ function 采集柠檬草()
 	end 
 	扔叠加物("柠檬草",40)
 end
+function 采集蝴蝶花()
+	while true do
+		if(取包裹空格() < 1)then break end	-- 包满回城
+		if(取物品叠加数量('蝴蝶花')>= 蝴蝶花数量)then break end	
+		if(人物("魔") <  1)then break end	-- 魔无回城
+		if(取当前地图名() ~= "芙蕾雅")then break end	--地图切换 也返回
+		工作("伐木","",6500)	--技能名 物品名 延时时间
+		等待工作返回(6500)
+	end 
+	扔叠加物("蝴蝶花",40)
+end
 
 function main()
-
+	local fmlv = common.playerSkillLv("伐木")
+	if(fmlv < 3)then
+		日志("3级200血，需要3级伐木技能，伐木3级需要1转，脚本退出",1)
+		return
+	end
 ::begin::
 	等待空闲()
 	mapName=取当前地图名()
 	if(mapName=="芙蕾雅")then			--加在这，主要是随时启动脚本原地复原
 		goto 去采集材料
 	end
-	if(取物品叠加数量("生命力回复药（100）") >= 3)then
-		--扔叠加物("生命力回复药（100）",3)
-		common.sellCastle("生命力回复药（100）")		--默认卖
+	if(取物品叠加数量("生命力回复药（200）") >= 3)then
+		common.sellCastle("生命力回复药（200）")		--默认卖
 	end
 	common.supplyCastle()
 	common.checkHealth()
@@ -68,19 +84,25 @@ function main()
 		采集柠檬草()
 		goto begin
 	end
+	if(取物品叠加数量('蝴蝶花')< 蝴蝶花数量)then					
+		移动(503,118)
+		采集蝴蝶花()
+		goto begin
+	end
 	common.supplyCastle()
 ::work::
-	合成("生命力回复药（100）")	
+	合成("生命力回复药（200）")	
 	if(取包裹空格() < 1) then goto  pause end			
 	if(取物品叠加数量( "苹果薄荷") < 10 )then goto begin end			
-	if(人物("魔") <  16) then 
+	if(人物("魔") <  50) then 
 		common.supplyCastle() 		
 	end
 	goto work 
 ::pause::	
-	叠("生命力回复药（100）", 3)	
+	叠("生命力回复药（200）", 3)	
 	叠("苹果薄荷", 40)
 	叠("柠檬草", 40)	
+	叠("蝴蝶花", 40)	
 	goto work 
 end
 main()

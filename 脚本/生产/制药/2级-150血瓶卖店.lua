@@ -8,11 +8,12 @@ common=require("common")
 设置("高速战斗",1)  
 设置("自动战斗",1)  
 设置("遇敌全跑",1)  
-设置("自动叠",1,"生命力回复药（100）&3")
+设置("自动叠",1,"生命力回复药（150）&3")
 设置("自动叠",1,"苹果薄荷&40")
 设置("自动叠",1,"柠檬草&40")
-苹果薄荷数量=400
-柠檬草数量=40
+苹果薄荷数量=320
+柠檬草数量=320
+
 function 采集苹果薄荷()
 	while true do
 		if(取包裹空格() < 1)then break end	-- 包满回城
@@ -44,9 +45,9 @@ function main()
 	if(mapName=="芙蕾雅")then			--加在这，主要是随时启动脚本原地复原
 		goto 去采集材料
 	end
-	if(取物品叠加数量("生命力回复药（100）") >= 3)then
+	if(取物品叠加数量("生命力回复药（150）") >= 3)then
 		--扔叠加物("生命力回复药（100）",3)
-		common.sellCastle("生命力回复药（100）")		--默认卖
+		common.sellCastle("生命力回复药（150）")		--默认卖
 	end
 	common.supplyCastle()
 	common.checkHealth()
@@ -70,7 +71,7 @@ function main()
 	end
 	common.supplyCastle()
 ::work::
-	合成("生命力回复药（100）")	
+	合成("生命力回复药（150）")	
 	if(取包裹空格() < 1) then goto  pause end			
 	if(取物品叠加数量( "苹果薄荷") < 10 )then goto begin end			
 	if(人物("魔") <  16) then 
@@ -78,7 +79,7 @@ function main()
 	end
 	goto work 
 ::pause::	
-	叠("生命力回复药（100）", 3)	
+	叠("生命力回复药（150）", 3)	
 	叠("苹果薄荷", 40)
 	叠("柠檬草", 40)	
 	goto work 
