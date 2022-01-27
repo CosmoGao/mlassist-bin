@@ -62,6 +62,7 @@ function main()
 		goto 去采集材料
 	end
 	if(取物品叠加数量("生命力回复药（200）") >= 3)then
+		扔叠加物("生命力回复药（200）",3)
 		common.sellCastle("生命力回复药（200）")		--默认卖
 	end
 	common.supplyCastle()

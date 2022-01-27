@@ -2,8 +2,8 @@
 
 common=require("common")
 
-::menu::
---	设置("timer", 100)						-- 设置定时器，单位毫秒
+
+	设置("timer", 100)						-- 设置定时器，单位毫秒
 						-- 设置定时器，单位毫秒
 
 --	设置("自动战斗", 1)                     -- 开启自动战斗，0不自动战斗，1自动战斗
@@ -15,8 +15,18 @@ common=require("common")
 	宠补血值=用户输入框( "宠多少血以下去补给", "400")
 	宠补魔值=用户输入框( "宠多少魔以下去补给", "50")
 
-技能名称="强力恢复魔法"
+技能名称=""
+指定技能等级切换=10
 
+
+function 获取人物技能名称列表()
+	local skills={}
+	local playerData = 人物信息()
+	for i,skill in ipairs(playerData.skill) do
+		table.insert(skills,skill.name)
+	end
+	return skills
+end
 function 技能等级()
 	local playerData = 人物信息()
 	for i,skill in ipairs(playerData.skill) do
@@ -46,6 +56,15 @@ function 拿钱()
 	goto begin
 end
 
+function main()
+	是否切换下个技能=用户下拉框("是否自动切换下个技能",{"是","否"})
+	if(是否切换下个技能=="是")then
+		技能名称=用户下拉框("练技能的名称",获取人物技能名称列表())--	"强力恢复魔法"
+		指定技能等级切换=用户输入框( "指定技能等级切换下一个配置\n(达到技能，切换下一个烧技能配置)", "10")
+		下个烧技能配置=用户输入框( "下个烧技能配置\n(达到技能，切换下一个烧技能配置)", "配置/96练技能气绝回复.save")
+		日志(指定技能等级切换,1)
+		日志(下个烧技能配置,1)
+	end
 ::kaishi::
 	common.checkHealth()
 	common.supplyCastle()
@@ -132,8 +151,11 @@ end
 		common.getMoneyFromBank(300000)		
 	end
 	common.checkHealth()	
-	if(技能等级() >= 10)then
-		读取配置("配置/96练技能气绝回复.save")
+	if(是否切换下个技能=="是")then
+		if(技能等级() >= 指定技能等级切换)then
+			--读取配置("配置/96练技能气绝回复.save")
+			读取配置(下个烧技能配置)
+		end
 	end
 	goto saite 
 ::saite1::	
@@ -147,3 +169,5 @@ end
 	等待到指定地图("雪拉威森塔９６层")
 	移动(30,101)
 	goto yd 
+end
+main()
