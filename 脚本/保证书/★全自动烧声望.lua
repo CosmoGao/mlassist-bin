@@ -22,25 +22,60 @@ common=require("common")
 不达标多刷金币倍数=1
 任务步骤=1
 是否缓存任务中=false  --缓存保证书任务中途-天亮 中断用
-刷称号阶段=用户输入框("输入‘1’从（现称号）开始刷，\n"..
-    "输入‘2’从当前进行转职并开始刷，\n","1")	
+刷称号阶段=用户下拉框("选择‘1’从（现称号）开始刷，\n"..
+    "选择‘2’从当前进行转职并开始刷，\n"..
+    "选择‘3’从指定称号开始刷，\n"
+	,{"1","2","3"})	
+指定初始称号列表={ "恶人",
+			"忌讳的人",
+			"受挫折的人",
+			"无名的旅人",
+			"路旁的落叶",
+			"水面上的小草",
+			"呢喃的歌声",
+			"地上的月影",
+			"奔跑的春风",
+			"苍之风云",
+			"摇曳的金星",
+			"欢喜的慈雨",
+			"蕴含的太阳",
+			"敬畏的寂静",
+			"无尽星空",
+			"迈步前进者",
+			"追求技巧的人",
+			"刻于新月之铭",
+			"掌上的明珠",
+			"敬虔的技巧",
+			"踏入神的领域",
+			"贤者",
+			"神匠",
+			"摘星的技巧",
+			"万物创造者",
+			"持石之贤者" }
 
-
+target={}
 function 统计消耗(beginTime)	
 	local nowTime = os.time() 
 	local time = math.floor((nowTime - beginTime)/60)--已持续时间
 	if(time == 0)then
 		time=1
 	end	
-	刷声望回补总计 = 刷声望回补总计+1
-	local usedGold = 刷声望前金币 - 人物("金币")
+	刷声望回补总计 = 刷声望回补总计+1	
+	local nowGold=人物("金币")
+	if(nowGold == nil or nowGold <= 0)then
+		日志("获取金币失败"..nowGold)
+	end
+	local usedGold = 刷声望前金币 - nowGold
 	日志("第【"..刷声望回补总计.."】轮回补,已持续【"..time.."】分钟，总计消耗【"..usedGold.."】金币")
 end
 
 --通过金币判断 再去阿蒙和医院那二次确认
 function 判断称号()
 	if(目标称号数据 == nil) then return false end
-	
+	local nowGold=人物("金币")
+	if(nowGold == nil or nowGold <= 0)then
+		return false
+	end
 	local usedGold = (刷声望前金币 - 人物("金币"))
 	if(usedGold >= 目标称号数据.gold) then
 		日志("已消耗:"..usedGold.." 金币，达到下级声望所需金币，去领取称号")
@@ -200,32 +235,15 @@ function 开始找人()
 	if(string.find(取当前地图名(),"海底墓场外苑")==nil)then --错误 返回
 		return false
 	end
-	下载地图()
-	x,y=取当前坐标()	
-	nx,ny=取迷宫远近坐标()--默认拿离自己最远坐标 
-	if(x==nx and y == ny)then	--地图错误 重新下载地图
-		goto beFind
-	end
-	target=查周围信息("守墓员",1)
-	if(target ~= nil) then	--找到目标
+	找到,target.x,target.y,nextX,nextY=搜索地图("守墓员",1)
+	if(找到) then		
+		移动到目标附近(target.x,target.y)
 		对战长老(target)
-	end
+	end	
 	if(取物品叠加数量("长老之证")>=7) then
 		return 
-	end
-	searchMazePath = 取搜索路径(nx,ny)
-	for k,v in pairs(searchMazePath) do
-        移动(v.x,v.y)
-		target=查周围信息("守墓员",1)
-		if (target ~= nil) then --找到目标
-			对战长老(target)
-			if(取物品叠加数量("长老之证")>=7) then
-				return 
-			end		
-			设置("遇敌全跑",1)
-		end				
-	end
-	移动(nx,ny)	--下一层
+	end	
+	移动(nextX,nextY)	--下一层
 	等待(2000)
 	goto beFind
 end
@@ -1018,6 +1036,33 @@ function main()
 			日志("获取称号数据错误，退出",1)
 		end
 		去转职()			
+	elseif(刷称号阶段 == 3)then	
+		日志("当前选择从指定称号开始刷（重启脚本时专用）")
+		指定初始称号 =用户下拉框("指定初始称号刷",指定初始称号列表)	
+		if(指定初始称号==nil or 指定初始称号=="")then
+			指定初始称号 = 人物("称号")
+		end		
+		刷之前声望进度=0	
+		刷声望前时间=os.time() 
+		刷声望回补总计=0
+		刷声望前金币=人物("金币")
+		目标称号数据=下级称号数据(指定初始称号,刷之前声望进度)
+		if(目标称号数据 ~= nil) then		
+			目标称号数据.gold = 目标称号数据.gold*不达标多刷金币倍数
+			if(目标称号数据.gold > 400000)then
+				日志("计算下级消耗金币数量错误，请查看",1)
+				return 2
+			end
+			日志("下级称号数据 金币："..目标称号数据.gold.." 下级称号:"..目标称号数据.title.." 分钟:"..目标称号数据.time.." 等级:"..目标称号数据.grade.." 需要次数:"..目标称号数据.count)		
+			if(人物("金币") < 目标称号数据.gold) then
+				日志("人物金币不够刷到下个称号，去银行取钱，当前金币【"..人物("金币").."】")
+				common.getMoneyFromBank(目标称号数据.gold)
+			end
+			if(人物("金币") < 目标称号数据.gold) then
+				日志("人物金币不够刷到下个称号，银行也没有钱了，退出")	
+				return -1
+			end
+		end		
 	end	
 	根据职业加载配置()
 ::begin::
@@ -1071,6 +1116,8 @@ function main()
 	goto scriptStart 
 ::buxue::
 	停止遇敌()          -- 结束战斗		
+	等待(5000)
+	等待空闲()
 	统计消耗(刷声望前时间)
 	if(判断称号() == true) then --金币消耗达标 转职 声望达标 切换下一级
 		二次判断=称号提交二次判断() 

@@ -1724,7 +1724,7 @@ function common.outCastle(dir)
 	if(dir=="e")then
 		移动(65,53)
 	elseif(dir == "s")then
-		移动(41,97)
+		移动(41,98)
 	elseif(dir == "w")then
 		移动(17,53)
 	elseif(dir == "n")then

@@ -13,6 +13,14 @@ common=require("common")
 crystalName="水火的水晶（5：5）"
 sealCardName="封印卡（人形系）"
 sealCardCount=40
+
+topicList={"烈风哥布林仓库名称","烈风哥布林仓库空格","烈风哥布林仓库几线"}
+订阅消息(topicList)
+抓宠线=人物("几线")
+tradeName=nil				--仓库人物名称
+tradeBagSpace=nil			--仓库人物宠物空格
+tradePlayerLine=nil			--仓库人物当前线路
+
 function FindMaze()
 	local units = 取周围信息()
 	if( units ~= nil) then
@@ -153,6 +161,95 @@ function FindNpc()
 	--还没刷新出来 重新到找人环节
 	goto  开始找人
 end
+
+function waitTopic()
+	if(抓宠线==nil)then 抓宠线=人物("几线") end
+::begin::
+	等待空闲()
+	tryNum=0
+	if(取当前地图名()~= "银行")then
+		common.gotoFalanBankTalkNpc()
+		tradeName=nil
+		tradeBagSpace=nil
+		tradePlayerLine=nil
+	end
+	设置("timer",0)
+	topic,msg=等待订阅消息()
+	日志(topic.." Msg:"..msg,1)
+	if(topic == "烈风哥布林仓库名称")then
+		tradeName=msg
+	end
+	if(topic == "烈风哥布林仓库空格")then
+		tradeBagSpace=tonumber(msg)
+	end
+	if(topic == "烈风哥布林仓库几线")then
+		tradePlayerLine=tonumber(msg)
+		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+			切换登录信息("","",tradePlayerLine,"")
+			登出服务器()
+			等待(3000)			
+			goto begin
+		end
+	end
+	if(tradeName ~= nil and tradeBagSpace ~= nil and tradePlayerLine==人物("几线"))then	
+		while tryNum<3 do
+			tradex=nil
+			tradey=nil
+			units = 取周围信息()
+			if(units ~= nil)then
+				for i,u in pairs(units) do
+					if(u.unit_name==tradeName)then
+						tradex=u.x
+						tradey=u.y
+						break
+					end
+				end
+			else
+				goto begin
+			end
+			if(tradex ~=nil and tradey ~= nil)then
+				移动到目标附近(tradex,tradey)
+			else
+				goto begin
+			end
+			转向坐标(tradex,tradey)				
+			pets = 全部宠物信息()
+			tradeList="金币:2000;宠物:"
+			hasData=false
+			selfTradeCount=0
+			for i,v in pairs(pets) do
+				if(v.realname == "烈风哥布林" and v.level==1)then					
+					if(selfTradeCount >= tradeBagSpace)then
+						break
+					end		
+					selfTradeCount=selfTradeCount+1
+					hasData=true				
+				end
+			end	
+			tradeList = tradeList.."烈风哥布林|"..selfTradeCount
+			--金币:2000;物品:设计图？|0|1|誓约之花|0|1|
+			--string.sub(tradeList,1,string.len(tradeList)-1)
+			
+			日志(tradeList)
+			if(hasData)then
+				交易(tradeName,tradeList,"",10000)
+			else	
+				设置("timer",100)
+				回城()
+				goto checkLine
+			end
+			tryNum=tryNum+1
+		end
+	end
+	goto begin
+::checkLine::
+	if(人物("几线")~=抓宠线)then
+		切换登录信息("","",抓宠线,"")
+		登出服务器()
+		等待(3000)
+		return
+	end
+end
 function main()
 ::HomePos::	
 	停止遇敌()				-- 结束战斗	
@@ -162,7 +259,11 @@ function main()
 		common.depositNoBattlePetToBank()
 		if (人物("宠物数量") >= 5 )then	
 			日志("银行宠物也满啦！请先清理，再重新执行脚本！")
-			return
+			common.gotoFalanBankTalkNpc()
+			tradeName=nil
+			tradeBagSpace=nil
+			waitTopic()
+			goto HomePos
 		end
 	end
 	当前地图名 = 取当前地图名()
@@ -181,6 +282,8 @@ function main()
 	end
 	等待(1000)
 	回城()
+	common.supplyCastle()
+	common.checkHealth()	
 	goto HomePos
 ::start::		
 	等待到指定地图("艾尔莎岛", 1)    

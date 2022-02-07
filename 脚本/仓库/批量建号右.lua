@@ -7,9 +7,11 @@
 --切换游戏账号部分
 function tableSize(data)
 	count = 0  
+	设置("timer",0)
 	for k,v in pairs(data) do  
 		count = count + 1  
 	end  
+	设置("timer",100)
 	return count
 end
 function 等待游戏窗口()

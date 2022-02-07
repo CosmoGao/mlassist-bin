@@ -31,9 +31,18 @@ end
 卖店物品列表="魔石|卡片？|锹型虫的卡片|狮鹫兽的卡片|水蜘蛛的卡片|虎头蜂的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
 	--可以增加多个 不影响速度
 水晶名称="水火的水晶（5：5）"
+是否自动购买水晶=0
 满金币存银行数=950000	--95万存银行
 身上最少金币数=1000	--身上最少5万  判断会用这个判断 取得话 会用这个的2倍取 防止来回判断
 多少金币去拿钱=10000	--1w
+扔物品列表={'时间的碎片','时间的结晶','绿头盔','红头盔','秘文之皮','星之砂','奇香木','巨石','龙角','坚硬的鳞片','传说的鹿皮','碎石头'}
+设置("自动叠",1, "时间的结晶&20")	
+设置("自动叠",1, "时间的碎片&20")	
+for i,v in pairs(扔物品列表) do
+	设置("自动扔",1, v)	
+end
+
+
 
 喊话(队长名称,2,3,5)
 医生名称={"星落护士","谢谢惠顾☆"}
@@ -174,7 +183,7 @@ function 布拉基姆高地练级(目标等级,练级地名称)
 	common.supplyCastle()
 	common.sellCastle()		--默认卖
 	common.checkHealth(医生名称)
-	common.checkCrystal(水晶名称)	
+	if(是否自动购买水晶==1)then common.checkCrystal(水晶名称) end 
 	if(取当前地图名() ~= "艾尔莎岛")then
 		回城()
 		等待(1000)		
@@ -352,7 +361,7 @@ function 雪塔练级(目标等级)
 	等待空闲()
 	common.changeLineFollowLeader(队长名称)
 	common.checkHealth(医生名称)
-	common.checkCrystal(水晶名称)	
+	if(是否自动购买水晶==1)then common.checkCrystal(水晶名称) end	
 	local 当前地图名 = 取当前地图名()	
 	local leaderSetLv=getLeaderSetLv()
 	if(leaderSetLv ~= nil and leaderSetLv ~= 目标等级) then
@@ -484,6 +493,7 @@ function 回廊练级(目标等级)
 	if(取队伍人数() < 2)then
 		goto ting
 	end
+	if(checkCharisma())then goto begin end	--检查魅力
 	common.checkHealth(医生名称)	
 	等待(2000)	
 	goto yudi  
@@ -642,7 +652,7 @@ function 营地练级(目标等级,练级地名称)
 ::quYingDi::
 	设置("移动速度",走路加速值)
 	common.checkHealth(医生名称)
-	common.checkCrystal(水晶名称)
+	if(是否自动购买水晶==1)then common.checkCrystal(水晶名称) end
 	common.supplyCastle()
 	common.去营地()
 	设置("移动速度",走路还原值)
@@ -820,7 +830,7 @@ function 矮人练级(目标等级,练级地名称)
 ::quYingDi::
 	设置("移动速度",走路加速值)
 	common.checkHealth(医生名称)
-	common.checkCrystal(水晶名称)
+	if(是否自动购买水晶==1)then common.checkCrystal(水晶名称) end
 	common.去营地()
 	设置("移动速度",走路还原值)
 	goto begin
@@ -952,7 +962,7 @@ function 旧日练级(目标等级)
 	common.supplyCastle()
 	common.sellCastle()		--默认卖
 	common.checkHealth(医生名称)
-	common.checkCrystal(水晶名称)
+	if(是否自动购买水晶==1)then common.checkCrystal(水晶名称) end
 	common.去营地()
 	设置("移动速度",走路还原值)
 	goto begin
@@ -1094,7 +1104,7 @@ function 半山练级(目标等级)
 	common.supplyCastle()
 	common.sellCastle()		--默认卖
 	common.checkHealth(医生名称)
-	common.checkCrystal(水晶名称)
+	if(是否自动购买水晶==1)then common.checkCrystal(水晶名称) end
 	if(半山西门)then
 		goto falanw
 	else
@@ -1216,7 +1226,7 @@ end
 function checkCharisma()
 	if(是否有完美调教)then return end
 	if(人物("魅力") < 60 and 宠物("忠诚") < 60)then
-		if(人物("金币") > 400000)then	--40w 金币 去买魅力
+		if(人物("金币") > 200000)then	--40w 金币 去买魅力
 			执行脚本("./脚本/其他/★花钱买魅力.lua")
 			return true
 		end
@@ -1265,8 +1275,8 @@ function main()
 				营地练级(115,"黑一")
 			elseif(avgLevel == 135)then		--龙顶 或 旧日 
 				旧日练级(135)
-			elseif(avgLevel == 160)then		--龙顶		
-				营地练级(160,"龙顶")
+			-- elseif(avgLevel == 160)then		--龙顶		
+				-- 营地练级(160,"龙顶")
 			elseif(avgLevel == 160)then		--半山		
 				半山练级(160)
 			elseif(avgLevel >= 160)then	

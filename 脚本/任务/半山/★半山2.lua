@@ -4,7 +4,7 @@
 if(队长名称==nil or 队长名称=="")then
 	队长名称=用户输入框("请输入队伍名称！","风依旧￠花依然")--风依旧￠花依然  乱￠逍遥
 end
-
+日志("队长名称:"..队长名称,1)
 isTeamLeader=false		--是否队长
 if(人物("名称") == 队长名称)then
 	isTeamLeader=true

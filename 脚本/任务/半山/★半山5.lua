@@ -15,6 +15,7 @@ common=require("common")
 	--营地任务()
 	if (string.find(当前地图名,"通往山顶的路")~= nil )then goto crossMaze
 	elseif (当前地图名 =="艾尔莎岛" )then goto toIsland
+	elseif (当前地图名 =="半山腰" )then goto crossMaze
 	elseif(当前地图名 ==  "里谢里雅堡")then goto toIsland 
 	elseif(当前地图名 ==  "法兰城")then goto toIsland 	
 	elseif(当前地图名 ==  "小岛")then goto island
@@ -55,6 +56,8 @@ common=require("common")
 	自动穿越迷宫("圣鸟之巢")
 	if(取当前地图名()=="圣鸟之巢")then
 		goto birdnest
+	elseif(取当前地图名()=="半山腰")then
+		移动(78,52)
 	end
 	等待(1000)
 	goto crossMaze

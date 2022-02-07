@@ -224,6 +224,7 @@ function battle()
 		if(人物("魔") < 补魔值)then break end
 		if(宠物("血") < 宠补血值)then break end
 		if(宠物("魔") < 宠补魔值)then break end
+		if(取当前地图名() ~= "库鲁克斯岛")then break end
 		if(取包裹空格() < 1)then break end
 		if( 人物("健康") > 0 or 人物("灵魂") > 0 or 宠物("健康") > 0)then break end
 		if(是否战斗中()) then 等待战斗结束() end		
