@@ -282,8 +282,6 @@ function main()
 	end
 	等待(1000)
 	回城()
-	common.supplyCastle()
-	common.checkHealth()	
 	goto HomePos
 ::start::		
 	等待到指定地图("艾尔莎岛", 1)    
@@ -291,9 +289,9 @@ function main()
 	转向(1)		-- 转向北
 	等待服务器返回()	
 	对话选择(4, 0)
-	等待到指定地图("里谢里雅堡", 1)	
-	移动(34,89)
-	renew(1)			-- 转向北边恢复人宠血魔	
+	等待到指定地图("里谢里雅堡", 1)		
+	common.checkHealth()	
+	common.supplyCastle()
     移动(41, 53)
 	if(取物品叠加数量(sealCardName) < sealCardCount)then 
 		goto maika
@@ -397,6 +395,7 @@ function main()
 ::salebegin::
 	停止遇敌()				-- 结束战斗	
 	等待(3000)
+	回城()
 	goto start
 ::checkcrystalnow::
 	if(取物品数量(crystalName) < 1  )then
