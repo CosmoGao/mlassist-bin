@@ -233,7 +233,9 @@ function main()
 	
 ::切换游戏id::
 	for k,v in pairs(游戏id列表) do  
-		登录游戏id(v)
+		if(v ~= "wzqcangku000" and v ~= "wzqcangku001" and v ~= "wzqcangku002" )then
+			登录游戏id(v)
+		end	
 	end  
 	--获取完成 退出
 	return

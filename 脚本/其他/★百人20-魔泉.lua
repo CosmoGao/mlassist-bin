@@ -38,6 +38,11 @@ common=require("common")
 设置("自动扔",1,"迷之手册")
 设置("自动扔",1,"迷之晶体")
 设置("自动扔",1,"黑暗之戒")
+预置交易物品列表={"小护士家庭号","魔力之泉","完全结晶体的紫水晶","完全结晶体的骑士宝石","完全结晶体的绿宝石","火焰鼠闪卡「B4奖」","火焰鼠闪卡「B3奖」","火焰鼠闪卡「B2奖」","火焰鼠闪卡「B1奖」","火焰鼠闪卡「A4奖」","火焰鼠闪卡「A3奖」","火焰鼠闪卡「A2奖」","火焰鼠闪卡「A1奖」","宝石鼠月亮奖","海洋之心","火焰之魂","天空之枪","帕鲁凯斯之斧","村正","鼠王"}	
+local tradeName=nil
+local tradeBagSpace=nil
+topicList={"百人道场仓库名称","百人道场仓库空格"}
+订阅消息(topicList)
 function 去打二十层()
 	tryCount=0
 ::warpErShi::
@@ -453,8 +458,79 @@ end
 	等待(2000)
 	if(取物品数量("宝石鼠金奖") > 1)then 
 		goto clearpack
-	end		
+	end	
+	if(取包裹空格() < 5)then
+		common.gotoFalanBankTalkNpc()
+		tradeName=nil
+		tradeBagSpace=nil
+		goto waitTopic		
+	end	
 	goto StartBegin
+::waitTopic::
+	if(取当前地图名()~= "银行")then
+		goto StartBegin
+	end
+	设置("timer",0)
+	topic,msg=等待订阅消息()
+	日志(topic.." Msg:"..msg,1)
+	if(topic == "百人道场仓库名称")then
+		tradeName=msg
+	end
+	if(topic == "百人道场仓库空格")then
+		tradeBagSpace=tonumber(msg)
+	end
+	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
+		tradex=nil
+		tradey=nil
+		units = 取周围信息()
+		if(units ~= nil)then
+			for i,u in pairs(units) do
+				if(u.unit_name==tradeName)then
+					tradex=u.x
+					tradey=u.y
+					break
+				end
+			end
+		else
+			goto waitTopic
+		end
+		if(tradex ~=nil and tradey ~= nil)then
+			移动到目标附近(tradex,tradey)
+		else
+			goto waitTopic
+		end
+		转向坐标(tradex,tradey)				
+		items = 物品信息()
+		tradeList="金币:2000;物品:"
+		hasData=false
+		selfTradeCount=0
+		for i,v in pairs(items) do
+			if(common.isInTable(预置交易物品列表,v.name) or
+				(v.name=="魔族的水晶" and v.count==5))then
+				if(hasData)then
+					tradeList=tradeList.."|"..v.name.."|"..v.count.."|".."1"
+				else
+					tradeList=tradeList..v.name.."|"..v.count.."|".."1"			
+				end
+				selfTradeCount=selfTradeCount+1
+				hasData=true
+				if(selfTradeCount >= tradeBagSpace)then
+					break
+				end			
+			end
+		end	
+		--金币:2000;物品:设计图？|0|1|誓约之花|0|1|
+		--string.sub(tradeList,1,string.len(tradeList)-1)
+		日志(tradeList)
+		if(hasData)then
+			交易(tradeName,tradeList,"",10000)
+		else	
+			设置("timer",100)
+			回城()
+			goto StartBegin
+		end
+	end
+	goto waitTopic
 ::clearpack::	
 	扔("宝石鼠金奖")		
 	等待(1000)	

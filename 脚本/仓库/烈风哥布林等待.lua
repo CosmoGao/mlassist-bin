@@ -127,7 +127,7 @@ function 登录游戏id(游戏id)
 	-- goto bankWait
 -- ::waitTrade::
 	if(取当前地图名() ~= "银行")then goto dengru end
-	移动(10,11)
+	移动(10,12)
 	发布消息("烈风哥布林仓库名称",人物("名称"))
 	--等待(1000)
 	发布消息("烈风哥布林仓库空格",5-common.getTableSize(全部宠物信息()))
