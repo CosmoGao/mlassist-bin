@@ -31,6 +31,7 @@ function 登录游戏id(游戏id)
 	end
 	重置登录状态()
 	设置登录子账号(游戏id)
+	日志("角色："..左右角色)
 	设置登录角色(左右角色)	--左边
 	登录游戏()
 ::checkCharacter::	--检查游戏角色和状态
@@ -110,14 +111,30 @@ function 登录游戏id(游戏id)
     goto faLan
 ::saveData::
 	获取仓库信息()
-	保存仓库信息()
-	登出服务器()
+	保存仓库信息()	
 	左右角色=左右角色+1
-	等待(1000)	
+	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
+		登出服务器()
+		return
+	end
+	重置登录状态()
+	设置登录子账号(游戏id)
+	设置登录角色(左右角色)	--左边		
+	登出服务器()
+	等待(1500)	
 	goto switchCharacter
 
 	
 ::bankWait::
+	if(common.getTableSize(全部宠物信息()) == 5)then
+		移动(11,8)
+		面向("东")
+		等待服务器返回()
+		if(银行("宠物数") == 5)then	--默认20
+			goto saveData
+		end
+	end
+	
 	-- 发布消息("百人道场仓库名称",人物("名称"))
 	-- topic,msg=等待订阅消息()
 	-- 日志(topic.." Msg:"..msg,1)
@@ -221,24 +238,45 @@ function 登录游戏id(游戏id)
 	等待到指定地图("法兰城", 63, 79)		
 	goto faLan
 end
+function TestIsInTable(data,name)
+	设置("timer",0)
+	for index,tblName in ipairs(data) do			
+		if(tblName == name)then
+			设置("timer",100)
+			return index
+		end		
+	end 
+	设置("timer",100)
+	return nil
+end
 function main()
 ::begin::
 	游戏id列表=获取游戏子账户()	--登录成功才能获取
+	设置("timer",1)
 	if(tableSize(游戏id列表) > 0)then
 		goto 切换游戏id
 	else
 		打开游戏窗口()
 		等待(10000)
 	end
-	
+	设置("timer",100)
 	等待(1000)
 	goto begin
 	
 ::切换游戏id::
+	登出服务器()
+	tmpGid={}
+	i=32
+	while i < 52 do
+		i = i+1
+		table.insert(tmpGid,"wzqcangku0"..i)
+	end
+	设置("timer",100)
 	for k,v in pairs(游戏id列表) do  
-		if(v ~= "wzqcangku032" and v ~= "wzqcangku033" and v ~= "wzqcangku034" and v ~= "wzqcangku035" and v ~= "wzqcangku036")then
+		if(TestIsInTable(tmpGid,v)==nil)then
 			登录游戏id(v)
 		end
+		--登录游戏id(v)
 	end  
 	--获取完成 退出
 	return
