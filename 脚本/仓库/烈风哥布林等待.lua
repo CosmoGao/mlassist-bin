@@ -267,7 +267,7 @@ function main()
 	登出服务器()
 	tmpGid={}
 	i=32
-	while i < 52 do
+	while i < 56 do
 		i = i+1
 		table.insert(tmpGid,"wzqcangku0"..i)
 	end
