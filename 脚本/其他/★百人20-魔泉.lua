@@ -41,7 +41,8 @@ common=require("common")
 预置交易物品列表={"小护士家庭号","魔力之泉","完全结晶体的紫水晶","完全结晶体的骑士宝石","完全结晶体的绿宝石","火焰鼠闪卡「B4奖」","火焰鼠闪卡「B3奖」","火焰鼠闪卡「B2奖」","火焰鼠闪卡「B1奖」","火焰鼠闪卡「A4奖」","火焰鼠闪卡「A3奖」","火焰鼠闪卡「A2奖」","火焰鼠闪卡「A1奖」","宝石鼠月亮奖","海洋之心","火焰之魂","天空之枪","帕鲁凯斯之斧","村正","鼠王"}	
 local tradeName=nil
 local tradeBagSpace=nil
-topicList={"百人道场仓库名称","百人道场仓库空格"}
+local tradePlayerLine=nil			--仓库人物当前线路
+topicList={"百人道场仓库名称","百人道场仓库空格","百人道场仓库几线"}
 订阅消息(topicList)
 function 去打二十层()
 	tryCount=0
@@ -478,6 +479,15 @@ end
 	end
 	if(topic == "百人道场仓库空格")then
 		tradeBagSpace=tonumber(msg)
+	end
+	if(topic == "百人道场仓库几线")then
+		tradePlayerLine=tonumber(msg)
+		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+			切换登录信息("","",tradePlayerLine,"")
+			登出服务器()
+			等待(3000)			
+			goto StartBegin
+		end
 	end
 	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
 		tradex=nil
