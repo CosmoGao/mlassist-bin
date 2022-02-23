@@ -220,6 +220,17 @@ function 登录游戏id(游戏id)
 	等待到指定地图("法兰城", 63, 79)		
 	goto faLan
 end
+function TestIsInTable(data,name)
+	设置("timer",0)
+	for index,tblName in ipairs(data) do			
+		if(tblName == name)then
+			设置("timer",100)
+			return index
+		end		
+	end 
+	设置("timer",100)
+	return nil
+end
 function main()
 ::begin::
 	游戏id列表=获取游戏子账户()	--登录成功才能获取
@@ -234,10 +245,16 @@ function main()
 	goto begin
 	
 ::切换游戏id::
+	tmpGid={}
+	i=0
+	while i < 5 do
+		i = i+1
+		table.insert(tmpGid,"wzqcangku00"..i)
+	end
 	for k,v in pairs(游戏id列表) do  
-		if(v ~= "wzqcangku000" and v ~= "wzqcangku001" and v ~= "wzqcangku002" )then
+		if(TestIsInTable(tmpGid,v)==nil)then
 			登录游戏id(v)
-		end	
+		end
 	end  
 	--获取完成 退出
 	return
