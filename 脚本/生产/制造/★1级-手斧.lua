@@ -15,7 +15,7 @@ common=require("common")
 设置("自动叠",1,"铜条&20")
 设置("自动叠",1,"铜&40")
 矿石名="铜"
-铜条数量=15
+铜条数量=64
 印度轻木数量=320
 function 采集铜矿()	
 	while true do
@@ -58,7 +58,7 @@ function main()
 		common.supplyCastle()
 		common.checkHealth()	
 	end	
-	if(取物品叠加数量("手斧") >= 1)then
+	if(取物品数量("手斧") >= 1)then
 		common.toCastle()
 		移动(40, 98,"法兰城")	
 		移动(150, 123)
