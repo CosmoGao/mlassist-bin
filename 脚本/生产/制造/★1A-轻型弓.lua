@@ -122,6 +122,7 @@ function main()
 	叠("铜条", 20)
 	叠("印度轻木", 40)	
 	叠("麻布", 20)	
+	if(取包裹空格() < 1) then goto begin end	
 	goto work 
 end
 main()

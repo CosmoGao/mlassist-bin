@@ -43,6 +43,8 @@ function makeShoe.main()
 		makeShoe.采集鹿皮()
 		goto begin	
 	end
+	common.supplyCastle()
+	common.checkHealth()	
 	if(取物品数量("光之鞋") >= 1)then		--得去老头那卖
 		--common.outCastle("s")		--默认卖
 		common.toCastle()
@@ -97,8 +99,7 @@ function makeShoe.main()
 		买(2,毛毡数量-取物品叠加数量('毛毡'))
 		goto begin
 	end	
-	common.supplyCastle()
-	common.checkHealth()	
+	
 	goto work
 ::work::
 	合成("光之鞋")	
