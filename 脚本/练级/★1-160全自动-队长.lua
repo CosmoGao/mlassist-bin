@@ -2732,12 +2732,12 @@ function main()
 			布拉基姆高地练级(32,112,203,"龙骨")
 		elseif(avgLevel<37)then		--黄金龙骨
 			布拉基姆高地练级(37,130, 190,"黄金龙骨")
-		-- elseif(avgLevel<44)then		--洞穴
-			-- 洞窟练级(44)
-		-- elseif(avgLevel<50)then		--洞穴
-		 	-- 雪塔练级(50,"t49")			--49
-		-- elseif(avgLevel<55)then		--洞穴
-		 	-- 雪塔练级(55,"t55")
+		elseif(avgLevel<44)then		--洞穴
+			洞窟练级(44)
+		elseif(avgLevel<50)then		--洞穴
+		 	雪塔练级(50,"t49")			--49
+		elseif(avgLevel<55)then		--洞穴
+		 	雪塔练级(55,"t55")
 		elseif(avgLevel<60)then		--回廊
 			回廊练级(60)
 		-- elseif(avgLevel<60)then		--T59
