@@ -148,10 +148,12 @@ function findHoleEntry(mazeName)
     ["风"] = {{401,207},{395,223}},
     ["黑一"] = {{424, 344},{424, 345}}
      }	--地103013 model_id
+	local targetModelID={["地"]=103013,["水"] =103010, ["火"] =103011, ["风"] =103012}
 	local findMazeList=targetEntryArr[mazeName]
+	local mazeModelID=targetModelID[mazeName]
 	for index,pos in ipairs(findMazeList) do						
 		移动(pos[1],pos[2])	
-		if(common.findAroundMazeEx(五转洞名称) == true)then
+		if(common.findAroundMazeEx(五转洞名称,mazeModelID) == true)then
 			return true
 		end
 	end
