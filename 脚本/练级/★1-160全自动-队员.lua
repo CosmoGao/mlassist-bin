@@ -41,7 +41,12 @@ end
 for i,v in pairs(扔物品列表) do
 	设置("自动扔",1, v)	
 end
+local tradeName=nil
+local tradeBagSpace=nil
+local tradePlayerLine=nil			--仓库人物当前线路
+topicList={"金币仓库名称","金币仓库余钱","金币仓库几线"}
 
+订阅消息(topicList)	
 
 
 喊话(队长名称,2,3,5)
@@ -125,21 +130,90 @@ function 营地存取金币(金额,存取)
 		转向(2)
 		等待服务器返回()
 		if(人物("金币") == oldGold) then
+			日志("存【"..金额.."】金币失败,尝试按100W存金币")
 			金额=1000000-银行("金币")
 			银行("存钱",金额)	
 			等待(3000)
 			转向(2)
 			等待服务器返回()
 			if(人物("金币") == oldGold) then
+				日志("存【"..金额.."】金币失败,尝试按1000W存金币")
 				金额=10000000-银行("金币")
 				银行("存钱",金额)	
+				if(人物("金币") == oldGold) then
+					等待(3000)
+					--去找指定仓库存储
+					tradeName=nil
+					tradeBagSpace=nil
+					waitTopic()	
+					return
+				end
 			end
 		end
 	else
 		银行("取钱",金额)
 	end
 end
-	
+function waitTopic()
+::begin::
+	if(取当前地图名()~= "银行" and 取当前地图编号() ~= 1121)then
+		common.gotoFaLanCity("e1")		
+		等待到指定地图("法兰城")	
+		移动(238,111,"银行")	
+	end
+	设置("timer",0)
+	topic,msg=等待订阅消息()
+	日志(topic.." Msg:"..msg,1)
+	if(topic == "金币仓库名称")then
+		tradeName=msg
+	end
+	if(topic == "金币仓库余钱")then
+		tradeBagSpace=tonumber(msg)
+	end
+	if(topic == "金币仓库几线")then
+		tradePlayerLine=tonumber(msg)
+		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+			切换登录信息("","",tradePlayerLine,"")
+			登出服务器()
+			等待(3000)			
+			goto begin
+		end
+	end
+	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
+		tradex=nil
+		tradey=nil
+		units = 取周围信息()
+		if(units ~= nil)then
+			for i,u in pairs(units) do
+				if(u.unit_name==tradeName)then
+					tradex=u.x
+					tradey=u.y
+					break
+				end
+			end
+		else
+			goto begin
+		end
+		if(tradex ~=nil and tradey ~= nil)then
+			移动到目标附近(tradex,tradey)
+		else
+			goto begin
+		end
+		转向坐标(tradex,tradey)		
+		if(人物("金币") > 200000)then
+			goldNum = 人物("金币")-200000
+			if(goldNum > tradeBagSpace)then goldNum = tradeBagSpace end
+			tradeList="金币:"..goldNum	
+			日志(tradeList)		
+			交易(tradeName,tradeList,"",10000)
+		else	
+			设置("timer",100)
+			回城()
+			return
+		end
+	end
+	goto begin
+end
 function 布拉基姆高地练级(目标等级,练级地名称)	
 	清除系统消息()
 	练级前经验=人物("经验")		
@@ -606,6 +680,9 @@ function 营地练级(目标等级,练级地名称)
 			离开队伍()
 		end				
 	end	
+	if(人物("金币")>950000)then
+		waitTopic()	
+	end
 	当前地图名 = 取当前地图名()	
 	mapIndex = 取当前地图编号()
 	if(leaderSetLv ~= nil and leaderSetLv ~= 目标等级) then
