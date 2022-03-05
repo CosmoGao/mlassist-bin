@@ -248,8 +248,8 @@ function main()
 	-- if(取当前地图名()=="芙蕾雅") then--迷宫刷新
 		-- goto begin
 	-- end
-	下载地图()
 	x,y=取当前坐标()	
+	下载地图()	
 	nx,ny=取迷宫远近坐标()--默认拿离自己最远坐标 
 	if(x==nx and y == ny)then	--到最顶层 或地图错误
 		goto begin
