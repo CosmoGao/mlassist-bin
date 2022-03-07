@@ -10,6 +10,12 @@
 迷宫是否已刷新=1
 刷之前金币=人物("金币")
 卖店物品列表="魔石|卡片？|锹型虫的卡片|虎头蜂的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
+topicList={"烈风哥布林改图仓库名称","烈风哥布林改图仓库空格","烈风哥布林改图仓库几线"}
+订阅消息(topicList)
+刷改图线=人物("几线")
+tradeName=nil				--仓库人物名称
+tradeBagSpace=nil			--仓库人物宠物空格
+tradePlayerLine=nil			--仓库人物当前线路
 
 --练级统计信息打印
 刷改图总数=0
@@ -140,6 +146,98 @@ function 去银行拿钱(money)
 	return		
 end
 
+function waitTopic()
+	if(刷改图线==nil)then 刷改图线=人物("几线") end
+::begin::
+	等待空闲()
+	tryNum=0
+	if(取当前地图名()~= "银行")then
+		common.gotoFalanBankTalkNpc()
+		tradeName=nil
+		tradeBagSpace=nil
+		tradePlayerLine=nil
+	end
+	设置("timer",0)
+	topic,msg=等待订阅消息()
+	日志(topic.." Msg:"..msg,1)
+	if(topic == "烈风哥布林改图仓库名称")then
+		tradeName=msg
+	end
+	if(topic == "烈风哥布林改图仓库空格")then
+		tradeBagSpace=tonumber(msg)
+	end
+	if(topic == "烈风哥布林改图仓库几线")then
+		tradePlayerLine=tonumber(msg)
+		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+			切换登录信息("","",tradePlayerLine,"")
+			登出服务器()
+			等待(3000)			
+			goto begin
+		end
+	end
+	if(tradeName ~= nil and tradeBagSpace ~= nil and tradePlayerLine==人物("几线"))then	
+		while tryNum<3 do
+			tradex=nil
+			tradey=nil
+			units = 取周围信息()
+			if(units ~= nil)then
+				for i,u in pairs(units) do
+					if(u.unit_name==tradeName)then
+						tradex=u.x
+						tradey=u.y
+						break
+					end
+				end
+			else
+				goto begin
+			end
+			if(tradex ~=nil and tradey ~= nil)then
+				移动到目标附近(tradex,tradey)
+			else
+				goto begin
+			end
+			转向坐标(tradex,tradey)				
+			allitems = 物品信息()
+			tradeList="金币:2000;物品:"
+			hasData=false
+			selfTradeCount=0
+			for i,v in pairs(allitems) do
+				if(string.find(v.name,"哥布林矿工")~=nil  and v.pos>=8)then					
+					if(hasData)then
+						tradeList=tradeList.."|"..v.name.."|"..v.count.."|".."1"
+					else
+						tradeList=tradeList..v.name.."|"..v.count.."|".."1"			
+					end
+					selfTradeCount=selfTradeCount+1
+					hasData=true
+					if(selfTradeCount >= tradeBagSpace)then
+						break
+					end			
+				end
+			end	
+			
+			
+			日志(tradeList)
+			if(hasData)then
+				交易(tradeName,tradeList,"",10000)
+			else	
+				设置("timer",100)
+				回城()
+				goto checkLine
+			end
+			tryNum=tryNum+1
+		end
+	end
+	goto begin
+::checkLine::
+	--不用换线 仓库线刷即可
+	-- if(人物("几线")~=刷改图线)then
+		-- 切换登录信息("","",刷改图线,"")
+		-- 登出服务器()
+		-- 等待(3000)
+		-- return
+	-- end
+end
 function main()
 ::begin::	
 	等待空闲()
@@ -500,7 +598,16 @@ function main()
 			end
 		end
 	end
-	goto manle
+	if(取包裹空格() < 2)then
+		common.gotoFalanBankTalkNpc()
+		tradeName=nil
+		tradeBagSpace=nil
+		waitTopic()
+	end
+	if(取包裹空格() < 2)then
+		goto manle		
+	end
+	goto begin
 ::convertGBL::
 	等待空闲()
 	当前地图名 = 取当前地图名()
