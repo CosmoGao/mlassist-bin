@@ -1,4 +1,5 @@
 ★捉烈风哥布林脚本，起点艾尔莎岛登入点，请设置好自动战斗,战斗1中设置好遇一级宠时的战斗方法 战斗2设置好宠物满下线保护，谢谢支持魔力辅助程序.脚本发现BUG联系Q:274100927-----------星落
+--被迷宫送出来后，三菱镜会失效，进不去的，必须扔掉
 
 common=require("common")
 
@@ -121,7 +122,7 @@ function FindNpc()
 	if(取当前地图名()=="莎莲娜") then--迷宫刷新
 		return false
 	end	
-	if( string.find(取当前地图名(),"奇怪的坑道")==nil)then	--不是迷宫 不招人
+	if( string.find(取当前地图名(),"奇怪的坑道")==nil)then	--不是迷宫 不找人
 		return false
 	end
 
@@ -159,7 +160,7 @@ function FindNpc()
 		return true		
 	end
 	--还没刷新出来 重新到找人环节
-	goto  开始找人
+	goto 开始找人
 end
 
 function waitTopic()
@@ -345,8 +346,11 @@ function main()
 	goto HomePos
 ::inMaze::
 	当前地图名 = 取当前地图名()--取当前地图数据
-	if( 当前地图名== "莎莲娜")then
+	if(当前地图名== "莎莲娜")then
 		goto shaLianNa	
+	elseif(string.find(最新系统消息(),"被不可思议的力量送出了")~=nil and 取物品数量("红色三菱镜")  > 0)then 
+		清除系统消息()
+		扔("红色三菱镜")
 	elseif( string.find(当前地图名,"奇怪的坑道")~=nil and 取物品数量("月之锄头") > 0 and 取物品数量("红色三菱镜") == 0)then
 		FindNpc()	
 	elseif( string.find(当前地图名,"奇怪的坑道")~=nil and 取物品数量("红色三菱镜") > 0)then
@@ -354,7 +358,7 @@ function main()
 	elseif( 当前地图名 == "地下水脉" and 取当前地图编号() == 15531)then
 		goto yudi
 	elseif(检查当前位置()==true) then
-		goto yudi	
+		goto yudi				
 	else
 		回城()
 		goto HomePos
@@ -435,7 +439,7 @@ function main()
 		local itemList = buyData.items
 		local dstItem = nil
 		for i,item in ipairs(itemList)do
-		if( item.name == crystalName) then
+			if( item.name == crystalName) then
 				dstItem={index=i-1,count=1}		
 				break
 			end
@@ -443,6 +447,10 @@ function main()
 		if (dstItem ~= nil)then
 			买(dstItem.index,dstItem.count)
 			等待(1000)		
+			扔(7)
+			等待(1000)
+			装备物品(crystalName, 7)
+			等待(1000)
 		else
 			日志("购买水晶失败！")		
 		end
