@@ -12,6 +12,78 @@ allGoldNum=0	--累计获得金币
 走路加速值=125	
 走路还原值=100	
 卡对话检测次数=0
+
+
+local tradeName=nil
+local tradeBagSpace=nil
+local tradePlayerLine=nil			--仓库人物当前线路
+topicList={"金币仓库名称","金币仓库余钱","金币仓库几线"}
+订阅消息(topicList)	
+function waitTopic()
+::begin::
+	if(取当前地图名()~= "银行" and 取当前地图编号() ~= 1121)then
+		--common.gotoFaLanCity("e1")		
+		if(取当前地图名() ~= "哥拉尔镇")then 
+			回城()
+		end
+		执行脚本("./脚本/直通车/★公交车-哥拉尔To法兰银行.lua")	
+		--等待到指定地图("法兰城")	
+		--移动(238,111,"银行")	
+	end
+	设置("timer",0)
+	topic,msg=等待订阅消息()
+	日志(topic.." Msg:"..msg,1)
+	if(topic == "金币仓库名称")then
+		tradeName=msg
+	end
+	if(topic == "金币仓库余钱")then
+		tradeBagSpace=tonumber(msg)
+	end
+	if(topic == "金币仓库几线")then
+		tradePlayerLine=tonumber(msg)
+		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+			切换登录信息("","",tradePlayerLine,"")
+			登出服务器()
+			等待(3000)			
+			goto begin
+		end
+	end
+	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
+		tradex=nil
+		tradey=nil
+		units = 取周围信息()
+		if(units ~= nil)then
+			for i,u in pairs(units) do
+				if(u.unit_name==tradeName)then
+					tradex=u.x
+					tradey=u.y
+					break
+				end
+			end
+		else
+			goto begin
+		end
+		if(tradex ~=nil and tradey ~= nil)then
+			移动到目标附近(tradex,tradey)
+		else
+			goto begin
+		end
+		转向坐标(tradex,tradey)		
+		if(人物("金币") > 200000)then
+			goldNum = 人物("金币")-200000
+			if(goldNum > tradeBagSpace)then goldNum = tradeBagSpace end
+			tradeList="金币:"..goldNum	
+			日志(tradeList)		
+			交易(tradeName,tradeList,"",10000)
+		else	
+			设置("timer",100)
+			回城()
+			return
+		end
+	end
+	goto begin
+end
+
 function logbackG()
 	当前地图名 = 取当前地图名()
 	x,y=取当前坐标()		
@@ -208,7 +280,11 @@ function checkGold()
 		转向(2)
 		日志("银行存后还有【"..银行("金币").."】金币",1)
 		if(人物("金币") > 990000)then
-			日志("钱包满了，银行也放不下了，脚本结束")
+			日志("钱包满了，银行也放不下了，去法兰仓库")
+			执行脚本("./脚本/直通车/★公交车-哥拉尔To法兰银行.lua")	
+			tradeName=nil
+			tradeBagSpace=nil
+			waitTopic()	
 			return
 		end
 		oldGold = 人物("金币")	--重新记录金币
