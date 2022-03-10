@@ -44,7 +44,7 @@ end
 local tradeName=nil
 local tradeBagSpace=nil
 local tradePlayerLine=nil			--仓库人物当前线路
-topicList={"金币仓库名称","金币仓库余钱","金币仓库几线"}
+topicList={"金币仓库信息"}
 
 订阅消息(topicList)	
 
@@ -164,21 +164,18 @@ function waitTopic()
 	设置("timer",0)
 	topic,msg=等待订阅消息()
 	日志(topic.." Msg:"..msg,1)
-	if(topic == "金币仓库名称")then
-		tradeName=msg
-	end
-	if(topic == "金币仓库余钱")then
-		tradeBagSpace=tonumber(msg)
-	end
-	if(topic == "金币仓库几线")then
-		tradePlayerLine=tonumber(msg)
-		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
-			切换登录信息("","",tradePlayerLine,"")
-			登出服务器()
-			等待(3000)			
-			goto begin
-		end
-	end
+	if(topic == "金币仓库信息")then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.gold
+		tradePlayerLine=recvTbl.line
+	end		
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end	
 	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
 		tradex=nil
 		tradey=nil
@@ -208,6 +205,10 @@ function waitTopic()
 			交易(tradeName,tradeList,"",10000)
 		else	
 			设置("timer",100)
+			--下次说不定是哪个仓库 设置为nil
+			tradeName=nil
+			tradeBagSpace=nil
+			tradePlayerLine=nil	
 			回城()
 			return
 		end

@@ -32,8 +32,56 @@ function common.luaStringSplit(str, split_char)
 
     return sub_str_tab;
 end
+--转字符串类型判断
+function common.ToStringEx(value)
+    if type(value)=='table' then
+       return common.TableToStr(value)
+    elseif type(value)=='string' then
+        return "\'"..value.."\'"
+    else
+       return tostring(value)
+    end
+end
+--lua表转字符串
+function common.TableToStr(t)
+    if t == nil then return "" end
+	if type(t) == 'string' then return "" end
+    local retstr= "{"
 
+    local i = 1
+    for key,value in pairs(t) do
+        local signal = ","
+        if i==1 then
+          signal = ""
+        end
 
+        if key == i then
+            retstr = retstr..signal..common.ToStringEx(value)
+        else
+            if type(key)=='number' or type(key) == 'string' then
+                retstr = retstr..signal..'['..common.ToStringEx(key).."]="..common.ToStringEx(value)
+            else
+                if type(key)=='userdata' then
+                    retstr = retstr..signal.."*s"..common.TableToStr(getmetatable(key)).."*e".."="..common.ToStringEx(value)
+                else
+                    retstr = retstr..signal..key.."="..common.ToStringEx(value)
+                end
+            end
+        end
+
+        i = i+1
+    end
+
+     retstr = retstr.."}"
+     return retstr
+end
+--字符串转表
+function common.StrToTable(str)
+    if str == nil or type(str) ~= "string" then
+        return
+    end    
+    return load("return " .. str)()
+end
 --获取好友当前服务器线路
 function common.getFriendServerLine(friendName)
 	if(friendName == nil)then return 0 end

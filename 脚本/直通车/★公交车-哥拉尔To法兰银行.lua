@@ -46,6 +46,7 @@ function 哥拉尔到法兰(dj)
 	if(string.find(最新系统消息(),"本船已到达了伊尔港")~=nil)then
 		goto xia
 	end   
+	等待(3000)
 	goto tdn1
 ::xia::
 	移动(70, 26)

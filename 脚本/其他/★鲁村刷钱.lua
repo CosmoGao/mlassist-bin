@@ -1,6 +1,6 @@
 脚本支持发蓝和艾尔莎岛启动，支持传送羽毛，请设置好自动战斗,谢谢支持魔力辅助程序
 
-
+common=require("common")
 补魔值 = 50--用户输入框("多少魔以下补魔", "50")
 补血值=430--用户输入框("多少血以下补血", "430")
 宠补血值=50--用户输入框( "宠多少血以下补血", "50")
@@ -17,38 +17,34 @@ allGoldNum=0	--累计获得金币
 local tradeName=nil
 local tradeBagSpace=nil
 local tradePlayerLine=nil			--仓库人物当前线路
-topicList={"金币仓库名称","金币仓库余钱","金币仓库几线"}
+--topicList={"金币仓库名称","金币仓库余钱","金币仓库几线"}
+topicList={"金币仓库信息"}
 订阅消息(topicList)	
+
 function waitTopic()
+设置("timer",0)
 ::begin::
-	if(取当前地图名()~= "银行" and 取当前地图编号() ~= 1121)then
-		--common.gotoFaLanCity("e1")		
-		if(取当前地图名() ~= "哥拉尔镇")then 
-			回城()
-		end
-		执行脚本("./脚本/直通车/★公交车-哥拉尔To法兰银行.lua")	
-		--等待到指定地图("法兰城")	
-		--移动(238,111,"银行")	
-	end
-	设置("timer",0)
 	topic,msg=等待订阅消息()
 	日志(topic.." Msg:"..msg,1)
-	if(topic == "金币仓库名称")then
-		tradeName=msg
-	end
-	if(topic == "金币仓库余钱")then
-		tradeBagSpace=tonumber(msg)
-	end
-	if(topic == "金币仓库几线")then
-		tradePlayerLine=tonumber(msg)
-		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
-			切换登录信息("","",tradePlayerLine,"")
-			登出服务器()
-			等待(3000)			
-			goto begin
-		end
-	end
+	if(topic == "金币仓库信息")then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.gold
+		tradePlayerLine=recvTbl.line
+	end	
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end	
 	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
+		if(取当前地图名()~= "银行" and 取当前地图编号() ~= 1121)then			
+			if(取当前地图名() ~= "哥拉尔镇")then 
+				回城()
+			end
+			执行脚本("./脚本/直通车/★公交车-哥拉尔To法兰银行.lua")				
+		end	
 		tradex=nil
 		tradey=nil
 		units = 取周围信息()
@@ -76,9 +72,14 @@ function waitTopic()
 			日志(tradeList)		
 			交易(tradeName,tradeList,"",10000)
 		else	
-			设置("timer",100)
-			回城()
-			return
+			移动(11,8)
+			银行("取钱",-1000000)
+			tradeName=nil--交易完后，这里重置
+			if(人物("金币") <= 200000)then			
+				设置("timer",100)
+				回城()
+				return
+			end
 		end
 	end
 	goto begin
@@ -264,8 +265,7 @@ function checkGold()
 		移动(167,66,"银行")
 		移动(25,10)
 		转向(2)
-		等待(2000)
-		转向(2)
+		等待(2000)		
 		日志("银行现有【"..银行("金币").."】金币",1)
 		银行("存钱",100000)	
 		银行("存钱",100000)	
@@ -281,7 +281,8 @@ function checkGold()
 		日志("银行存后还有【"..银行("金币").."】金币",1)
 		if(人物("金币") > 990000)then
 			日志("钱包满了，银行也放不下了，去法兰仓库")
-			执行脚本("./脚本/直通车/★公交车-哥拉尔To法兰银行.lua")	
+			--执行脚本("./脚本/直通车/★公交车-哥拉尔To法兰银行.lua")	
+			回城()
 			tradeName=nil
 			tradeBagSpace=nil
 			waitTopic()	
@@ -358,6 +359,7 @@ function main()
 		logbackG()
 		checkHealth()
 		checkSupply()
+		checkGold()
 		设置("遇敌全跑",1)
 		移动(176,105,"库鲁克斯岛")
         移动(476,526)
