@@ -35,6 +35,12 @@ function main()
 	local skill=common.findSkillData("伐木")
 	if(skill == nil)then
 		日志("提示：没有伐木技能！",1)
+		common.autoLearnSkill("伐木")		
+	end
+	skill=common.findSkillData("伐木")
+	if(skill == nil)then
+		日志("提示：没有伐木技能！",1)
+		common.autoLearnSkill("伐木")
 		return
 	end
 	if(skill.lv < 伐木技能等级) then
