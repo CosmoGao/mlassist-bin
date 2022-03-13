@@ -10,6 +10,7 @@ common=require("common")
 宠补血值=取脚本界面数据("宠补血")
 宠补魔值=取脚本界面数据("宠补魔")
 队伍人数=取脚本界面数据("队伍人数")
+队长名称=取脚本界面数据("队长名称")
 if(补血值==nil or 补血值==0)then
 	补血值=用户输入框("多少血以下补血", "430")
 end
@@ -25,6 +26,16 @@ end
 if(队伍人数==nil or 队伍人数==0)then
 	队伍人数 = 用户输入框("练级队伍人数，不足则固定点等待！",5)
 end
+
+if(队长名称==nil or 队长名称=="")then
+	队长名称=用户输入框("请输入队伍名称！","风依旧￠花依然")
+end
+
+isTeamLeader=false		--是否队长
+if(人物("名称") == 队长名称)then
+	isTeamLeader=true
+end
+
 走路加速值=125	--脚本走路中可以设定移动速度  到达目的地后，再还原值即可
 走路还原值=100	--防止掉线 还原速度
 卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
@@ -294,14 +305,17 @@ function 五转任务()
 		goto begin	
 	end
 	if(当前地图名 == "隐秘之洞 地下10层")then
+		等待(3000)
 		使用物品("隐秘的水晶（"..当前刷碎片属性.."）")
 		等待(3000)
-		curx,cury = 取当前坐标()
-		tgtx,tgty = 取周围空地(curx,cury,1)--取当前坐标1格范围内 空地
-		移动(tgtx,tgty)
-		common.makeTeam(队伍人数)
-		if(队伍("人数")==队伍人数)then
-			自动迷宫(1,"",0)			
+		if(isTeamLeader)then
+			curx,cury = 取当前坐标()
+			tgtx,tgty = 取周围空地(curx,cury,1)--取当前坐标1格范围内 空地
+			移动(tgtx,tgty)
+			common.makeTeam(队伍人数)
+			if(队伍("人数")==队伍人数)then
+				自动迷宫(1,"",0)			
+			end
 		end
 	end		
 	if(当前地图名 == "隐秘之洞 最底层")then
@@ -420,16 +434,16 @@ function battleBoss()
 		return 0
 	end
 	mapNum=取当前地图编号()
-	if(mapNum == 27313 || mapNum == 27314)then		--风
+	if(mapNum == 27313 or mapNum == 27314)then		--风
 		移动(24,19)
 		对话选是(4)
-	elseif(mapNum == 27307 || mapNum == 27308)then	--水
+	elseif(mapNum == 27307 or mapNum == 27308)then	--水
 		移动(24,29)
 		对话选是(0)
-	elseif(mapNum == 27310 || mapNum == 27311)then	--火
+	elseif(mapNum == 27310 or mapNum == 27311)then	--火
 		移动(29,24)
 		对话选是(6)
-	elseif(mapNum == 27304 || mapNum == 27305)then	--地
+	elseif(mapNum == 27304 or mapNum == 27305)then	--地
 		移动(20,24)
 		对话选是(2)
 	elseif(mapNum == 27315)then		--隐秘之洞 最底层  5转
@@ -472,6 +486,6 @@ function battleBoss()
 	end
 	goto checkBattleRes
 end
-检查
+
 五转任务()  	
 

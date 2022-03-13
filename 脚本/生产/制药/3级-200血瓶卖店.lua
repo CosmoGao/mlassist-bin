@@ -64,6 +64,16 @@ function main()
 	if(取物品叠加数量("生命力回复药（200）") >= 3)then
 		扔叠加物("生命力回复药（200）",3)
 		common.sellCastle("生命力回复药（200）")		--默认卖
+		saleItems={}
+		bagItems = 物品信息()
+		for i,v in pairs(bagItems) do
+			if(v.pos > 7 and v.name == "生命力回复药（200）" and v.count==3)then
+				saleItem={id=v.itemid,pos=v.pos,count=v.count}
+				table.insert(saleItems,saleItem)					
+			end		
+		end
+		转向(6)
+		SellNPCStore(saleItems)
 	end
 	common.supplyCastle()
 	common.checkHealth()

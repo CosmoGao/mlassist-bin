@@ -64,10 +64,11 @@ function waitAddTeam()
 			离开队伍()
 		end		
 	end
+	tryNum=tryNum+1
 	if(是否空闲中()==false)then
 		return
 	end
-	if(tryNum>10)then
+	if(tryNum>0)then
 		return
 	end
 	goto begin

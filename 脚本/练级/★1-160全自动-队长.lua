@@ -792,6 +792,11 @@ function 营地任务()
 	common.checkHealth(医生名称)
 	common.supplyCastle()
 ::begin::	
+	--加个重复判断吧，防止卡在这个函数中
+	needCampMission=是否需要做营地任务()		
+	if(needCampMission==false) then
+		return
+	end
 	if (取物品数量("团长的证明") > 0 ) then
 		goto battleBoss	
 	end
@@ -900,9 +905,10 @@ function 营地任务()
 	等待空闲()
 	goto battleBoss
 ::naSuiPian::
+	扔("魔石")
 	移动(13,15)
 	移动(15,15)
-	移动(13,15)
+	移动(13,15)	
 	对话选是(14,14)
 	if(取物品数量("怪物碎片") > 0) then
 		--回城()
@@ -928,6 +934,7 @@ end
 
 function 营地练级(目标等级)
 	日志("目标等级",1)
+	日志("营地练级",1)
 	设置个人简介("玩家称号",目标等级)
 	清除系统消息()
 	练级前经验=人物("经验")

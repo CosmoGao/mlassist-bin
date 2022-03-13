@@ -3,58 +3,64 @@
 common=require("common")
 
 设置("遇敌全跑",1)
+
+function 到伊尔村()
+	common.toTeleRoom("伊尔村")
+	等待到指定地图("伊尔村的传送点")
+	移动(12, 17,"村长的家")
+	移动(6, 13,"伊尔村")
+end
 function main()
 	common.supplyCastle()
 	common.sellCastle()		--默认卖
 	common.checkHealth(医生名称)   
-	回城()	
-::begin::
-	等待空闲()     
-	if(取物品数量("有关矿石成分的笔记") > 0)then	
-		common.outCastle("e")	
-		移动(196,78,"凯蒂夫人的店")
-		移动(12,9)
-		对话选是(13,9)
-		日志("钙",1)
-		goto begin
-	end	
-	if(取物品数量("18168") > 0) then	--给葛利玛的信？
-		common.outCastle("e")	
-		移动(216, 43,"葛利玛的家")		
-		移动(12,13)
-		对话选是(13,13)
-		goto begin
-	end	
-	if(取物品数量("梦露草") > 0)then
-		common.gotoFaLanCity("w1")	
-		移动(22, 87,"芙蕾雅")	
-		移动(351, 145,"国营第24坑道 地下1楼")	
-		移动(34,8)
-		对话选是(35,7)
-		goto begin
+::begin::	
+	if(取物品数量("传说的鹿皮") > 0)then 	--只能是在芙蕾雅 不然登出消失
+		--到伊尔村()
+		移动(681, 343, '伊尔村')
+		移动(48,77)
+		对话选是(0)     
+		移动(35, 25, '装备店')
+		移动(13, 17)
+		转向坐标(13,16)	
+		等待服务器返回()
+		对话选择(0,0)
+		等待服务器返回()
+		对话选择(32,-1)
+		等待服务器返回()
+		对话选择(0,0)
+		等待(2000)
+		if(人物("职业") == "见习猎人")then
+			日志("就职猎人成功！")
+		else		
+			日志("就职猎人失败，请手动查看原因")				
+		end
+		return
 	end
-	if(取物品数量("给山男的信？") > 0)then	--18167
-		common.outFaLan("e")
-		移动(509, 153,"山男的家")	
-		移动(8,3)
-		对话选是(9,3)
-		goto begin
-	end
-	if(取物品数量("钙矿") > 0)then
-		common.gotoFaLanCity("w1")	
-		移动(22, 87,"芙蕾雅")	
-		移动(351, 145,"国营第24坑道 地下1楼")	
-		移动(34,8)
-		对话选是(35,7)
-		goto begin
+	if(common.findSkillData("狩猎体验") == nil)then		
+		到伊尔村()
+		移动(48,75)
+		common.learnPlayerSkill(48,76)	
+		移动(45, 31, '芙蕾雅')
+		移动(649, 228, '芙蕾雅')
 	else
-		common.outCastle("e")
-		移动(196,78,"凯蒂夫人的店")
-		移动(12,9)
-		对话选是(13,9)	
-	goto begin		
-	end		
-
+		if(取当前地图名() ~= "芙蕾雅")then
+			common.outFaLan("e")		
+		end
+		移动(649, 228, '芙蕾雅')
+		while true do
+			if(取包裹空格() < 1)then break end	-- 包满回城
+			if(人物("魔") <  1)then 
+				common.supplyCastle() 
+				break 
+			end	-- 魔无回城
+			if(取物品数量("传说的鹿皮") > 0)then break end	-- 魔无回城
+			if(取当前地图名() ~= "芙蕾雅")then break end	--地图切换 也返回
+			工作("狩猎体验","",6500)	--技能名 物品名 延时时间
+			等待工作返回(6500)
+		end 		
+	end	
+	goto begin
 end
 
 main()

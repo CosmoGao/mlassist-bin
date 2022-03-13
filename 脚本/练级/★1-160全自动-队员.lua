@@ -597,6 +597,7 @@ function 营地任务()
 ::mission::
 	当前地图名 = 取当前地图名()
 	if(当前地图名 =="研究室" ) then
+		扔("魔石")
 		对话坐标选是(14,14)
 	elseif(取物品数量("怪物碎片") < 1 and 取物品数量("信") < 1 and 取队伍人数() < 2 )then		
 		common.toCastle()

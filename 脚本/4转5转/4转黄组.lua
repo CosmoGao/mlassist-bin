@@ -313,6 +313,12 @@ function main()
 		elseif(playerJob == "樵夫" )then--and 取物品数量("鳖料理") > 0
 		elseif(playerJob == "猎人" )then--and 取物品数量("鳖料理") > 0
 		elseif(playerJob == "矿工" )then--and 取物品数量("鳖料理") > 0
+			if(取物品叠加数量("奥利哈钢")>20)then				
+				移动(95,79)
+				对话选是(95,78)
+				日志("可以进行4转了",1)
+				goto begin
+			end
 		elseif(playerJob == "仙人" )then--and 取物品数量("鳖料理") > 0
 			if(取物品数量("仙花")>0)then
 				移动(95,79)
@@ -324,8 +330,8 @@ function main()
 			转向坐标(92,85)
 		elseif(playerJob == "鉴定" )then--and 取物品数量("鳖料理") > 0
 			if(取物品数量("陨石？")>0)then
-				工作("鉴定","陨石？")
-				goto begin
+				工作("鉴定","陨石？",15000,false)				
+				等待工作返回(15000)					
 				移动(95,79)
 				对话选是(95,78)
 --				喊话("完成")
