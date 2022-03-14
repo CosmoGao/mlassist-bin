@@ -68,11 +68,14 @@ function main()
 		bagItems = 物品信息()
 		for i,v in pairs(bagItems) do
 			if(v.pos > 7 and v.name == "生命力回复药（200）" and v.count==3)then
-				saleItem={id=v.itemid,pos=v.pos,count=v.count}
+				saleItem={id=v.itemid,pos=v.pos,count=v.count/3}
 				table.insert(saleItems,saleItem)					
 			end		
 		end
 		转向(6)
+		等待服务器返回()
+		对话选择(-1,0)
+		等待服务器返回()
 		SellNPCStore(saleItems)
 	end
 	common.supplyCastle()
