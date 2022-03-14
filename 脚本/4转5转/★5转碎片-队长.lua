@@ -1,10 +1,6 @@
-★刷5转碎片脚本，加入自动组队功能
+★5洞连刷5转碎片脚本，加入自动组队功能
 
--- function reload( moduleName )  
-    -- package.loaded[moduleName] = nil  
-    -- return require(moduleName)  
--- end
--- common=reload("common")
+
 common=require("common")
 
 清除系统消息()
