@@ -47,7 +47,7 @@ common=require("common")
 local tradeName=nil
 local tradeBagSpace=nil
 local tradePlayerLine=nil			--仓库人物当前线路
-topicList={"百人道场仓库名称","百人道场仓库空格","百人道场仓库几线"}
+topicList={"百人道场仓库信息"}
 
 订阅消息(topicList)	
 function 去打二十层()
@@ -616,21 +616,18 @@ end
 	设置("timer",0)
 	topic,msg=等待订阅消息()
 	日志(topic.." Msg:"..msg,1)
-	if(topic == "百人道场仓库名称")then
-		tradeName=msg
-	end
-	if(topic == "百人道场仓库空格")then
-		tradeBagSpace=tonumber(msg)
-	end
-	if(topic == "百人道场仓库几线")then
-		tradePlayerLine=tonumber(msg)
-		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
-			切换登录信息("","",tradePlayerLine,"")
-			登出服务器()
-			等待(3000)			
-			goto StartBegin
-		end
-	end
+	if(topic == "百人道场仓库信息")then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.bagcount
+		tradePlayerLine=recvTbl.line
+	end	
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto StartBegin
+	end	
 	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
 		tradex=nil
 		tradey=nil
@@ -680,6 +677,9 @@ end
 			交易(tradeName,tradeList,"",10000)
 		else	
 			设置("timer",100)
+			tradeName=nil
+			tradeBagSpace=nil
+			tradePlayerLine=nil	
 			回城()
 			goto StartBegin
 		end

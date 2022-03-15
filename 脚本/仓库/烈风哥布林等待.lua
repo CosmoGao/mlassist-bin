@@ -126,6 +126,9 @@ function 登录游戏id(游戏id)
 
 	
 ::bankWait::
+	if(取当前地图编号() ~= 1121)then
+		common.gotoFalanBankTalkNpc()
+	end
 	if(common.getTableSize(全部宠物信息()) == 5)then
 		移动(11,8)
 		面向("东")
@@ -133,23 +136,12 @@ function 登录游戏id(游戏id)
 		if(银行("宠物数") == 5)then	--默认20
 			goto saveData
 		end
-	end
-	
-	-- 发布消息("百人道场仓库名称",人物("名称"))
-	-- topic,msg=等待订阅消息()
-	-- 日志(topic.." Msg:"..msg,1)
-	-- if(队伍("人数") > 0)then
-		-- goto waitTrade
-	-- end
-	-- goto bankWait
--- ::waitTrade::
+	end	
+
 	if(取当前地图名() ~= "银行")then goto dengru end
 	移动(10,12)
-	发布消息("烈风哥布林仓库名称",人物("名称"))
-	--等待(1000)
-	发布消息("烈风哥布林仓库空格",5-common.getTableSize(全部宠物信息()))
-	--等待(1000)
-	发布消息("烈风哥布林仓库几线",人物("几线"))
+	topicMsg = {name=人物("名称"),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
+	发布消息("烈风哥布林仓库信息", common.TableToStr(topicMsg))
 	等待交易("","","",10000)
 	if(人物("金币") > 900000)then
 		goto cun
@@ -267,7 +259,7 @@ function main()
 	登出服务器()
 	tmpGid={}
 	i=32
-	while i < 61 do
+	while i < 84 do
 		i = i+1
 		table.insert(tmpGid,"wzqcangku0"..i)
 	end

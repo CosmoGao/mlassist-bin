@@ -10,7 +10,7 @@
 迷宫是否已刷新=1
 刷之前金币=人物("金币")
 卖店物品列表="魔石|卡片？|锹型虫的卡片|虎头蜂的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
-topicList={"烈风哥布林改图仓库名称","烈风哥布林改图仓库空格","烈风哥布林改图仓库几线"}
+topicList={"烈风哥布林改图仓库信息"}
 订阅消息(topicList)
 刷改图线=人物("几线")
 tradeName=nil				--仓库人物名称
@@ -160,21 +160,19 @@ function waitTopic()
 	设置("timer",0)
 	topic,msg=等待订阅消息()
 	日志(topic.." Msg:"..msg,1)
-	if(topic == "烈风哥布林改图仓库名称")then
-		tradeName=msg
+	if(topic == "烈风哥布林改图仓库信息")then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.bagcount
+		tradePlayerLine=recvTbl.line
+	end	
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
 	end
-	if(topic == "烈风哥布林改图仓库空格")then
-		tradeBagSpace=tonumber(msg)
-	end
-	if(topic == "烈风哥布林改图仓库几线")then
-		tradePlayerLine=tonumber(msg)
-		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
-			切换登录信息("","",tradePlayerLine,"")
-			登出服务器()
-			等待(3000)			
-			goto begin
-		end
-	end
+	
 	if(tradeName ~= nil and tradeBagSpace ~= nil and tradePlayerLine==人物("几线"))then	
 		while tryNum<3 do
 			tradex=nil
@@ -222,6 +220,9 @@ function waitTopic()
 				交易(tradeName,tradeList,"",10000)
 			else	
 				设置("timer",100)
+				tradeName=nil
+				tradeBagSpace=nil
+				tradePlayerLine=nil	
 				回城()
 				goto checkLine
 			end
@@ -381,6 +382,7 @@ function main()
 	移动(58, 31)
 	等待到指定地图("芙蕾雅")
 	移动(541, 33)
+	移动(540, 33)
 ::fuleiya::	
 	找迷宫= 搜索范围迷宫(520, 15, 40, 40,"549,43;")
 	if(找迷宫) then				

@@ -468,7 +468,7 @@ end
 		end
 	end 	
 	等待(1000)
-	goto next2
+	goto begin
 ::map24070::
 	if(目标是否可达(30,5))then
 		移动(25,17)
@@ -579,7 +579,7 @@ end
 		end 	
 	end
 	等待(1000)
-	goto next3
+	goto begin
 ::map24071::
 	if(目标是否可达(20,28))then
 		移动(20,28)	
@@ -659,7 +659,7 @@ end
 		end 	
 	end
 	等待(1000)
-	goto next4
+	goto begin
 ::map24072::			
 	移动(29,26)	
 	goto begin
@@ -732,7 +732,7 @@ end
 		end 	
 	end
 	等待(1000)
-	goto next5
+	goto begin
 ::map24073::
 	移动(24,4)
 	goto begin
@@ -792,8 +792,11 @@ end
 	end
 	goto mapCheck6	
 ::map24064::
-	等待到指定地图("诅咒的迷宫 地下56楼", 15, 8)
-	移动(25, 12)
+	if(目标是否可达(25, 12))then
+		移动(25, 12)
+	end	
+	-- 等待到指定地图("诅咒的迷宫 地下56楼", 15, 8)
+	-- 移动(25, 12)
 	goto mapCheck6	
 ::map24065::
 	等待到指定地图("诅咒的迷宫 地下57楼")	

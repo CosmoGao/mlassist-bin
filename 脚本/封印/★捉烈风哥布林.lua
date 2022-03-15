@@ -15,7 +15,9 @@ crystalName="水火的水晶（5：5）"
 sealCardName="封印卡（人形系）"
 sealCardCount=40
 
-topicList={"烈风哥布林仓库名称","烈风哥布林仓库空格","烈风哥布林仓库几线"}
+
+
+topicList={"烈风哥布林仓库信息"}
 订阅消息(topicList)
 抓宠线=人物("几线")
 tradeName=nil				--仓库人物名称
@@ -177,21 +179,18 @@ function waitTopic()
 	设置("timer",0)
 	topic,msg=等待订阅消息()
 	日志(topic.." Msg:"..msg,1)
-	if(topic == "烈风哥布林仓库名称")then
-		tradeName=msg
-	end
-	if(topic == "烈风哥布林仓库空格")then
-		tradeBagSpace=tonumber(msg)
-	end
-	if(topic == "烈风哥布林仓库几线")then
-		tradePlayerLine=tonumber(msg)
-		if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
-			切换登录信息("","",tradePlayerLine,"")
-			登出服务器()
-			等待(3000)			
-			goto begin
-		end
-	end
+	if(topic == "烈风哥布林仓库信息")then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.pets
+		tradePlayerLine=recvTbl.line
+	end				
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end	
 	if(tradeName ~= nil and tradeBagSpace ~= nil and tradePlayerLine==人物("几线"))then	
 		while tryNum<3 do
 			tradex=nil
@@ -236,6 +235,10 @@ function waitTopic()
 				交易(tradeName,tradeList,"",10000)
 			else	
 				设置("timer",100)
+				--下次说不定是哪个仓库 设置为nil
+				tradeName=nil
+				tradeBagSpace=nil
+				tradePlayerLine=nil	
 				回城()
 				goto checkLine
 			end

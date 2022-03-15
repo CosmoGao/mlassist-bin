@@ -118,20 +118,11 @@ function 登录游戏id(游戏id)
 
 	
 ::bankWait::
-	-- 发布消息("百人道场仓库名称",人物("名称"))
-	-- topic,msg=等待订阅消息()
-	-- 日志(topic.." Msg:"..msg,1)
-	-- if(队伍("人数") > 0)then
-		-- goto waitTrade
-	-- end
-	-- goto bankWait
--- ::waitTrade::
+
+	if(取当前地图编号() ~= 1121)then
+		common.gotoFalanBankTalkNpc()
+	end
 	移动(10,13)
-	-- 发布消息("金币仓库名称",人物("名称"))
-	-- 等待(500)
-	-- 发布消息("金币仓库余钱",1000000-人物("金币"))
-	-- 等待(500)
-	-- 发布消息("金币仓库几线",人物("几线"))
 	topicMsg = {name=人物("名称"),gold=1000000-人物("金币"),line=人物("几线")}
 	发布消息("金币仓库信息", common.TableToStr(topicMsg))
 	等待交易("","","",10000)

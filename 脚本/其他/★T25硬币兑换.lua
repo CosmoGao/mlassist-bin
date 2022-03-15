@@ -11,6 +11,8 @@
 设置("自动扔",1,"中型的水之宝石")
 设置("自动扔",1,"中型的火之宝石")
 设置("自动扔",1,"中型的风之宝石")
+设置("自动扔",1,"生命力回复药（75）")
+设置("自动扔",1,"魔石")
 
 
 function main()
@@ -89,10 +91,11 @@ function 兑换100怪物硬币()
 			elseif(position == 3)then goto 移位3 
 			elseif(position == 4)then goto 移位4 
 			elseif(position == 5)then goto 移位5 		
+			elseif(position == 6)then goto 移位6
 			end
 			goto 移位1	
 		end
-		if(取物品叠加数量("５怪物硬币") < 100)then
+		if(取物品叠加数量("５怪物硬币") < 100 and 取物品叠加数量("１０怪物硬币") < 100)then
 			日志("没有怪物硬币了",1)
 			return
 		end		
@@ -146,6 +149,14 @@ function 兑换100怪物硬币()
 	移动(88,43)
 	等待(2000)
 	移动(90,37)
+	position=position+1
+	goto begin
+::移位6::
+	移动(92,36)
+	等待(2000)
+	移动(89,36)
+	等待(2000)
+	移动(87,36)
 	position=1
 	goto begin
 end

@@ -79,7 +79,8 @@ common=require("common")
 	
 local tradeName=nil
 local tradeBagSpace=nil
-topicList={"百人道场仓库名称","百人道场仓库空格"}
+local tradePlayerLine=nil			--仓库人物当前线路
+topicList={"百人道场仓库信息"}
 订阅消息(topicList)
 
 补血值=1000--用户输入框("多少血以下补血", "430")
@@ -781,12 +782,18 @@ function main()
 	设置("timer",0)
 	topic,msg=等待订阅消息()
 	日志(topic.." Msg:"..msg,1)
-	if(topic == "百人道场仓库名称")then
-		tradeName=msg
-	end
-	if(topic == "百人道场仓库空格")then
-		tradeBagSpace=tonumber(msg)
-	end
+	if(topic == "百人道场仓库信息")then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.bagcount
+		tradePlayerLine=recvTbl.line
+	end	
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto StartBegin
+	end	
 	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
 		tradex=nil
 		tradey=nil
@@ -834,6 +841,9 @@ function main()
 			交易(tradeName,tradeList,"",10000)
 		else	
 			设置("timer",100)
+			tradeName=nil
+			tradeBagSpace=nil
+			tradePlayerLine=nil	
 			回城()
 			goto begin
 		end
