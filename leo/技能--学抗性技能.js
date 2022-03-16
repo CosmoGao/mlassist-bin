@@ -1,4 +1,4 @@
-require('./common').then(cga=>{
+require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
 	//leo.baseInfoPrint();
 	var isLogBackFirst = true;
 	var prepareOptions = {

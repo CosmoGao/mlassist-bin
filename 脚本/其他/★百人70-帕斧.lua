@@ -792,7 +792,7 @@ function main()
 		切换登录信息("","",tradePlayerLine,"")
 		登出服务器()
 		等待(3000)			
-		goto StartBegin
+		goto begin
 	end	
 	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
 		tradex=nil
