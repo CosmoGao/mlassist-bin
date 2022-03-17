@@ -1,4 +1,4 @@
-require('./common').then(cga=>{
+require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
 	//leo.baseInfoPrint();
 	leo.log('红叶の开箱子(随机迷宫)脚本，启动~');
 
@@ -37,7 +37,7 @@ require('./common').then(cga=>{
     }
 
     leo.loop(()=>{
-		return leo.findOne(targetFinder, todo);
+		return leo.lookForNpc(targetFinder, todo);
 	});
 
 });

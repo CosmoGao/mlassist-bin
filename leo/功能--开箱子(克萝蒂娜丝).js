@@ -1,4 +1,4 @@
-require('./common').then(async (cga) => {
+require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
 	
 	const minMoney = 20000;
 	let bank = true;

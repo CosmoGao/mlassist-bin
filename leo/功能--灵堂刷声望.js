@@ -1,4 +1,4 @@
-require('./common').then(cga => {
+require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
 	//leo.baseInfoPrint();
 
 	var money = 76500;
@@ -194,8 +194,8 @@ require('./common').then(cga => {
 			.then(()=>leo.moveGold(needGold,cga.MOVE_GOLD_FROMBANK))
 			.then(()=>{
 				playerinfo = cga.GetPlayerInfo();
-				if(playerinfo.gold < needGold){
-					return leo.log(playerinfo.gold + '魔币不足，请检查' +needGold)
+				if(playerinfo.gold != needGold){
+					return leo.log('魔币不足，请检查')
 					.then(()=>leo.reject());
 				}
 			})

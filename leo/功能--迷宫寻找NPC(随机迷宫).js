@@ -1,12 +1,12 @@
-require('./common').then(cga=>{
+require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
 	//leo.baseInfoPrint();
     var npcName = '旋律影子';   //要寻找的NPC名字，请确保名字无误
 
     //是-找到NPC后自动对话选是；否-找到NPC后自动对话选否；留空则不对话
     var autoTalk = '是';
 
-    //对话完是否要走到下一层迷宫
-    var autoNextLevel = true;
+    //true - 往上层；false - 往下层
+    var up = true;
 
     if(npcName==''){
         leo.log('NPC的名字不能为空，请确认');
@@ -26,7 +26,8 @@ require('./common').then(cga=>{
     }
 
     var todo = (target) => {
-        return leo.todo()
+        const positions = leo.getMovablePositionsAround({x: target.xpos, y: target.ypos});
+        return leo.autoWalk([positions[0].x, positions[0].y])
         .then(() => {
             if(autoTalk=='是'){
                 return leo.talkNpc(target.xpos, target.ypos, leo.talkNpcSelectorYes);
@@ -36,18 +37,11 @@ require('./common').then(cga=>{
                 return leo.next();
             }
         })
-        .then(() => {
-            if(autoNextLevel && (autoTalk == '是' || autoTalk == '否')){
-                return leo.autoWalk([target.entry.x, target.entry.y, '*'],undefined,undefined,{compress: false});
-            }else{
-                return leo.next();
-            }
-        })
         .then(() => console.log('已找到NPC，脚本结束'));
     }
 
 
-    leo.findOne(targetFinder, todo)
+    leo.lookForNpc(targetFinder, todo, up)
     .catch(()=>console.log('未找到NPC，脚本结束'));
 
 });
