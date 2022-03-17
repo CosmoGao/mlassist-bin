@@ -114,6 +114,7 @@ function 登录游戏id(游戏id)
 	保存仓库信息()	
 	左右角色=左右角色+1
 	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
+		common.WriteFileData("烈风哥布林仓库.txt",tonumber(string.sub(人物("gid"),-3)))
 		登出服务器()
 		return
 	end
@@ -256,16 +257,26 @@ function main()
 	goto begin
 	
 ::切换游戏id::
-	登出服务器()
-	tmpGid={}
-	i=32
-	while i < 84 do
-		i = i+1
-		table.insert(tmpGid,"wzqcangku0"..i)
+	--登出服务器()	
+	readFileMsg = common.ReadFileData("烈风哥布林仓库.txt")
+	if(readFileMsg == nil)then
+		readFileMsg=0
 	end
+	lastGid = tonumber(readFileMsg)
+	if(lastGid==nil)then lastGid=0 end
+	日志("最后gid"..lastGid)
+	if(tonumber(string.sub(人物("gid"),-3)) < lastGid)then
+		登出服务器()
+	end
+	-- tmpGid={}
+	-- i=32
+	-- while i < 84 do
+		-- i = i+1
+		-- table.insert(tmpGid,"wzqcangku0"..i)
+	-- end
 	设置("timer",100)
 	for k,v in pairs(游戏id列表) do  
-		if(TestIsInTable(tmpGid,v)==nil)then
+		if(tonumber(string.sub(v,-3)) >= lastGid)then
 			登录游戏id(v)
 		end
 		--登录游戏id(v)

@@ -3,6 +3,49 @@
 
 common={}
 
+
+--读取文件内容
+function common.ReadFileData(name)
+	if(name ==nil)then return "" end
+	local file = io.open(字符串转换(取程序路径().."data/"..name), "r+")		
+	if(file==nil)then 
+		日志("本地仓库文件为空",1) 
+		return nil
+	else
+		readFileMsg = file:read("*a")	
+		file:close()
+		return readFileMsg
+	end
+end
+--覆盖写入文件
+function common.WriteFileData(name,data)
+	if(data == nil or name ==nil)then return false end
+	local file = io.open(字符串转换(取程序路径().."data/"..name), "w+")		
+	file:write(data)
+	file:close()
+	return true
+	
+end
+--文件是否存在
+function common.IsExistFile(name)
+	local file = io.open(字符串转换(取程序路径().."data/"..name), "r+")	
+	if(file==nil)then 
+		return false	
+	end
+	file:close()
+	return true
+end
+
+--打开仓库文件 并返回文件句柄,文件不存在则建立，需要外部关闭
+function common.OpenFile(name)
+	local file = io.open(字符串转换(取程序路径().."data/"..name), "r+")	
+	if(file==nil)then 
+		日志("本地仓库文件不存在，建立仓库文件",1) 
+		file = io.open(字符串转换(取程序路径().."data/"..name), "w+")	
+	end
+	return file
+end
+
 --获取表大小
 function common.getTableSize(tmpTable)
 	if(tmpTable == nil) then
