@@ -28,7 +28,20 @@ function hunting.亚村卖和回复()
 		移动(588, 51,"亚留特村")
 		移动(56, 48,"村长的家")	
 		移动(15, 8)	
-		卖(2,"海苔")
+		卖(2,狩猎材料名)
+		saleItems={}
+		bagItems = 物品信息()
+		for i,v in pairs(bagItems) do
+			if(v.pos > 7 and v.name == 狩猎材料名 and v.count>=20)then
+				saleItem={id=v.itemid,pos=v.pos,count=v.count/20}
+				table.insert(saleItems,saleItem)					
+			end		
+		end
+		转向(2)
+		等待服务器返回()
+		对话选择(-1,0)
+		等待服务器返回()
+		SellNPCStore(saleItems)
 		移动(6, 13,"亚留特村")
 		移动(52,63)
 		等待到指定地图("医院", 2,9)

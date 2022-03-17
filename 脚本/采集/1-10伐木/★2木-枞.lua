@@ -58,6 +58,19 @@ function main()
 		if(是否卖)then		
 			扔叠加物(木材名,40)
 			common.sellCastle(木材名)
+			saleItems={}
+			bagItems = 物品信息()
+			for i,v in pairs(bagItems) do
+				if(v.pos > 7 and v.name == 木材名 and v.count>=20)then
+					saleItem={id=v.itemid,pos=v.pos,count=v.count/20}
+					table.insert(saleItems,saleItem)					
+				end		
+			end
+			转向(6)
+			等待服务器返回()
+			对话选择(-1,0)
+			等待服务器返回()
+			SellNPCStore(saleItems)
 		else
 			cunYinHang() 
 		end
