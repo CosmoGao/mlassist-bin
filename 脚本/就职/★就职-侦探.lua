@@ -84,6 +84,7 @@ function main()
 	if(mapNum == 33258)then goto map33258 end		--食堂
 	if(mapNum == 33259)then goto map33259 end		--食堂
 	if(mapNum == 33263)then goto map33263 end		--平台
+	if(mapNum == 33266)then goto map33266 end		--客房
 	if(mapNum == 33269)then goto map33269 end		--平台
 	if(mapNum == 33270)then map33270() end			--公爵房间
 	if(mapNum == 33273)then goto map33273 end		--医生菲斯的房间
