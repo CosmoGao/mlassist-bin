@@ -27,30 +27,38 @@ function hunting.亚村卖和回复()
 	if(取当前地图名() =="芙蕾雅")then			--加在这，主要是随时启动脚本原地复原
 		移动(588, 51,"亚留特村")
 		移动(56, 48,"村长的家")	
-		移动(15, 8)	
-		卖(2,狩猎材料名)
-		saleItems={}
-		bagItems = 物品信息()
-		for i,v in pairs(bagItems) do
-			if(v.pos > 7 and v.name == 狩猎材料名 and v.count>=20)then
-				saleItem={id=v.itemid,pos=v.pos,count=v.count/20}
-				table.insert(saleItems,saleItem)					
-			end		
-		end
-		转向(2)
-		等待服务器返回()
-		对话选择(-1,0)
-		等待服务器返回()
-		SellNPCStore(saleItems)
-		移动(6, 13,"亚留特村")
-		移动(52,63)
-		等待到指定地图("医院", 2,9)
-		移动(10, 5)
-		回复(2) 
-		移动(2, 9)
-		等待到指定地图("亚留特村", 52,63)	
-		移动(59, 31,"芙蕾雅")
+	end	
+::begin::
+	if(取当前地图名() ~="村长的家")then	
+		return
 	end
+	移动(15, 8)	
+	卖(2,狩猎材料名)
+	saleItems={}
+	bagItems = 物品信息()
+	for i,v in pairs(bagItems) do
+		if(v.pos > 7 and v.name == 狩猎材料名 and v.count>=20)then
+			saleItem={id=v.itemid,pos=v.pos,count=v.count/20}
+			table.insert(saleItems,saleItem)					
+		end		
+	end
+	转向(2)
+	等待服务器返回()
+	对话选择(-1,0)
+	等待服务器返回()
+	SellNPCStore(saleItems)
+	等待(3000)
+	if(取物品叠加数量(狩猎材料名) >= 40)then
+		goto begin
+	end
+	移动(6, 13,"亚留特村")
+	移动(52,63)
+	等待到指定地图("医院", 2,9)
+	移动(10, 5)
+	回复(2) 
+	移动(2, 9)
+	等待到指定地图("亚留特村", 52,63)	
+	移动(59, 31,"芙蕾雅")
 end
 function hunting.main()
 
