@@ -20,7 +20,10 @@ common=require("common")
 蝴蝶花数量=120
 function 采集苹果薄荷()
 	while true do
-		if(取包裹空格() < 1)then break end	-- 包满回城
+		if(取包裹空格() < 1)then 
+			回城()
+			break 
+		end	-- 包满回城
 		if(取物品叠加数量('苹果薄荷')>= 苹果薄荷数量)then break end	
 		if(人物("魔") <  1)then break end	-- 魔无回城
 		if(取当前地图名() ~= "芙蕾雅")then break end	--地图切换 也返回
@@ -31,7 +34,10 @@ function 采集苹果薄荷()
 end
 function 采集柠檬草()
 	while true do
-		if(取包裹空格() < 1)then break end	-- 包满回城
+		if(取包裹空格() < 1)then 
+			回城()
+			break 
+		end	-- 包满回城
 		if(取物品叠加数量('柠檬草')>= 柠檬草数量)then break end	
 		if(人物("魔") <  1)then break end	-- 魔无回城
 		if(取当前地图名() ~= "芙蕾雅")then break end	--地图切换 也返回
@@ -42,7 +48,10 @@ function 采集柠檬草()
 end
 function 采集蝴蝶花()
 	while true do
-		if(取包裹空格() < 1)then break end	-- 包满回城
+		if(取包裹空格() < 1)then 
+			回城()
+			break 
+		end	-- 包满回城
 		if(取物品叠加数量('蝴蝶花')>= 蝴蝶花数量)then break end	
 		if(人物("魔") <  1)then break end	-- 魔无回城
 		if(取当前地图名() ~= "芙蕾雅")then break end	--地图切换 也返回

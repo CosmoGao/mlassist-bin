@@ -28,6 +28,7 @@ common=require("common")
 
 isSuccessed=false		--是否成功鉴定过
 	
+指定5硬币数量去兑换=500		--500个5硬币 去兑换大面值
 
 补血值=取脚本界面数据("人补血")
 补魔值=取脚本界面数据("人补魔")
@@ -284,16 +285,16 @@ function main()
 	等待(2000)
 	goto begin 
 ::出发::
-	if(取物品叠加数量("５怪物硬币") >= 1000)then 		
+	if(取物品叠加数量("５怪物硬币") >= 指定5硬币数量去兑换)then 		
 		t25兑换()
 		goto begin
 	end
-	if(取物品叠加数量("１０００怪物硬币") >0)then
+	if(取物品叠加数量("１０００怪物硬币") >0 or 取物品叠加数量("１万怪物硬币") >0)then		
 		common.gotoBankTalkNpc()
 		银行("全存","１０００怪物硬币",10)
-		回城()
-		goto begin
-	end
+		银行("全存","１万怪物硬币",10)
+		回城()		
+	end	
 	if(取物品数量("王冠") < 1)then		
 		common.gotoBankTalkNpc()
 		银行("取物","王冠",1)
@@ -344,7 +345,7 @@ function main()
 		移动(106,63)
 		转向(2)
 		等待服务器返回()
-		if(取银行物品叠加数量("５怪物硬币") >= 1000)then 
+		if(取银行物品叠加数量("５怪物硬币") >= 指定5硬币数量去兑换)then 
 			t25兑换()
 			goto begin
 		end
@@ -353,6 +354,10 @@ function main()
 		转向(2)
 		等待服务器返回()
 		日志("银行硬币数量:5硬币"..取银行物品叠加数量("５怪物硬币").." 1000硬币:"..取银行物品叠加数量("１０００怪物硬币"),1)
+		if(取包裹空格() < 5 and 取物品叠加数量("５怪物硬币") >= 指定5硬币数量去兑换)then 
+			t25兑换()
+			goto begin
+		end
 		-- items =物品信息()
 		-- for i,v in pairs(items) do
 			-- if((v.name == "５怪物硬币" || v.name == "１怪物硬币") and v.count ==100)then
@@ -371,7 +376,13 @@ function main()
 	if(人物("血") < 补血值)then goto  回补 end
 	if(宠物("血") < 宠补血值)then goto 回补 end
 	if(宠物("魔") < 宠补魔值)then goto 回补 end
-	if(取包裹空格() < 1)then goto 鉴定1 end
+	if(取包裹空格() < 1)then
+		if(取物品数量("硬币？") < 1)then
+			goto 回补
+		else
+			goto 鉴定1 
+		end
+	end
 	if(取当前地图名() ~= "光之路")then goto begin end 
 	if(string.find(最新系统消息(),"无法放置")~=nil)then goto 移位2	end
 	goto 硬币1 
@@ -388,7 +399,13 @@ function main()
 	if(人物("血") < 补血值)then goto  回补 end
 	if(宠物("血") < 宠补血值)then goto 回补 end
 	if(宠物("魔") < 宠补魔值)then goto 回补 end
-	if(取包裹空格() < 1)then goto 鉴定2 end
+	if(取包裹空格() < 1)then 	
+		if(取物品数量("硬币？") < 1)then
+			goto 回补
+		else
+			goto 鉴定2 
+		end
+	end
 	if(取当前地图名() ~= "光之路")then goto begin end 
 	if(string.find(最新系统消息(),"无法放置")~=nil)then goto 移位3	end
 	goto 硬币2 
@@ -405,7 +422,13 @@ function main()
 	if(人物("血") < 补血值)then goto  回补 end
 	if(宠物("血") < 宠补血值)then goto 回补 end
 	if(宠物("魔") < 宠补魔值)then goto 回补 end
-	if(取包裹空格() < 1)then goto 鉴定3 end
+	if(取包裹空格() < 1)then 
+		if(取物品数量("硬币？") < 1)then
+			goto 回补
+		else
+			goto 鉴定3
+		end
+	end
 	if(取当前地图名() ~= "光之路")then goto begin end 
 	if(string.find(最新系统消息(),"无法放置")~=nil)then goto 移位4	end
 	goto 硬币3 
@@ -423,7 +446,13 @@ function main()
 	if(人物("血") < 补血值)then goto  回补 end
 	if(宠物("血") < 宠补血值)then goto 回补 end
 	if(宠物("魔") < 宠补魔值)then goto 回补 end
-	if(取包裹空格() < 1)then goto 鉴定4 end
+	if(取包裹空格() < 1)then 
+		if(取物品数量("硬币？") < 1)then
+			goto 回补
+		else
+			goto 鉴定4 
+		end
+	end
 	if(取当前地图名() ~= "光之路")then goto begin end 
 	if(string.find(最新系统消息(),"无法放置")~=nil)then goto 移位1	end
 	goto 硬币4 
@@ -532,6 +561,7 @@ function t25兑换()
 	goto begin
 ::map59825::
 	移动(92,31)
+	--换硬币 要1个空格 最少
 	对话选是(0)
 	对话选是(0)
 	对话选是(0)
