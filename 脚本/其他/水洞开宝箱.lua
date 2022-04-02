@@ -1,6 +1,6 @@
 脚本支持发蓝和艾尔莎岛启动，支持传送羽毛，请设置好自动战斗,谢谢支持魔力辅助程序
 
-
+common=require("common")
 补魔值 = 50--用户输入框("多少魔以下补魔", "50")
 补血值=430--用户输入框("多少血以下补血", "430")
 宠补血值=50--用户输入框( "宠多少血以下补血", "50")
@@ -10,6 +10,7 @@
 迷宫是否已刷新=1
 开箱子数量=0
 上次迷宫顺序=2
+设置("自动叠",1,"铜钥匙&999")
 function 开箱子(宝箱信息)
 	移动到目标附近(宝箱信息.x,宝箱信息.y)
 	转向坐标(宝箱信息.x,宝箱信息.y)
@@ -21,11 +22,33 @@ function 开箱子(宝箱信息)
 	开箱子数量=开箱子数量+1
 	喊话("已开箱子数："..开箱子数量,2,3,5)
 end
+
+function searchCallBack(findx,findy,nextx,nexty)
+	日志("回调函数："..findx.." y:"..findy)
+	日志("回调函数 Next："..nextx.." y:"..nexty)
+	if(findx ~= 0 and findy ~= 0)then
+		移动到目标附近(findx,findy)
+		转向坐标(findx,findy)
+		--使用物品("黑钥匙")
+		--使用物品("白钥匙")
+		使用物品("铜钥匙")
+		等待(1000)
+		等待空闲()
+		开箱子数量=开箱子数量+1
+		喊话("已开箱子数："..开箱子数量,2,3,5)
+	end
+	return false,0,0
+end
+
 function main()
+	if(取物品叠加数量("铜钥匙") < 100)then
+		common.gotoFaLanCity()
+		goto 去买钥匙 
+	end
 ::begin::
 	当前地图名 = 取当前地图名()
 	x,y=取当前坐标()	
-	地图编号=取当前地图编号()	
+	mapNum=取当前地图编号()	
 	if (当前地图名=="艾尔莎岛" )then	
 		goto  aiersa  
 	elseif (当前地图名=="里谢里雅堡" )then	
@@ -44,21 +67,21 @@ function main()
 		goto  去水洞	
 	elseif(当前地图名=="启程之间") then
 		goto  warpRoom	
-	elseif(当前地图名=="水之洞窟") then
+	elseif(当前地图名=="水之洞窟" and mapNum==15542) then
 		goto  进水洞
-	-- elseif(当前地图名=="客房" and x==8 and y==3)then
-		-- goto 买钥匙
-	elseif (x==72 and y==123 )then	-- 西2登录点
+	elseif(mapNum==1172)then
+		goto 买钥匙
+	elseif (当前地图名 == "法兰城" and x==72 and y==123 )then	-- 西2登录点
 		goto  w2
-	elseif (x==233 and y==78 )then	-- 东2登录点
+	elseif (当前地图名 == "法兰城" and x==233 and y==78 )then	-- 东2登录点
 		goto  e2
-	elseif (x==162 and y==130 )then	-- 南2登录点
+	elseif (当前地图名 == "法兰城" and x==162 and y==130 )then	-- 南2登录点
 		goto  s2
-	elseif (x==63 and y==79 )then	-- 西1登录点
+	elseif (当前地图名 == "法兰城" and x==63 and y==79 )then	-- 西1登录点
 		goto  w1
-	elseif (x==242 and y==100 )then	-- 东1登录点
+	elseif (当前地图名 == "法兰城" and x==242 and y==100 )then	-- 东1登录点
 		goto  e1
-	elseif (x==141 and y==148 )then	-- 南1登录点
+	elseif (当前地图名 == "法兰城" and x==141 and y==148 )then	-- 南1登录点
 		goto  s1
 	end	
 	--回城()
@@ -69,6 +92,7 @@ function main()
 
 ::aiersa::
 	等待到指定地图("艾尔莎岛")			
+	移动(140,105)
 	转向(1)
 	等待服务器返回()	
 	对话选择(4, 0)	
@@ -243,32 +267,40 @@ function main()
 		goto 开始找箱子
 	end		
 	if(string.find(取当前地图名(),"水之洞窟中层" ) ~= nil)then			
-		goto  进水洞2  	
+		goto 进水洞2  	
 	end
+	if(取当前地图名() == "水之试炼" )then			
+		goto 原地进入  	
+	end
+	找到,findX,findY,nextX,nextY=搜索地图("宝箱",0,"","searchCallBack")
+			
+	--移动(nextX,nextY)
+	
+	--等待(2000)
 	-- if(取当前地图名()=="芙蕾雅") then--迷宫刷新
 		-- goto begin
 	-- end
-	x,y=取当前坐标()	
-	下载地图()	
-	nx,ny=取迷宫远近坐标()--默认拿离自己最远坐标 
-	if(x==nx and y == ny)then	--到最顶层 或地图错误
-		goto begin
-	end
-	找到宝箱=查周围信息("宝箱",0)
-	if(找到宝箱 ~= nil) then	--找到目标
-		开箱子(找到宝箱)
-	end
-	searchMazePath = 取搜索路径(nx,ny)
-	for k,v in pairs(searchMazePath) do
-		print(k,v,v.x,v.y)
-        移动(v.x,v.y)
-		找到宝箱=查周围信息("宝箱",0)
-		while (找到宝箱 ~= nil) do --找到目标
-			开箱子(找到宝箱)
-			找到宝箱=查周围信息("宝箱",0)
-		end		
-	end
-	移动(nx,ny)
+	-- x,y=取当前坐标()	
+	-- 下载地图()	
+	-- nx,ny=取迷宫远近坐标()--默认拿离自己最远坐标 
+	-- if(x==nx and y == ny)then	--到最顶层 或地图错误
+		-- goto begin
+	-- end
+	-- 找到宝箱=查周围信息("宝箱",0)
+	-- if(找到宝箱 ~= nil) then	--找到目标
+		-- 开箱子(找到宝箱)
+	-- end
+	-- searchMazePath = 取搜索路径(nx,ny)
+	-- for k,v in pairs(searchMazePath) do
+		-- print(k,v,v.x,v.y)
+        -- 移动(v.x,v.y)
+		-- 找到宝箱=查周围信息("宝箱",0)
+		-- while (找到宝箱 ~= nil) do --找到目标
+			-- 开箱子(找到宝箱)
+			-- 找到宝箱=查周围信息("宝箱",0)
+		-- end		
+	-- end
+	-- 移动(nx,ny)
 	等待(2000)
 	goto 开始找箱子
 
@@ -287,6 +319,7 @@ function main()
 	等待服务器返回()	
 	对话选择(4, 0)		
 	if(取物品叠加数量("铜钥匙") >= 100)then
+		回城()
 		goto begin
 	end
 	goto 买钥匙
