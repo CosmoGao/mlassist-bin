@@ -431,6 +431,111 @@ function common.supplyCastle()
 	return
 end
 
+function common.sellPileDir(dir,saleItem,count,maxCount)
+	if(saleItem == nil)then return false end
+	if(count == nil)then count=20 end
+	if(maxCount == nil)then maxCount=40 end
+	local loopCount=0
+	while loopCount<2 do
+		apiSaleItems={}
+		bagItems = 物品信息()
+		for i,v in pairs(bagItems) do
+			if(v.pos > 7 and v.name == saleItem and v.count>=count)then
+				apiSaleItem={id=v.itemid,pos=v.pos,count=v.count/count}
+				table.insert(apiSaleItems,apiSaleItem)					
+			end		
+		end
+		转向(dir)
+		等待服务器返回()		
+		对话选择(-1,0)	--这边没有类型判断 直接-1了
+		等待服务器返回()
+		SellNPCStore(apiSaleItems)
+		叠(saleItem,maxCount)
+		等待(3000)
+		loopCount=loopCount+1
+	end
+end
+function common.sellPilePos(x,y,saleItem,count,maxCount)
+	if(saleItem == nil)then return false end
+	if(count == nil)then count=20 end
+	if(maxCount == nil)then maxCount=40 end
+	local loopCount=0
+	while loopCount<2 do
+		saleItems={}
+		bagItems = 物品信息()
+		for i,v in pairs(bagItems) do
+			if(v.pos > 7 and v.name == saleItem and v.count>=count)then
+				saleItem={id=v.itemid,pos=v.pos,count=v.count/count}
+				table.insert(saleItems,saleItem)					
+			end		
+		end
+		转向坐标(x,y)
+		等待服务器返回()		
+		对话选择(-1,0)	--这边没有类型判断 直接-1了
+		等待服务器返回()
+		SellNPCStore(saleItems)
+		叠(saleItem,maxCount)
+		等待(3000)
+		loopCount=loopCount+1
+	end
+end
+
+--城堡卖采集叠加物品 count是卖物品最小数量 比如采集20个起卖
+function common.sellCastlePile(saleItem,count,maxCount)	
+	if(saleItem == nil)then return false end
+	if(count == nil)then count=20 end
+	if(maxCount == nil)then maxCount=40 end
+	local needSale=false	
+	if(取物品叠加数量(saleItem) >= count) then
+		needSale = true		
+	end	
+	if(needSale == false)then return end
+::begin::	
+	等待空闲()
+	local 当前地图名 = 取当前地图名()
+	if (当前地图名=="艾尔莎岛" )then			
+		移动(140,105)				
+		转向(1)
+		等待服务器返回()
+		对话选择(4,0)		
+		goto liBao
+	elseif (当前地图名=="里谢里雅堡" )then	
+		goto liBao	
+	elseif (当前地图名=="工房" )then	
+		goto gongFang
+	elseif (当前地图名=="召唤之间" )then	--登出 bank
+		移动( 3, 7)	
+		等待到指定地图("里谢里雅堡")	
+		goto liBao
+	end	
+	回城()
+	等待(2000)
+	goto begin
+::liBao::		
+	if(取当前地图名() ~= "里谢里雅堡")then
+		等待(2000)
+		goto begin
+	end
+	移动(31,77)		
+	common.sellPileDir(6,saleItem,count,maxCount)	
+	goto goEnd
+::gongFang::	
+	if(是否目标附近(21,23,1)==true) then
+		common.sellPilePos(21,23,saleItem,count,maxCount)	
+	end
+	goto goEnd
+::goEnd::
+	return
+end
+
+--法兰武器商人卖制造物品 1个起卖
+function common.sellFaLanPile(saleItem)
+	common.toCastle()
+	移动(40, 98,"法兰城")	
+	移动(150, 123)
+	卖(0,saleItem)		
+end
+
 --城堡卖魔石 卡片等
 function common.sellCastle(saleItems)
 	local saleList=
@@ -907,6 +1012,47 @@ function common.checkHealth(doctorName)
 		common.healPet()
 	end
 end
+--检查人物金币 不足去拿 
+--minGold人物最少金币 少于此值去银行拿钱
+--maxGold人物最多金币 大于此值去银行存钱
+--bagGold人物身上取钱和存钱保留的钱数 取钱后身上有这么多钱 存钱后身上有这么多钱
+--值设定时候不要给错，满足minGold < bagGold < maxGold
+function common.checkGold(minGold,maxGold,bagGold)
+	if(minGold==nil or maxGold ==nil or bagGold == nil)then return end
+	local oldGold=人物("金币")
+	if(oldGold < minGold)then
+		日志("人物现有金币【"..oldGold.."】小于设定的最少值【"..minGold.."】,去银行取钱",1)
+		common.gotoBankTalkNpc()
+		银行("取钱",-bagGold)
+		等待(1000)
+		local nowGold=人物("金币")
+		if(nowGold ~= oldGold)then
+			日志("取钱成功，现有金币："..nowGold)
+		end
+	elseif(oldGold > maxGold)then
+		日志("人物现有金币【"..oldGold.."】大于设定的最大值【"..maxGold.."】,去银行存钱",1)
+		common.gotoBankTalkNpc()
+		银行("存钱",-bagGold)
+		等待(1000)
+		local nowGold=人物("金币")
+		if(nowGold == oldGold)then	--银行满了 存少点
+			日志("银行金币满了，尝试存部分金币")
+			local bankGold = 银行("金币")
+			if(bagGold > 1000000)then	
+				银行("存钱",10000000-bankGold)
+			else
+				银行("存钱",1000000-bankGold)
+			end
+			等待(1000)
+			nowGold=人物("金币")
+			if(nowGold ~= oldGold)then	
+				日志("存钱成功，现有金币："..nowGold)
+			end
+		else
+			日志("存钱成功，现有金币："..nowGold)
+		end
+	end
+end
 
 --获取队伍宠物平均等级
 function common.GetPetAverageLevel()
@@ -950,7 +1096,7 @@ end
 function common.baseInfoPrint()
 	--人物信息
 	local playerinfo = 人物信息()
-	日志("人物信息： LV"..playerinfo.level.."【 "..playerinfo.name.."】【 "..playerinfo.job.." 】")
+	日志("人物信息： Lv"..playerinfo.level.."【 "..playerinfo.name.."】【 "..playerinfo.job.." 】")
 	日志("生命： " .. playerinfo.hp .. "/" .. playerinfo.maxhp .. " (" .. getRatio(playerinfo.hp, playerinfo.maxhp) .. ")")
 	日志("魔法： " .. playerinfo.mp .. "/" .. playerinfo.maxmp .. " (" .. getRatio(playerinfo.mp, playerinfo.maxmp) .. ")")
 	日志("健康： " .. playerinfo.health .. "  掉魂： " .. playerinfo.souls)
@@ -960,12 +1106,12 @@ function common.baseInfoPrint()
 	local items = 装备信息()
 	for index,item in ipairs(items) do			
 		local nCur,nMax = 装备耐久(item.attr)	
-		日志(index .. "： LV" .. item.level .. " " .. item.name .. "  (" .. nCur .. "/" .. nMax .. ")")
+		日志("穿戴位置"..item.pos .. "： Lv" .. item.level .. " " .. item.name .. "  (" .. nCur .. "/" .. nMax .. ")")
 	end 
 	
     --出战宠物
 	local petinfo = 宠物信息(playerinfo.petid)
-	日志("出战宠物： LV" .. petinfo.level .. " " .. petinfo.realname .. "  (" .. petinfo.name .. ")")
+	日志("出战宠物： Lv" .. petinfo.level .. " " .. petinfo.realname .. "  (" .. petinfo.name .. ")")
 	日志("生命： " .. petinfo.hp .. "/" .. petinfo.maxhp .. " (" .. getRatio(petinfo.hp, petinfo.maxhp) .. ")")
 	日志("魔法： " .. petinfo.mp .. "/" .. petinfo.maxmp .. " (" .. getRatio(petinfo.mp, petinfo.maxmp) .. ")")
 	日志("健康： " .. petinfo.health)
@@ -974,6 +1120,26 @@ function common.baseInfoPrint()
 	common.petInfoPrint()
 
 end
+--统计时间
+function common.statisticsTime(beginTime,oldGold)	
+	local nowTime = os.time() 
+	local time = math.floor((nowTime - beginTime)/60)--已持续练级时间
+	if(time == 0)then
+		time=1
+	end		
+	local goldContent =""
+	if(oldGold~=nil) then
+		local nowGold = 人物("金币")
+		local getGold = nowGold - oldGold
+		local avgGold = math.floor(60 * getGold/time)
+		goldContent = "总消耗【"..getGold.."】金币，平均每小时消耗【"..avgGold.."】金币"
+	end
+	local content ="脚本已持续【"..time.."】分钟，"..goldContent	
+	日志(content)--字符串太长 崩溃
+	return content
+
+end
+
 --练级统计信息打印
 function common.statistics(beginTime,oldXp,oldPetXp,oldGold)
 	if(oldXp == nil) then
@@ -1047,7 +1213,7 @@ end
 function common.petInfoPrint()
 	local pets=全部宠物信息()
 	for index,pet in ipairs(pets) do			
-		日志(index .. "： LV" .. pet.level .. " " .. pet.realname .. "  (" .. pet.name ..")")
+		日志("宠物位置"..pet.index .. "： LV" .. pet.level .. " " .. pet.realname .. "  (" .. pet.name ..")")
 	end 
 end
 --传送之间

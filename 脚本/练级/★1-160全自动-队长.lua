@@ -1394,6 +1394,7 @@ function 拿酒瓶()
 	对话选是(14,5)
 	tryCount= tryCount+1
 	if(tryCount > 3 and 取物品数量("巴萨的破酒瓶")< 1)then
+		扔("魔石")
 		goto tryNa
 	end
 	移动(0,23,"圣骑士营地")

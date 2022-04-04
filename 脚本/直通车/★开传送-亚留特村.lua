@@ -2,7 +2,7 @@
 
 
 common=require("common")
-       
+  
 ::start::
 	common.checkHealth()
 	common.supplyCastle()	    
@@ -11,8 +11,13 @@ common=require("common")
 	移动(41, 8,"哈巴鲁东边洞穴 地下2楼")
 ::xiongnan::
 	移动(17, 18)	
+	等待(1000)
 	穿墙(17, 16)			
 	等待(2000)
+	while (人物("坐标")=="17,18") do
+		穿墙(17, 16)	
+		等待(2000)		
+	end
 	移动(16, 11,"哈巴鲁东边洞穴 地下1楼")	
 	移动(30, 4,"芙蕾雅")	
 	移动(595, 84,"亚留特村")	

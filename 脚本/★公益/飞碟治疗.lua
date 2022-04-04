@@ -1,6 +1,11 @@
 里堡飞碟治疗
 
+common=require("common")
+
 补魔值 = 100
+身上最少金币=3000			--少于去取
+身上最多金币=1000000		--大于去存
+身上预置金币=500000			--取和拿后 身上保留金币
 
 function main()
 ::begin::
@@ -28,6 +33,7 @@ function main()
 	工作("治疗",4)     
 	if(人物("魔") < 补魔值)then goto LiBao end		
 	if(取当前地图名() ~= "里谢里雅堡") then goto begin end
+	common.checkGold(身上最少金币,身上最多金币,身上预置金币)
 	等待(2000)
 	goto scriptstart  
 end
