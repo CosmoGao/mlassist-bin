@@ -1301,9 +1301,8 @@ function common.toTeleRoomTemplate(warpData)
 	end		
 	移动(41,50,"里谢里雅堡 1楼")
 	移动(45,20,"启程之间")	
-	移动(25, 27) 						
-	isTeamLeader = 是否队长()
-	if (isTeamLeader) then
+	移动(25, 27) 	
+	if (是否队长()) then
 		移动(warpData[1].x,warpData[1].y)
 		移动(warpData[2].x,warpData[2].y)
 		移动(warpData[1].x,warpData[1].y)
@@ -2380,11 +2379,7 @@ end
 function common.卵4步骤2(step,队长名称,队伍人数,队员列表)	
 	等待空闲()	
 	local outMazeX,outMazeY
-	local outMapName
-	local isTeamLeader=false
-	if(人物("名称") == 队长名称)then
-		isTeamLeader=true
-	end
+	local outMapName	
 ::begin::
 	if(取当前地图名() == "？？？") then
 		if(队伍("人数") < 队伍人数)then	--数量不足 等待
@@ -2409,7 +2404,7 @@ function common.卵4步骤2(step,队长名称,队伍人数,队员列表)
 	等待(2000)
 	移动(3,10,"？？？")
 	设置("遇敌全跑",0)		
-	if(isTeamLeader)then	
+	if(人物("名称",false) == 队长名称)then	
 		if(队伍("人数") < 队伍人数)then	--数量不足 等待
 			common.makeTeam(队伍人数,队员列表)
 		end
@@ -2566,11 +2561,7 @@ function common.卵4打障碍物()
 	goto begin
 end
 function common.卵4步骤4(step,队长名称,队伍人数,队员列表)	
-	等待空闲()		
-	local isTeamLeader=false
-	if(人物("名称") == 队长名称)then
-		isTeamLeader=true
-	end
+	等待空闲()			
 	if(取物品数量("逆十字") < 1)then
 		移动(157,93)
 		转向(2)	
@@ -2609,7 +2600,7 @@ function common.卵4步骤4(step,队长名称,队伍人数,队员列表)
 	等待到指定地图("？？？")
 ::map59714::
 	设置("遇敌全跑",0)
-	if(isTeamLeader)then
+	if(人物("名称",false) == 队长名称)then
 		while (队伍("人数") < 队伍人数) do--数量不足 等待
 			common.makeTeam(队伍人数,队员列表)
 			等待(5000)	
