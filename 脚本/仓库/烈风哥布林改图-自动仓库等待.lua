@@ -1,3 +1,4 @@
+注意，默认把最后一次登录账号后3位，写入配置文件，下次登入时候，会跳过此角色，这就要求角色命名是 张三001  这种的
 
 common=require("common")
 
@@ -27,6 +28,7 @@ function 登录游戏id(游戏id)
 	--切换游戏id
 ::switchCharacter::
 	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
+		common.WriteFileData("烈风哥布林改图仓库.txt",tonumber(string.sub(人物("gid"),-3)))
 		return
 	end
 	重置登录状态()
@@ -239,14 +241,18 @@ function main()
 	goto begin
 	
 ::切换游戏id::
-	tmpGid={}
-	i=0
-	while i < 1 do
-		i = i+1
-		table.insert(tmpGid,"wzqcangku00"..i)
+	readFileMsg = common.ReadFileData("烈风哥布林改图仓库.txt")
+	if(readFileMsg == nil)then
+		readFileMsg=0
+	end
+	lastGid = tonumber(readFileMsg)
+	if(lastGid==nil)then lastGid=0 end
+	日志("最后gid"..lastGid)
+	if(tonumber(string.sub(人物("gid"),-3)) < lastGid)then
+		登出服务器()
 	end
 	for k,v in pairs(游戏id列表) do  
-		if(TestIsInTable(tmpGid,v)==nil)then
+		if(tonumber(string.sub(v,-3)) >= lastGid)then
 			登录游戏id(v)
 		end
 	end  

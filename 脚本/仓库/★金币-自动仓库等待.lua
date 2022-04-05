@@ -27,6 +27,7 @@ function 登录游戏id(游戏id)
 	--切换游戏id
 ::switchCharacter::
 	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
+		common.WriteFileData("金币仓库.txt",tonumber(string.sub(人物("gid"),-3)))
 		return
 	end
 	重置登录状态()
@@ -239,16 +240,20 @@ function main()
 	goto begin
 	
 ::切换游戏id::
-	-- tmpGid={}
-	-- i=0
-	-- while i < 5 do
-		-- i = i+1
-		-- table.insert(tmpGid,"wzqcangku00"..i)
-	-- end
+	readFileMsg = common.ReadFileData("金币仓库.txt")
+	if(readFileMsg == nil)then
+		readFileMsg=0
+	end
+	lastGid = tonumber(readFileMsg)
+	if(lastGid==nil)then lastGid=0 end
+	日志("最后gid"..lastGid)
+	if(tonumber(string.sub(人物("gid"),-3)) < lastGid)then
+		登出服务器()
+	end
 	for k,v in pairs(游戏id列表) do  
-		--if(TestIsInTable(tmpGid,v)==nil)then
+		if(tonumber(string.sub(v,-3)) >= lastGid)then
 			登录游戏id(v)
-		--end
+		end
 	end  
 	--获取完成 退出
 	return
