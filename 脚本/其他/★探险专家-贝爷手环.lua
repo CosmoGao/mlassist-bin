@@ -63,11 +63,12 @@ function main()
 		日志("当前是队员",1)
 	end
 	日志("队长名称："..队长名称.." 角色名称:" .. 人物("名称",false))
+	common.changeLineFollowLeader(队长名称)		--同步服务器线路
 	设置("移动速度",走路加速值)	-- 掉线的自己关闭加速就行
 	设置("遇敌全跑", 1)			-- 遇敌全跑 
 ::begin::
 	等待空闲()
-	
+	common.changeLineFollowLeader(队长名称)		--同步服务器线路
 	mapNum=取当前地图编号()
 	mapName=取当前地图名()
 	if(mapNum == 1000)then		--"法兰城"
@@ -81,9 +82,7 @@ function main()
 	elseif(mapNum == 57197)then		--"隐秘山道下层"
 		goto map57197	
 	elseif(mapNum == 57198)then		--"山道尽头"
-		goto map57198
-	elseif(string.find(mapName,"隐秘山道") ~= nil)then	--迷宫
-		goto maze
+		goto map57198	
 	elseif(mapNum == 57199)then	--贝尔的隐居地
 		goto map57199
 	elseif(mapNum == 57200)then	--贝尔的隐居地		
@@ -104,6 +103,8 @@ function main()
 		goto map4300
 	elseif(mapNum == 400)then	--莎莲娜
 		goto map400		
+	elseif(string.find(mapName,"隐秘山道") ~= nil)then	--迷宫
+		goto maze
 	end
 	common.checkGold(身上最少金币,身上最多金币,身上预置金币)
 	common.supplyCastle()
