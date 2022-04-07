@@ -1,3 +1,4 @@
+注意，默认把最后一次登录账号后3位，写入配置文件，下次登入时候，会跳过此角色，这就要求角色命名是 张三001  这种的
 
 common=require("common")
 
@@ -27,11 +28,11 @@ function 登录游戏id(游戏id)
 	--切换游戏id
 ::switchCharacter::
 	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
+		common.WriteFileData("烈风哥布林改图仓库.txt",tonumber(string.sub(人物("gid"),-3)))
 		return
 	end
 	重置登录状态()
 	设置登录子账号(游戏id)
-	日志("角色："..左右角色)
 	设置登录角色(左右角色)	--左边
 	登录游戏()
 ::checkCharacter::	--检查游戏角色和状态
@@ -111,43 +112,34 @@ function 登录游戏id(游戏id)
     goto faLan
 ::saveData::
 	获取仓库信息()
-	保存仓库信息()	
-	左右角色=左右角色+1
-	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
-		common.WriteFileData("烈风哥布林仓库.txt",tonumber(string.sub(人物("gid"),-3)))
-		登出服务器()
-		return
-	end
-	重置登录状态()
-	设置登录子账号(游戏id)
-	设置登录角色(左右角色)	--左边		
+	保存仓库信息()
 	登出服务器()
-	等待(1500)	
+	左右角色=左右角色+1
+	等待(1000)	
 	goto switchCharacter
 
 	
 ::bankWait::
+
 	if(取当前地图编号() ~= 1121)then
 		common.gotoFalanBankTalkNpc()
 	end
-	if(common.getTableSize(全部宠物信息()) == 5)then
-		移动(11,8)
-		面向("东")
-		等待服务器返回()
-		if(银行("宠物数") == 5)then	--默认20
-			goto saveData
+	移动(10,10)
+	topicMsg = {name=人物("名称"),bagcount=取包裹空格(),line=人物("几线")}
+	发布消息("烈风哥布林改图仓库信息", common.TableToStr(topicMsg))	
+	
+	if(银行("金币") >= 1000000)then
+		if(人物("金币") > 998000)then
+			等待交易("","金币:2000","",10000)
+		else
+			等待交易("","","",10000)
+		end
+	else
+		if(人物("金币") > 900000)then		
+			goto cun
 		end
 	end	
-
-	if(取当前地图名() ~= "银行")then goto dengru end
-	移动(10,12)
-	topicMsg = {name=人物("名称"),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
-	发布消息("烈风哥布林仓库信息", common.TableToStr(topicMsg))
-	等待交易("","","",10000)
-	if(人物("金币") > 900000)then
-		goto cun
-	end
-	if(common.getTableSize(全部宠物信息()) == 5)then
+	if(取包裹空格() < 1)then
 		goto cun
 	end
 	goto bankWait
@@ -160,18 +152,18 @@ function 登录游戏id(游戏id)
 	if(bankGold > 1000000)then	--银行金币大于100万 取最小值
 		cGold =  math.min(10000000-bankGold,cGold)
 	else
-		cGold =  math.min(1000000-bankGold,cGold-2000)
+		cGold =  math.max(1000000-bankGold,cGold)
 	end
 	银行("存钱",cGold)
 	银行("取钱",2000)
-	if(银行("宠物数") == 5)then	--默认20
-		if(common.getTableSize(全部宠物信息()) == 5)then
+	if(银行("已用空格") == 20)then	--默认20
+		if(取包裹空格() < 1)then
 			goto saveData	--登出 切换仓库
 		end
 	else
-		i=0
-		while i<= 5 do
-			银行("存宠",i)
+		i=8
+		while i<= 28 do
+			银行("存包裹位置",i)
 			i=i+1
 			等待(1000)
 		end
@@ -245,20 +237,18 @@ end
 function main()
 ::begin::
 	游戏id列表=获取游戏子账户()	--登录成功才能获取
-	设置("timer",1)
 	if(tableSize(游戏id列表) > 0)then
 		goto 切换游戏id
 	else
 		打开游戏窗口()
 		等待(10000)
 	end
-	设置("timer",100)
+	
 	等待(1000)
 	goto begin
 	
 ::切换游戏id::
-	--登出服务器()	
-	readFileMsg = common.ReadFileData("烈风哥布林仓库.txt")
+	readFileMsg = common.ReadFileData("烈风哥布林改图仓库.txt")
 	if(readFileMsg == nil)then
 		readFileMsg=0
 	end
@@ -268,18 +258,10 @@ function main()
 	if(tonumber(string.sub(人物("gid"),-3)) < lastGid)then
 		登出服务器()
 	end
-	-- tmpGid={}
-	-- i=32
-	-- while i < 84 do
-		-- i = i+1
-		-- table.insert(tmpGid,"wzqcangku0"..i)
-	-- end
-	设置("timer",100)
 	for k,v in pairs(游戏id列表) do  
 		if(tonumber(string.sub(v,-3)) >= lastGid)then
 			登录游戏id(v)
 		end
-		--登录游戏id(v)
 	end  
 	--获取完成 退出
 	return

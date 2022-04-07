@@ -119,18 +119,24 @@ function 登录游戏id(游戏id)
 
 	
 ::bankWait::
-
 	if(取当前地图编号() ~= 1121)then
 		common.gotoFalanBankTalkNpc()
 	end
-	移动(10,11)
 	
+	移动(10,11)	
 	topicMsg = {name=人物("名称"),bagcount=取包裹空格(),line=人物("几线")}
 	发布消息("百人道场仓库信息", common.TableToStr(topicMsg))	
-	等待交易("","","",10000)
-	if(人物("金币") > 900000)then
-		goto cun
-	end
+	if(银行("金币") >= 1000000)then
+		if(人物("金币") > 998000)then
+			等待交易("","金币:2000","",10000)
+		else
+			等待交易("","","",10000)
+		end
+	else
+		if(人物("金币") > 900000)then		
+			goto cun
+		end
+	end	
 	if(取包裹空格() < 1)then
 		goto cun
 	end
