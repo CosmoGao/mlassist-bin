@@ -637,9 +637,9 @@ function common.localBuyCrystal(crystalName,buyCount)
 		goto yingdi
 	elseif (当前地图名=="商店" and  mapIndex == 44699)then	
 		goto yingdiShangDian
+	else
+		return false
 	end	
-	等待(2000)
-	goto goEnd
 ::aiDao::
 	移动(157,94)	
 	转向坐标(158,93,"艾夏岛")	
@@ -667,28 +667,7 @@ function common.localBuyCrystal(crystalName,buyCount)
 	goto buy
 ::buy::	
 	等待服务器返回()
-	对话选择(0,0) --第二个参数0 0买 1卖 2不用了
-	dlg = 等待服务器返回()
-	buyData = 解析购买列表(dlg.message)
-	itemList = buyData.items
-	dstItem = nil
-	for i,item in ipairs(itemList)do
-		if( item.name == crystalName) then
-			dstItem={index=i-1,count=buyCount}			
-		end
-	end
-	if (dstItem ~= nil)then
-		买(dstItem.index,dstItem.count)
-		等待(1000)
-		return true
-	else
-		日志("购买水晶失败！")
-		return false
-	end
-	goto goEnd
-::goEnd::
-	日志("购买水晶失败！")
-	return false
+	return common.buyDstItem(crystalName,buyCount)	
 end
 --商店购买指定物品
 function common.buyDstItem(itemName,buyCount)
@@ -744,26 +723,8 @@ function common.buyCrystal(crystalName,buyCount)
 	移动(17,18)
 	等待(1000)
 	转向(2)
-	等待服务器返回()
-	对话选择(0,0) --第二个参数0 0买 1卖 2不用了
-	local dlg = 等待服务器返回()
-	local buyData = 解析购买列表(dlg.message)
-	local itemList = buyData.items
-	local dstItem = nil
-	for i,item in ipairs(itemList)do
-		if( item.name == crystalName) then
-			dstItem={index=i-1,count=buyCount}			
-		end
-	end
-	if (dstItem ~= nil)then
-		买(dstItem.index,dstItem.count)
-		等待(1000)
-		return true
-	else
-		日志("购买水晶失败！")
-		return false
-	end
-	return false
+	等待服务器返回()	
+	return common.buyDstItem(crystalName,buyCount)	
 end
 --检查水晶
 function common.checkCrystal(crystalName,equipsProtectValue)
