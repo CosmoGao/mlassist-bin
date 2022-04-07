@@ -138,7 +138,7 @@ end
 --跟随好友换线 参数:好友名称
 function common.changeLineFollowLeader(leaderName)
 	if(leaderName==nil)then return end
-	if(人物("名称") == leaderName)then	return	end
+	if(人物("名称",false) == leaderName)then	return	end
 	local leaderServerLine = common.getFriendServerLine(leaderName)
 	if(leaderServerLine==0)then
 		return
