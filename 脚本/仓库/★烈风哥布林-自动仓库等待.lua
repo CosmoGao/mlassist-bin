@@ -170,6 +170,7 @@ function 登录游戏id(游戏id)
 		cGold =  math.min(1000000-bankGold,cGold-2000)
 	end
 	银行("存钱",cGold)
+	等待(2000)
 	银行("取钱",2000)
 	if(银行("宠物数") == 5)then	--默认20
 		if(common.getTableSize(全部宠物信息()) == 5)then

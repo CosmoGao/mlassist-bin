@@ -26,8 +26,7 @@ function 登录游戏id(游戏id)
 	左右角色=0
 	--切换游戏id
 ::switchCharacter::
-	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
-		common.WriteFileData("百人道场仓库.txt",tonumber(string.sub(人物("gid"),-3)))
+	if(左右角色 > 1)then	--左右都已获取仓库 去下一个		
 		return
 	end
 	重置登录状态()
@@ -112,8 +111,16 @@ function 登录游戏id(游戏id)
 ::saveData::
 	获取仓库信息()
 	保存仓库信息()
-	登出服务器()
 	左右角色=左右角色+1
+	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
+		common.WriteFileData("百人道场仓库.txt",tonumber(string.sub(人物("gid"),-3)))
+		登出服务器()
+		return
+	end
+	重置登录状态()
+	设置登录子账号(游戏id)
+	设置登录角色(左右角色)	--左边		
+	登出服务器()
 	等待(1000)	
 	goto switchCharacter
 
@@ -135,6 +142,9 @@ function 登录游戏id(游戏id)
 	else
 		if(人物("金币") > 900000)then		
 			goto cun
+		else
+			等待交易("","","",10000)
+		
 		end
 	end	
 	if(取包裹空格() < 1)then
@@ -150,9 +160,10 @@ function 登录游戏id(游戏id)
 	if(bankGold > 1000000)then	--银行金币大于100万 取最小值
 		cGold =  math.min(10000000-bankGold,cGold)
 	else
-		cGold =  math.max(1000000-bankGold,cGold)
+		cGold =  math.min(1000000-bankGold,cGold)
 	end
 	银行("存钱",cGold)
+	等待(1000)
 	银行("取钱",2000)
 	if(银行("已用空格") == 20)then	--默认20
 		if(取包裹空格() < 1)then

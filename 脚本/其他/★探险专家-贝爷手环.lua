@@ -210,6 +210,7 @@ function main()
 	goto teammateAction
 ::map57200::
 	设置("遇敌全跑", 1)			-- 遇敌全跑 
+	移动(20,18)
 	对话选是(20,16)
 	if(取当前地图名() == "法兰城")then	
 		common.statisticsTime(脚本运行前时间,脚本运行前金币)	
@@ -223,6 +224,7 @@ function main()
 	当前迷宫楼层=取当前楼层(mapName)		--从地图名取楼层
 	if(上次迷宫楼层~=nil and 当前迷宫楼层 < 上次迷宫楼层 )then	--反了
 		tx,ty=取迷宫远近坐标(false)			--取最近迷宫坐标
+		if(tx==0 and ty==0)then goto begin end
 		移动(tx,ty)		
 		当前迷宫楼层=取当前楼层(取当前地图名())	
 	end	

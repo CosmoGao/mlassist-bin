@@ -891,7 +891,7 @@ function 营地任务()
 		移动(44,22,"废墟地下1层")	
 		goto chuanYueMiGong
 	end	
-	goto quMiGong		
+	goto battleBoss		
 	-- 移动(55,47,"辛希亚探索指挥部")
 	-- 移动(7,4)
 	-- 移动(91,6)
