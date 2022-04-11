@@ -92,6 +92,7 @@ function 登录游戏id(游戏id)
 		common.gotoFalanBankTalkNpc()
 		goto bankWait
 	end	
+	回城()
 	goto waitlogin
 ::star1::
 	移动(157,94)	
