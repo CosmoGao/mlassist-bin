@@ -3,6 +3,7 @@
 common=require("common")
 
 设置("遇敌全跑",1)
+设置("自动扔",0,"传说的鹿皮")
 
 function 到伊尔村()
 	common.toTeleRoom("伊尔村")

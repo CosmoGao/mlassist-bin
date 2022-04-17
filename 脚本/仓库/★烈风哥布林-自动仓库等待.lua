@@ -153,6 +153,8 @@ function 登录游戏id(游戏id)
 	else
 		if(人物("金币") > 900000)then		
 			goto cun
+		else
+			等待交易("","","",10000)
 		end
 	end	
 	if(common.getTableSize(全部宠物信息()) == 5)then
