@@ -135,8 +135,7 @@ function 登录游戏id(游戏id)
 	end
 	移动(10,10)
 	topicMsg = {name=人物("名称"),bagcount=取包裹空格(),line=人物("几线")}
-	发布消息("烈风哥布林改图仓库信息", common.TableToStr(topicMsg))	
-	
+	发布消息("烈风哥布林改图仓库信息", common.TableToStr(topicMsg))		
 	if(银行("金币") >= 1000000)then
 		if(人物("金币") > 998000)then
 			等待交易("","金币:2000","",10000)
@@ -146,6 +145,8 @@ function 登录游戏id(游戏id)
 	else
 		if(人物("金币") > 900000)then		
 			goto cun
+		else
+			等待交易("","","",10000)
 		end
 	end	
 	if(取包裹空格() < 1)then
