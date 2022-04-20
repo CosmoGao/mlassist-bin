@@ -84,7 +84,6 @@ function makeShoe.main()
 	goto work
 ::work::
 	合成(合成物品名)	
-	if(取包裹空格() < 1) then goto  pause end			
 	if(取物品叠加数量("鹿皮") < 鹿皮所需数量 or 取物品叠加数量("麻布") < 麻布所需数量 )then 
 		common.supplyCastle()	--正好在旁边 补完再走
 		goto begin 
@@ -92,12 +91,14 @@ function makeShoe.main()
 	if(人物("魔") <  50) then 
 		common.supplyCastle() 		
 	end
+	if(取包裹空格() < 1) then goto  pause end		
 	goto work 
 ::pause::	
 	叠("麻布", 20)
 	叠("木棉布", 20)	
 	叠("毛毡", 20)	
 	叠("鹿皮", 40)	
+	if(取包裹空格() < 1) then goto begin end		
 	goto work 
 end
 makeShoe.main()

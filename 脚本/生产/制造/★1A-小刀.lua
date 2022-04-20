@@ -96,7 +96,6 @@ function main()
 	goto work
 ::work::
 	合成(制造物品名)	
-	if(取包裹空格() < 1) then goto  pause end			
 	if(取物品叠加数量("印度轻木") < 20 or 取物品叠加数量("铜条") < 4 )then 
 		common.supplyCastle()	--正好在旁边 补完再走
 		goto begin 
@@ -104,10 +103,13 @@ function main()
 	if(人物("魔") <  50) then 
 		common.supplyCastle() 		
 	end
+	if(取包裹空格() < 1) then goto  pause end			
+	
 	goto work 
 ::pause::	
 	叠("铜条", 20)
 	叠("印度轻木", 40)	
+	if(取包裹空格() < 1) then goto begin end		
 	goto work 
 end
 main()
