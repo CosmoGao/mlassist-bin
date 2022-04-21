@@ -98,6 +98,7 @@ function makeShoe.main()
 	叠("木棉布", 20)	
 	叠("毛毡", 20)	
 	叠("鹿皮", 40)	
+	if(取包裹空格() < 1) then goto begin end		
 	goto work 
 end
 makeShoe.main()
