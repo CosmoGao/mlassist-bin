@@ -1208,10 +1208,8 @@ function common.toTeleRoom(villageName)
 		离开队伍()
 		转向(2)
 		dlg=等待服务器返回()
-		if(dlg.message~=nil and (string.find(dlg.message,"此传送点的资格")~=nil or string.find(dlg.message,"不能使用这个传送石")~=nil))then
-			设置("遇敌全跑",1)
-			执行脚本("./脚本/直通车/★开传送-杰诺瓦镇.lua")
-			设置("遇敌全跑",0)
+		if(dlg.message~=nil and (string.find(dlg.message,"此传送点的资格")~=nil or string.find(dlg.message,"不能使用这个传送石")~=nil))then			
+			执行脚本("./脚本/直通车/★开传送-杰诺瓦镇.lua")			
 			goto jiecun
 		end	
 		转向(2, "")
@@ -1234,8 +1232,7 @@ function common.toTeleRoom(villageName)
 		等待服务器返回()
 		对话选择("1", "", "")
 		等待到指定地图("莎莲娜海底洞窟 地下2楼",31,22)	
-		移动(38, 37,"咒术师的秘密住处")
-		设置("遇敌全跑",0)		
+		移动(38, 37,"咒术师的秘密住处")		
 	else
 		日志("未知地图名称！",1)
 	end
@@ -1276,10 +1273,8 @@ function common.toTeleRoomTemplate(warpData)
 ::warpTalk::
 	转向坐标(warpData[3].x,warpData[3].y)
 	dlg=等待服务器返回()
-	if(dlg.message~=nil and (string.find(dlg.message,"此传送点的资格")~=nil or string.find(dlg.message,"不能使用这个传送石")~=nil))then
-		设置("遇敌全跑",1)
-		执行脚本(warpData[4].script)
-		设置("遇敌全跑",0)		
+	if(dlg.message~=nil and (string.find(dlg.message,"此传送点的资格")~=nil or string.find(dlg.message,"不能使用这个传送石")~=nil))then		
+		执行脚本(warpData[4].script)		
 		return true
 	elseif(dlg.message==nil)then
 		tryCount=tryCount+1
