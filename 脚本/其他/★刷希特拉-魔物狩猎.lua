@@ -998,7 +998,7 @@ function main()
 	if(取当前地图编号() == 59556 and 是否目标附近(89,57))then
 		回复(89,57)	
 	end
-	等待(1000)
+	等待(5000)
 	goto teammateAction	
 
 ::loopCheck::
@@ -1051,7 +1051,7 @@ function main()
 							goto 回辛梅尔
 						end					
 						--日志("当前第"..currentOrder.."个顺序目标")
-						等待(2000)						
+						等待(4000)						
 						if(是否空闲中())then
 							if(checkCurrentTargetObjAndFilterDrop(targetOrder[currentOrder]))then
 								checkAndSetSelfHaveItems()		
@@ -1067,7 +1067,10 @@ function main()
 								toTargetBoss(targetOrder[currentOrder])	
 								break
 							end							
-						end							
+						end	
+						if(队伍("人数") ~= 5)then
+							break
+						end
 					end		
 					停止遇敌()
 				elseif(tmpNewLeaderName ~= nil )then

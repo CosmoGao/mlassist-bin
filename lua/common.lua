@@ -351,7 +351,7 @@ function common.toCastle(warpPos)
 	goto dengru
 ::checkPos::
 	if(warpPos == nil) then
-		移动(34,89)	--艾岛上来传送点
+		移动(27,82)	--艾岛上来传送点
 		goto goEnd
 	end
 	if(warpPos == "c") then	--clock打卡处
