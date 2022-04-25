@@ -15,11 +15,121 @@
 设置("自动扔",1,"魔石")
 设置("timer",100)
 技能名称="精灵的盟约"
-技能等级=8		--停止等级
+技能等级=10		--停止等级
 
+local sTopicMsg="天狼星仓库信息"
+topicList={sTopicMsg}
+订阅消息(topicList)
+抽奖线=人物("几线")
+local tradePetRealName="天狼星"
+tradeName=nil				--仓库人物名称
+tradeBagSpace=nil			--仓库人物宠物空格
+tradePlayerLine=nil			--仓库人物当前线路
+
+function waitTopic()
+	if(抽奖线==nil)then 抽奖线=人物("几线") end
+::begin::
+	等待空闲()
+	tryNum=0
+	if(取当前地图名()~= "银行")then
+		common.gotoFalanBankTalkNpc()
+		tradeName=nil
+		tradeBagSpace=nil
+		tradePlayerLine=nil
+	end
+	设置("timer",0)
+	topic,msg=等待订阅消息()
+	日志(topic.." Msg:"..msg,1)
+	if(topic == sTopicMsg)then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.pets
+		tradePlayerLine=recvTbl.line
+	end				
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end	
+	if(tradeName ~= nil and tradeBagSpace ~= nil and tradePlayerLine==人物("几线"))then	
+		while tryNum<3 do
+			tradex=nil
+			tradey=nil
+			units = 取周围信息()
+			if(units ~= nil)then
+				for i,u in pairs(units) do
+					if(u.unit_name==tradeName)then
+						tradex=u.x
+						tradey=u.y
+						break
+					end
+				end
+			else
+				goto begin
+			end
+			if(tradex ~=nil and tradey ~= nil)then
+				移动到目标附近(tradex,tradey)
+			else
+				goto begin
+			end
+			转向坐标(tradex,tradey)				
+			pets = 全部宠物信息()
+			tradeList="金币:2000;宠物:"
+			hasData=false
+			selfTradeCount=0
+			for i,v in pairs(pets) do
+				if(v.realname == tradePetRealName and v.level==1)then					
+					if(selfTradeCount >= tradeBagSpace)then
+						break
+					end		
+					selfTradeCount=selfTradeCount+1
+					hasData=true				
+				end
+			end	
+			tradeList = tradeList..tradePetRealName.."|"..selfTradeCount
+			--金币:2000;物品:设计图？|0|1|誓约之花|0|1|
+			--string.sub(tradeList,1,string.len(tradeList)-1)
+			
+			日志(tradeList)
+			if(hasData)then
+				交易(tradeName,tradeList,"",10000)
+			else	
+				设置("timer",100)
+				--下次说不定是哪个仓库 设置为nil
+				tradeName=nil
+				tradeBagSpace=nil
+				tradePlayerLine=nil	
+				回城()
+				goto checkLine
+			end
+			tryNum=tryNum+1
+		end
+	end
+	goto begin
+::checkLine::
+	if(人物("几线")~=抽奖线)then
+		切换登录信息("","",抽奖线,"")
+		登出服务器()
+		等待(3000)
+		return
+	end
+end
 function main()
 ::begin::
 	等待空闲()
+	if (人物("宠物数量") >= 5 )then	
+		日志("宠物满了，去银行存货！")
+		common.depositNoBattlePetToBank()
+		if (人物("宠物数量") >= 5 )then	
+			日志("银行宠物也满啦！请先清理，再重新执行脚本！")
+			common.gotoFalanBankTalkNpc()
+			tradeName=nil
+			tradeBagSpace=nil
+			waitTopic()
+		end
+		goto begin
+	end
 	当前地图名=取当前地图名()
 	mapNum=取当前地图编号()
 	if(当前地图名=="艾尔莎岛")then
@@ -117,9 +227,12 @@ function 兑换100怪物硬币()
 				common.depositNoBattlePetToBank()
 				if (人物("宠物数量") >= 5 )then	
 					日志("银行宠物也满啦！请先清理，再重新执行脚本！")
-					return
+					common.gotoFalanBankTalkNpc()
+					tradeName=nil
+					tradeBagSpace=nil
+					waitTopic()
 				end
-				return
+				goto begin
 			end
 		end
 		if(取物品叠加数量("５怪物硬币") < 100 and 取物品叠加数量("１０怪物硬币") < 100  and 取物品数量("１０００怪物硬币") < 1 and 取物品数量("１万怪物硬币") < 1)then

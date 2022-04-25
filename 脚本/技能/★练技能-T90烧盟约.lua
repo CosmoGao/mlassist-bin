@@ -9,7 +9,7 @@ common=require("common")
 宠补血值=用户输入框( "宠多少血以下去补给", "200")
 卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"	
 cardName = "封印卡（人形系）"
-cardCount=10		--一次买多少
+cardCount=240		--一次买多少
 设置("自动叠",1,cardName.."&20")
 技能名称="精灵的盟约"
 清除系统消息()
@@ -33,6 +33,7 @@ end
 	elseif (mapName=="国民会馆" )then goto map59552	
 	elseif (mapName=="克罗利的店")then goto outshop 
 	elseif (mapName=="雪拉威森塔１层" )then goto map59801
+	elseif (mapName=="雪拉威森塔８５层" )then goto map59885
 	elseif (mapName=="雪拉威森塔９０层" )then goto map59890
 	elseif (mapName=="雪拉威森塔９５层" )then goto map59895
 	end
@@ -69,10 +70,13 @@ end
 	goto begin
 ::map59801::					--雪拉威森塔１层
 	移动(75, 50,"雪拉威森塔５０层")		
-	移动(18, 44,"雪拉威森塔９０层")
-	
+	移动(20, 44,"雪拉威森塔８５层")
+	--移动(18, 44,"雪拉威森塔９０层")	
 	--移动(16, 44,"雪拉威森塔９５层")
 	goto begin
+::map59885::
+	移动(57,132)
+	goto loop
 ::map59890::
 	移动(61,41)
 	goto loop
