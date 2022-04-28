@@ -108,6 +108,8 @@ function main()
 	if(人物("魔") < 补魔值)then goto begin end
 	if(宠物("血") < 宠补血值)then goto begin end
 	if(宠物("魔") < 宠补魔值)then goto begin end
+	if(取当前地图名() ~= "小岛")then goto begin end
+	等待(2000)
 	goto jiance 
 
 ::maika::

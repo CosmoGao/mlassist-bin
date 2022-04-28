@@ -1,6 +1,6 @@
 require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
 	//leo.baseInfoPrint();
-	var teamLeader = '花々语'; //队长名称
+	var teamLeader = '-005'; //队长名称
     var teamPlayerCount = 5; //队伍人数
     var autoOpen = true; //自动开壶
 
@@ -310,24 +310,7 @@ require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
             return leo.next();
         }
     })
-    .then(()=>{
-    	//扔掉多余的道具
-    	var index = 1;
-    	return leo.loop(()=>{
-    		if(index <= 16){
-    			var itemName = itemNamePrev + index;
-    			if(cga.getItemCount(itemName)>0){
-    				return leo.dropItemEx(itemName);
-    			}else{
-    				index++;
-    				return leo.next();
-    			}
-    		}else{
-    			return leo.log('初始化：身上的道具已清理完毕')
-    			.then(()=>leo.reject());
-    		}
-    	});
-    })
+  
     .then(()=>{
 		return leo.loop(()=>{
 			var mapInfo = cga.getMapInfo();
@@ -374,9 +357,9 @@ require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
 					}
 				});
 			}
-			if(mapInfo.name == '圣炎高地' && (isTeamLeader || !leo.isInTeam())){
-				return leo.autoWalk([209,330,'光之路']);
-			}
+			// if(mapInfo.name == '圣炎高地' && (isTeamLeader || !leo.isInTeam())){
+				// return leo.autoWalk([209,330,'光之路']);
+			// }
 			return leo.delay(2000);
 		});
 	})
@@ -532,6 +515,24 @@ require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
     	.then(()=>{
     		if(isLeader){
     			return leo.autoWalk([206,267])
+				  .then(()=>{
+					//扔掉多余的道具
+						var index = 1;
+						return leo.loop(()=>{
+							if(index <= 16){
+								var itemName = itemNamePrev + index;
+								if(cga.getItemCount(itemName)>0){
+									return leo.dropItemEx(itemName);
+								}else{
+									index++;
+									return leo.next();
+								}
+							}else{
+								return leo.log('初始化：身上的道具已清理完毕')
+								.then(()=>leo.reject());
+							}
+						});
+					})
     			.then(()=>leo.talkNpc(207,267,leo.talkNpcSelectorYes))
     			.then(()=>leo.waitUntil(()=>{
 					var mapInfo = cga.getMapInfo();

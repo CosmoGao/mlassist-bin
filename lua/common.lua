@@ -692,6 +692,7 @@ function common.buyDstItem(itemName,buyCount)
 	if (dstItem ~= nil)then
 		买(dstItem.index,dstItem.count)
 		等待(1000)
+		对话选择(-1,0)
 		return true
 	else
 		日志("购买道具失败！")
@@ -1544,7 +1545,7 @@ function common.learnPetSkill(x,y,skillIndex,petIndex,petSkillIndex)
 end
 --NPC xy 坐标，学习技能名称，那只宠物，宠物技能位置
 function common.learnPetSkillDir(d,skillIndex,petIndex,petSkillIndex)
-	转向坐标(d)
+	转向(d)
 	local dlg=等待服务器返回()
 	if(dlg ~= nil and dlg.type==24)then
 		对话选择(0,skillIndex)

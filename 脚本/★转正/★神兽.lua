@@ -15,6 +15,7 @@ common=require("common")
 	common.sellCastle()		--默认卖
 ::begin::
 	等待空闲()
+	等待(2000)
 	if(取当前地图名() ==  "艾尔莎岛")then goto  aiersa end
 	if(取当前地图名() ==  "里谢里雅堡")then goto liBao end
 	if(取当前地图名() ==  "杰诺瓦镇")then goto quYiYuan end
@@ -25,9 +26,9 @@ common=require("common")
 	if(取当前地图名() ==  "静谧之间" and 取当前地图编号() == 16512)then goto missionFini end
 	if(取当前地图名() ==  "静谧之间")then goto judge end
 	if(取当前地图名() ==  "启程之间")then goto warproom end--15508
+	if(取当前地图名() ==  "入口")then goto map16510 end--15508
 	-- if(取当前地图名() ==  "叹息森林")then goto naShuMiao end--15508
-	if(string.find(取当前地图名(),"贝兹雷姆的迷宫")~= nil)then goto crossMaze end
-	等待(2000)
+	if(string.find(取当前地图名(),"贝兹雷姆的迷宫")~= nil)then goto crossMaze end		
 	goto begin 
 ::aiersa::	
 	等待到指定地图("艾尔莎岛")        
@@ -92,6 +93,7 @@ common=require("common")
 	等待服务器返回()
 	对话选择("1", "", "")
 	等待到指定地图("入口", 1)
+::map16510::
 	等待(1000)
 	移动(25, 7)
 	等待到指定地图("贝兹雷姆的迷宫1楼", 1)
