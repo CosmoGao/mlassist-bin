@@ -1,9 +1,8 @@
 var cga = require('bindings')('node_cga');	
 var moment = require('moment');
 var PF = require('pathfinding');
-var Async = require('async');
 var request = require('request');
-const { createVerify } = require('crypto');
+var fs = require('fs');
 
 global.is_array_contain = function(arr, val)
 {
@@ -42,6 +41,13 @@ module.exports = function(callback){
 	cga.TRADE_STUFFS_PETSKILL = 3;
 	cga.TRADE_STUFFS_GOLD = 4;
 
+	cga.TRADE_STUFFS_TRANSLATION = {
+		1 : '物品',
+		2 : '宠物',
+		3 : '宠物技能',
+		4 : '金币',
+	};
+
 	cga.REQUEST_TYPE_PK = 1;
 	cga.REQUEST_TYPE_JOINTEAM = 3;
 	cga.REQUEST_TYPE_EXCAHNGECARD = 4;
@@ -66,6 +72,13 @@ module.exports = function(callback){
 	cga.TRADE_STATE_READY = 1;
 	cga.TRADE_STATE_CONFIRM = 2;
 	cga.TRADE_STATE_SUCCEED = 3;
+
+	cga.TRADE_STATE_TRANSLATION = {
+		0 : '取消交易',
+		1 : '准备交易',
+		2 : '确认交易',
+		3 : '交易成功',
+	};
 	
 	cga.FL_BATTLE_ACTION_ISPLAYER = 1;
 	cga.FL_BATTLE_ACTION_ISDOUBLE = 2;
@@ -195,6 +208,46 @@ module.exports = function(callback){
 	cga.turnDir = cga.turnOrientation = (orientation, offset = 2) => {
 		var pos = cga.getOrientationPosition(orientation, offset);
 		cga.TurnTo(pos[0], pos[1]);
+	}
+
+	/*  异步登出回城
+		由于2022年1月18日的一次更新之后登出回城有可能失败，故所有脚本中的登出回城操作均推荐更改为异步操作
+	*/
+	cga.logBack = (cb)=>{
+		cga.waitSysMsgTimeout((err, msg)=>{
+			if(err){
+				throw new Error('异步登出无反应，可能网络不稳定或者已经掉线！');
+			}
+
+			if(msg == '注销回到传送点。')
+			{
+				//保存登出回城的地点到配置文件
+				var config = cga.loadPlayerConfig();
+
+				if(!config)
+					config = {};
+
+				config.settledCity = cga.GetMapName();
+
+				cga.savePlayerConfig(config, cb);
+				return false;
+			}
+
+			var regex = msg.match(/一分钟内'回到城内登入点'最多使用5次，请过(\d+)秒钟后再用！/);
+			
+			if(regex && regex.length >= 2){
+
+				console.log('一分钟登出次数已达上限！等待 '+parseInt(regex[1])+' 秒后重试...');
+
+				var wait = parseInt(regex[1]) * 1000;
+				setTimeout(cga.logBack, wait + 1000, cb);
+				return false;
+			}
+
+			return true;
+		}, 5000);
+
+		cga.LogBack();
 	}
 	
 	//转向(x,y)坐标，默认往前一格避免捡起面前的物品
@@ -460,7 +513,15 @@ module.exports = function(callback){
 		
 	cga.travel.falan = {};
 
-	cga.travel.falan.isSettled = false;
+	cga.travel.falan.isSettled = ()=>{
+
+		var config = cga.loadPlayerConfig();
+
+		if(config)
+			return config.settledCity == '法兰城' ? true : false;
+
+		return false;
+	}
 	
 	cga.travel.falan.xy2name = (x, y, mapname)=>{
 		if(x == 242 && y == 100 && mapname == '法兰城')
@@ -653,13 +714,14 @@ module.exports = function(callback){
 			});
 			return;
 		}
-		cga.LogBack();
-		cga.AsyncWaitMovement({map:desiredMap, delay:1000, timeout:5000}, (err, reason)=>{
-			if(err){
-				cb(err, reason);
-				return;
-			}
-			cga.travel.falan.toStoneInternal(stone, cb);
+		cga.logBack(()=>{
+			cga.AsyncWaitMovement({map:desiredMap, delay:1000, timeout:5000}, (err, reason)=>{
+				if(err){
+					cb(err, reason);
+					return;
+				}
+				cga.travel.falan.toStoneInternal(stone, cb);
+			});
 		});
 	}
 	
@@ -1463,15 +1525,24 @@ module.exports = function(callback){
 	
 	cga.travel.AKLF = {};
 	
-	cga.travel.AKLF.isSettled = false;
+	cga.travel.AKLF.isSettled = ()=>{
+
+		var config = cga.loadPlayerConfig();
+
+		if(config)
+			return config.settledCity == '阿凯鲁法村' ? true : false;
+
+		return false;
+	}
 	
 	//前往到阿凯鲁法银行
 	cga.travel.AKLF.toBank = (cb)=>{
 		if(cga.GetMapName() != '阿凯鲁法村'){
 
-			if(cga.travel.AKLF.isSettled){
-				cga.LogBack();
-				setTimeout(cga.travel.AKLF.toBank, 1000, cb);
+			if( cga.travel.AKLF.isSettled() ){
+				cga.logBack(()=>{
+					setTimeout(cga.travel.AKLF.toBank, 1000, cb);
+				});
 				return;
 			}
 
@@ -1736,7 +1807,15 @@ module.exports = function(callback){
 	
 	cga.travel.newisland = {};
 		
-	cga.travel.newisland.isSettled = true;
+	cga.travel.newisland.isSettled = ()=>{
+
+		var config = cga.loadPlayerConfig();
+
+		if(config)
+			return config.settledCity == '艾尔莎岛' ? true : false;
+
+		return false;
+	}
 	
 	cga.travel.newisland.xy2name = function(x, y, mapname){
 		if(x == 140 && y == 105 && mapname == '艾尔莎岛')
@@ -1834,14 +1913,15 @@ module.exports = function(callback){
 			}
 		}
 
-		if(cga.travel.newisland.isSettled){
-			cga.LogBack();
-			cga.AsyncWaitMovement({map:desiredMap, delay:1000, timeout:5000}, (err, reason)=>{
-				if(err){
-					cb(err, reason);
-					return;
-				}
-				cga.travel.newisland.toStoneInternal(stone, cb);
+		if(cga.travel.newisland.isSettled()){
+			cga.logBack(()=>{
+				cga.AsyncWaitMovement({map:desiredMap, delay:1000, timeout:5000}, (err, reason)=>{
+					if(err){
+						cb(err, reason);
+						return;
+					}
+					cga.travel.newisland.toStoneInternal(stone, cb);
+				});
 			});
 		}
 	}
@@ -1900,7 +1980,15 @@ module.exports = function(callback){
 	
 	cga.travel.gelaer = {};
 	
-	cga.travel.gelaer.isSettled = false;
+	cga.travel.gelaer.isSettled = ()=>{
+
+		var config = cga.loadPlayerConfig();
+
+		if(config)
+			return config.settledCity == '哥拉尔镇' ? true : false;
+
+		return false;
+	}
 	
 	cga.travel.gelaer.xy2name = function(x, y, mapname){
 		if(x == 120 && y == 107 && mapname == '哥拉尔镇')
@@ -1971,14 +2059,15 @@ module.exports = function(callback){
 			}
 		}
 
-		if(cga.travel.gelaer.isSettled){
-			cga.LogBack();
-			cga.AsyncWaitMovement({map:'哥拉尔镇', delay:1000, timeout:5000}, (err, reason)=>{
-				if(err){
-					cb(err, reason);
-					return;
-				}
-				cga.travel.gelaer.toStoneInternal(stone, cb);
+		if(cga.travel.gelaer.isSettled()){
+			cga.logBack(()=>{
+				cga.AsyncWaitMovement({map:'哥拉尔镇', delay:1000, timeout:5000}, (err, reason)=>{
+					if(err){
+						cb(err, reason);
+						return;
+					}
+					cga.travel.gelaer.toStoneInternal(stone, cb);
+				});
 			});
 		}
 	}
@@ -1997,9 +2086,10 @@ module.exports = function(callback){
 	cga.travel.gelaer.toHospital = (cb, isPro)=>{
 		if(cga.GetMapName() != '哥拉尔镇'){
 
-			if(cga.travel.gelaer.isSettled){
-				cga.LogBack();
-				setTimeout(cga.travel.gelaer.toHospital, 1000, cb, isPro);
+			if(cga.travel.gelaer.isSettled()){
+				cga.logBack(()=>{
+					setTimeout(cga.travel.gelaer.toHospital, 1000, cb, isPro);
+				});				
 				return;
 			}
 
@@ -2024,9 +2114,10 @@ module.exports = function(callback){
 	cga.travel.gelaer.toBank = (cb)=>{
 		if(cga.GetMapName() != '哥拉尔镇'){
 
-			if(cga.travel.gelaer.isSettled){
-				cga.LogBack();
-				setTimeout(cga.travel.gelaer.toBank, 1000, cb);
+			if(cga.travel.gelaer.isSettled()){
+				cga.logBack(()=>{
+					setTimeout(cga.travel.gelaer.toBank, 1000, cb);
+				});				
 				return;
 			}
 
@@ -2048,9 +2139,10 @@ module.exports = function(callback){
 	cga.travel.gelaer.toLumi = (cb)=>{
 		if(cga.GetMapName() != '哥拉尔镇'){
 
-			if(cga.travel.gelaer.isSettled){
-				cga.LogBack();
-				setTimeout(cga.travel.gelaer.toLumi, 1000, cb);
+			if(cga.travel.gelaer.isSettled()){
+				cga.logBack(()=>{
+					setTimeout(cga.travel.gelaer.toLumi, 1000, cb);
+				});
 				return;
 			}
 
@@ -3129,8 +3221,154 @@ module.exports = function(callback){
 		return false;
 	}
 
-	//寻找银行中的空闲格子
-	cga.findBankEmptySlot = (filter, maxcount) =>{
+	//保存每个人物自己的个人配置文件，用于保存银行格信息和登出点信息
+	cga.savePlayerConfig = (config, cb) => {
+		console.log('正在保存个人配置文件...');
+
+		var configPath = __dirname+'\\个人配置';
+		var configName = configPath+'\\个人配置_'+cga.FileNameEscape(cga.GetPlayerInfo().name)+'.json';
+
+		fs.mkdir(configPath, (err)=>{
+			if(err && err.code != 'EEXIST'){
+				console.log('个人配置文件保存失败：');
+				console.log(err);
+				if(cb) cb(err);
+				return;
+			}
+
+			fs.writeFile(configName, JSON.stringify(config), (err)=>{
+				if(err){
+					console.log('个人配置文件保存失败：');
+					console.log(err);
+					if(cb) cb(err);
+					return;
+				}			
+				console.log('个人配置文件保存成功!...');
+				if(cb) cb(null);
+			});
+		});		
+	}
+
+	//读取每个人物自己的个人配置文件
+	cga.loadPlayerConfig = () => {
+		console.log('正在读取个人配置文件...');
+
+		var configPath = __dirname+'\\个人配置';
+		var configName = configPath+'\\个人配置_'+cga.FileNameEscape(cga.GetPlayerInfo().name)+'.json';
+
+		try
+		{
+			var json = fs.readFileSync(configName, 'utf8');
+				
+			if(typeof json != 'string' || !json.length)
+				throw new Error('个人配置文件格式错误或文件不存在');
+
+			var obj = JSON.parse(json);
+
+			return obj;
+		}
+		catch(e)
+		{
+			if(e.code != 'ENOENT'){
+				console.log('读取个人配置时发生错误：');
+				console.log(e);
+			} else {
+				console.log('读取个人配置文件不存在');
+			}
+
+		}
+		
+		return null;
+	}
+
+	//异步获取最大银行格，必须跟柜员对话一次
+	cga.getBankMaxSlots = (filter, cb) => {
+		var banks = cga.GetBankItemsInfo();
+
+		//先从配置文件里获取
+		var config = cga.loadPlayerConfig();
+
+		if(!config)
+			config = {};
+
+		if(config.maxbankslots)
+		{
+			console.log('最大银行格为：'+config.maxbankslots);
+			cb(null, config.maxbankslots);
+			return;
+		} 
+		else
+		{
+			//看看60~79，40~59，20~39是否有物品
+			var bank6079 = banks.filter((val)=>{ return val.pos >= 160 });
+
+			if(bank6079.length > 0)
+			{
+				cb(null, 80);
+				return;
+			}
+			else
+			{
+				var testitempos = cga.findItem(filter);
+				if(testitempos != -1)
+				{
+					cga.MoveItem(testitempos, 160, -1);
+
+					cga.waitSysMsgTimeout((err, msg)=>{
+						if(err){
+							//银行第60格物品保存成功
+							if(cga.GetBankItemsInfo().find((item)=>{
+								return item.pos == 160;
+							}) != undefined)
+							{
+								//第60格物品取回包里
+								cga.MoveItem(160, testitempos, -1);
+
+								config.maxbankslots = 80;
+								cga.savePlayerConfig(config);
+								console.log('最大银行格为：'+config.maxbankslots);
+								setTimeout(cb, 1000, config.maxbankslots);
+
+								return false;
+							}
+							//未知问题
+
+							console.log('获取最大银行格时发生未知问题，可能网络不稳定或没有与柜员对话！');
+							console.log('最大银行格默认为：'+20);
+							setTimeout(cb, 1000, 20);
+							return false;
+						}
+
+						if(msg.indexOf('您现在只能使用银行物品栏位中的第') >= 0)
+						{
+							var regex = msg.match(/您现在只能使用银行物品栏位中的第 (\d+)到(\d+)个！/);
+							if(regex && regex.length >= 3){
+
+								config.maxbankslots = parseInt(regex[2]);
+								cga.savePlayerConfig(config);
+								console.log('最大银行格为：'+config.maxbankslots);
+								setTimeout(cb, 1000, config.maxbankslots);
+
+								return false;
+							}
+						}
+
+						return true;
+					}, 1000);					
+				}
+				else
+				{
+					console.log('获取最大银行格失败，可能包中没有符合条件的物品！');
+					console.log('最大银行格默认为：'+20);
+					setTimeout(cb, 1000, 20);
+					return false;
+				}
+			}
+		}
+	};
+
+	//寻找银行中的空闲格子, 参数：物品filter、最大堆叠数量、最大银行格
+	cga.findBankEmptySlot = (filter, maxcount, maxslots = 20) => {
 		
 		var banks = cga.GetBankItemsInfo();
 
@@ -3140,7 +3378,7 @@ module.exports = function(callback){
 			arr[banks[i].pos-100] = banks[i];
 		}
 		
-		for(var i = 0; i < 80; ++i){
+		for(var i = 0; i < maxslots; ++i){
 			if(typeof arr[i] != 'undefined'){
 				if(typeof filter == 'string' && maxcount > 0){
 					if(arr[i].name == filter && arr[i].count < maxcount)
@@ -3214,31 +3452,42 @@ module.exports = function(callback){
 			cb(new Error('包里没有该物品, 无法存放到银行'));
 			return;
 		}
-		
-		var emptyslot = cga.findBankEmptySlot(filter, maxcount);
-		if(emptyslot == -1){
-			cb(new Error('银行没有空位, 无法存放到银行'));
-			return;
-		}
-		
-		cga.MoveItem(itempos, emptyslot, -1);
-		
-		var saveToBank = ()=>{
-			if(cga.GetItemInfo(emptyslot))
-			{
-				cb(null);
+
+		cga.getBankMaxSlots(filter, (err, maxslots)=>{
+			if(err){
+				cb(err);
+				return;
 			}
-			else
-			{
-				cb(new Error('存银行失败，可能银行格子已满'));
+
+			var emptyslot = cga.findBankEmptySlot(filter, maxcount, maxslots);
+			if(emptyslot == -1){
+				cb(new Error('银行没有空位, 无法存放到银行'));
+				return;
 			}
-		}
-		
-		setTimeout(saveToBank, 800);
+			
+			cga.MoveItem(itempos, emptyslot, -1);
+
+			setTimeout(()=>{
+				var bankitem = cga.GetBankItemsInfo().find((item)=>{
+					return item.pos == emptyslot;
+				});
+				if(bankitem != undefined)
+				{
+					//保存成功
+					console.log(bankitem.name+' 成功存到银行第 ' + (bankitem.pos - 100 + 1) + ' 格!');
+					cb(null);
+				}
+				else
+				{
+					cb(new Error('保存到银行失败，可能银行格子已满、未与柜员对话或网络问题'));
+				}
+			}, 1000);
+		});
 	}
 	
 	//循环将符合条件的物品存至银行，maxcount为最大堆叠数量
 	cga.saveToBankAll = (filter, maxcount, cb)=>{
+		console.log('开始批量保存物品到银行...');
 		var repeat = ()=>{
 			cga.saveToBankOnce(filter, maxcount, (err)=>{
 				if(err){
@@ -3247,10 +3496,11 @@ module.exports = function(callback){
 					return;
 				}
 				if(cga.findItem(filter) == -1){
+					console.log('包里已经没有指定物品，批量保存到银行执行完毕！');
 					cb(null);
 					return;
-				}				
-				setTimeout(repeat, 800);
+				}
+				setTimeout(repeat, 1000);
 			});
 		}
 		
@@ -3350,17 +3600,37 @@ module.exports = function(callback){
 		move();
 	}
 	
-	//从NPC对话框解析商店购物列表
+	//从NPC对话框内容解析商店购物列表
 	cga.parseBuyStoreMsg = (dlg)=>{
 		
-		if(!dlg.message)
+		if(!dlg){
+			throw new Error('解析商店购物列表失败，可能对话超时!');
 			return null;
+		}
+
+		if(!dlg.message){
+			throw new Error('解析商店购物列表失败，可能对话超时!');
+			return null;
+		}
+
+		//28?
+		if(dlg.type != 6){
+			throw new Error('解析商店购物列表失败，可能对话不是购物商店!');
+			return null;
+		}
 		
 		var reg = new RegExp(/([^|\n]+)/g)
 		var match = dlg.message.match(reg);
 		
-		if(match.length < 5)
+		if(match.length < 5){
+			throw new Error('解析商店购物列表失败，格式错误!');
 			return null;
+		}
+
+		if((match.length - 5) % 6 != 0){
+			throw new Error('解析商店购物列表失败，格式错误!');
+			return null;
+		}
 		
 		var storeItemCount = (match.length - 5) / 6;
 		
@@ -3376,16 +3646,177 @@ module.exports = function(callback){
 			obj.items.push({
 				index : i,
 				name : match[5 + 6 * i + 0],
-				image_id : match[5 + 6 * i + 1],
-				cost : match[5 + 6 * i + 2],
+				image_id : parseInt(match[5 + 6 * i + 1]),
+				cost : parseInt(match[5 + 6 * i + 2]),
 				attr : match[5 + 6 * i + 3],
-				unk1 : match[5 + 6 * i + 4],
-				max_buy : match[5 + 6 * i + 5],
+				batch : parseInt(match[5 + 6 * i + 4]),//最少买多少
+				max_buy : parseInt(match[5 + 6 * i + 5]),//最多买多少
+			});
+		}
+		return obj;
+	}
+
+	//从NPC对话框内容解析兑换列表
+	cga.parseExchangeStoreMsg = (dlg)=>{
+		
+		if(!dlg){
+			throw new Error('解析兑换列表失败，可能对话超时!');
+			return null;
+		}
+
+		if(!dlg.message){
+			throw new Error('解析兑换列表失败，可能对话超时!');
+			return null;
+		}
+
+		if(dlg.type != 28){
+			throw new Error('解析兑换列表失败，可能对话不是兑换商店!');
+			return null;
+		}
+		
+		var reg = new RegExp(/([^|\n]+)/g)
+		var match = dlg.message.match(reg);
+		
+		if(match.length < 5){
+			throw new Error('解析兑换列表失败，格式错误!');
+			return null;
+		}
+
+		if((match.length - 5) % 7 != 0){
+			throw new Error('解析兑换列表失败，格式错误!');
+			return null;
+		}
+		
+		var storeItemCount = (match.length - 5) / 7;
+		
+		var obj = {
+			storeid : match[0],
+			name : match[1],
+			welcome : match[2],
+			insuff_funds : match[3],
+			insuff_inventory : match[4],
+			items : []
+		}
+		for(var i = 0; i < storeItemCount; ++i){
+			obj.items.push({
+				index : i,
+				item_id : parseInt(match[5 + 6 * i + 0]),
+				required : match[5 + 6 * i + 1],
+				name : match[5 + 6 * i + 2],
+				image_id : parseInt(match[5 + 6 * i + 3]),
+				count : parseInt(match[5 + 6 * i + 4]),//count个required才能换取一个
+				batch : parseInt(match[5 + 6 * i + 5]),//最少换多少
+				attr : match[5 + 6 * i + 6],
+			});
+		}
+		return obj;
+	}
+
+	//从NPC对话框内容解析宠物技能学习列表
+	cga.parsePetSkillStoreMsg = (dlg)=>{
+		
+		if(!dlg){
+			throw new Error('解析宠物学习技能列表失败，可能对话超时!');
+			return null;
+		}
+
+		if(!dlg.message){
+			throw new Error('解析宠物学习技能列表失败，可能对话超时!');
+			return null;
+		}
+
+		if(dlg.type != 24){
+			throw new Error('解析宠物学习技能列表失败，可能对话不是宠物技能商店!');
+			return null;
+		}
+
+		var reg = new RegExp(/([^|\n]+)/g)
+		var match = dlg.message.match(reg);
+		
+		if(match.length < 5){
+			throw new Error('解析宠物学习技能列表失败，格式错误!');
+			return null;
+		}
+		
+		if((match.length - 5) % 4 != 0){
+			throw new Error('解析宠物学习技能列表失败，格式错误!');
+			return null;
+		}
+
+		var storeItemCount = (match.length - 5) / 4;
+		
+		var obj = {
+			storeid : match[0],
+			name : match[1],
+			welcome : match[2],
+			insuff_funds : match[3],
+			insuff_pets : match[4],
+			skills : []
+		}
+
+		for(var i = 0; i < storeItemCount; ++i){
+			obj.skills.push({
+				index : i,
+				name : match[5 + 4 * i + 0],
+				mana : parseInt(match[5 + 4 * i + 1]),
+				cost : parseInt(match[5 + 4 * i + 2]),
+				info : match[5 + 4 * i + 3],
 			});
 		}
 		return obj;
 	}
 	
+	//从NPC对话框内容解析遗忘技能列表
+	cga.parseForgetSkillStoreMsg = (dlg)=>{
+		
+		if(!dlg){
+			throw new Error('解析遗忘技能列表失败，可能对话超时!');
+			return null;
+		}
+
+		if(!dlg.message){
+			throw new Error('解析遗忘技能列表失败，可能对话超时!');
+			return null;
+		}
+
+		if(dlg.type != 18){
+			throw new Error('解析遗忘技能列表失败，可能对话不是遗忘技能!');
+			return null;
+		}
+		
+		var reg = new RegExp(/([^|\n]+)/g)
+		var match = dlg.message.match(reg);
+		
+		if(match.length < 3){
+			throw new Error('解析遗忘技能列表失败，格式错误!');
+			return null;
+		}
+		
+		if((match.length - 3) % 3 != 0){
+			throw new Error('解析遗忘技能列表失败，格式错误!');
+			return null;
+		}
+
+		var storeItemCount = (match.length - 3) / 3;
+		
+		var obj = {
+			storeid : match[0],
+			name : match[1],
+			welcome : match[2],
+			skills : []
+		}
+
+		for(var i = 0; i < storeItemCount; ++i){
+			obj.skills.push({
+				index : i,
+				name : match[3 + 3 * i + 0],
+				level : parseInt(match[3 + 3 * i + 1]),
+				slots : parseInt(match[3 + 3 * i + 2]),
+			});
+		}
+		return obj;
+	}
+
 	//获取队伍成员详细信息
 	cga.getTeamPlayers = ()=>{
 		var teaminfo = cga.GetTeamPlayerInfo();
@@ -3731,11 +4162,37 @@ module.exports = function(callback){
 				return;
 			}
 			
-			listen = cb(r.msg);	
+			listen = cb(r.msg);
 
 			if(listen == true)
 				cga.waitSysMsg(cb);
 		}, 1000);
+	}
+
+	cga.waitSysMsgTimeout = (cb, timeout)=>{
+		cga.AsyncWaitChatMsg((err, r)=>{
+
+			if(err){
+
+				listen = cb(err);
+
+				if(listen == true)
+					cga.waitSysMsgTimeout(cb, timeout);
+
+				return;
+			}
+
+			if(!r || r.unitid != -1){
+				cga.waitSysMsgTimeout(cb, timeout);
+				return;
+			}
+			
+			listen = cb(null, r.msg);
+
+			if(listen == true)
+				cga.waitSysMsgTimeout(cb, timeout);
+
+		}, timeout);
 	}
 	
 	//发送超长聊天信息
@@ -4056,6 +4513,10 @@ module.exports = function(callback){
 	
 	//下载地图的部分区域并等待下载完成
 	cga.downloadMapEx = (xfrom, yfrom, xsize, ysize, cb)=>{
+
+		throw new Error('警告：2022年1月18日一次更新后服务器对下载地图功能增加了验证，不再推荐使用该API!');
+		cb(null);
+		return;
 		var last_index3 = cga.GetMapIndex().index3;
 		var x = xfrom, y = yfrom;
 		var recursiveDownload = ()=>{
@@ -4106,9 +4567,7 @@ module.exports = function(callback){
 	cga.walkMaze = (target_map, cb, filter)=>{
 
 		var objs = cga.getMapObjects();
-		
-		var pos = cga.GetMapXY();
-		
+				
 		var newmap = null;
 
 		if(typeof target_map != 'string'){
@@ -4160,8 +4619,13 @@ module.exports = function(callback){
 		else
 		{
 			objs.forEach((obj)=>{
-				if(obj.mapx == pos.x && obj.mapy == pos.y)
-					return;
+
+				if(cga.walkMazeStartPosition != null){
+					if(obj.mapx == cga.walkMazeStartPosition.x && obj.mapy == cga.walkMazeStartPosition.y){
+						return;
+					}
+				}
+
 				if(target == null && obj.cell == 3){
 					target = obj;
 					return false;
@@ -4174,48 +4638,149 @@ module.exports = function(callback){
 			return;
 		}
 
+		console.log('迷宫出口：('+target.mapx+', '+target.mapy+')');
+
+		var pos = cga.GetMapXY();
+
 		var walklist = cga.calculatePath(pos.x, pos.y, target.mapx, target.mapy, newmap, null, null, []);
 		if(walklist.length == 0){
 			cb(new Error('无法计算到迷宫出口的路径'));
 			return;
 		}
 
+		cga.walkMazeStartPosition = null;
+
 		cga.walkList(walklist, (err, reason)=>{
+			if(err == null){
+				cga.waitUntilMapLoaded(()=>{
+					cb(err, reason);
+				});
+				return;
+			}
 			cb(err, reason);
 			return;
 		});
 	}
+	
+	cga.waitUntilMapLoaded = (cb)=>{
+		var curpos = cga.GetMapXY();
+		if(cga.getRandomSpace(curpos.x, curpos.y) != null){
+			cb(null);
+			return;
+		}
+		console.log('地图未下载完成，服务器可能卡住，等待1秒后再试...');
+		setTimeout(cga.waitUntilMapLoaded, 1000, cb);
+	}
 
-	//判断当前地图是否已经下载完成
-	
-	cga.isMapDownloaded = ()=>{
-		var tiles = cga.buildMapTileMatrix(true);
-		
-		for(var y = 0; y < tiles.y_size; ++y){
-			for(var x = 0; x < tiles.x_size; ++x){
-				if(tiles.matrix[y][x] == 0)
-					return false;
-			}
-		}
-		
-		return true;
-	}
-	
-	//走一层随机迷宫，和cga.walkMaze的区别是走之前会先下载地图
-	
+	//走随机迷宫
+	cga.walkMazeStartPosition = null;
 	cga.walkRandomMaze = (target_map, cb, filter)=>{
-		if(!cga.isMapDownloaded())
-		{
-			cga.downloadMap(()=>{
-				cga.walkMaze(target_map, cb, filter);
-			});
-		} 
-		else
-		{
-			cga.walkMaze(target_map, cb, filter);
-		}
+
+		cga.waitUntilMapLoaded(()=>{
+
+			if(cga.walkMazeStartPosition == null)
+			{
+				cga.walkMazeStartPosition = cga.GetMapXY();
+				console.log('开始走随机迷宫...');
+				console.log('起始坐标：('+cga.walkMazeStartPosition.x+', '+cga.walkMazeStartPosition.y+')');
+			}
+			else
+			{
+				console.log('继续走随机迷宫...');
+				console.log('起始坐标：('+cga.walkMazeStartPosition.x+', '+cga.walkMazeStartPosition.y+')');
+			}
+			cga.walkMaze(target_map, (err, reason)=>{
+				if(err && err.message == '无法找到迷宫的出口'){					
+					cga.searchMap(()=>{
+						return cga.getMapObjects().find((obj)=>{
+							
+							console.log('cga.walkMazeStartPosition');
+							console.log(cga.walkMazeStartPosition);
+							
+							if(cga.walkMazeStartPosition != null && obj.mapx == cga.walkMazeStartPosition.x && obj.mapy == cga.walkMazeStartPosition.y)
+								return false;
+							
+							if(obj.cell == 3){
+								console.log(obj);
+							}
+
+							return obj.cell == 3 ? true : false;
+						}) != undefined ? true : false;
+					}, (err)=>{
+						if(err && err.message.indexOf('无法找到') >= 0){
+							cga.walkRandomMaze(target_map, cb, filter);
+							return;
+						}
+						console.log('成功寻找到随机迷宫出口');
+						cga.walkMaze(target_map, cb, filter);
+					});
+					return;
+				}
+				cb(err, reason);
+			}, filter);
+		});
 	}
 	
+	cga.getRandomMazeEntrance = (args, cb, index = 0)=>{
+
+		if(index == undefined)
+			index = 0;
+
+		if(args.table[index] == undefined)
+		{
+			throw new Error('所有区域都已搜索完毕，没有找到迷宫入口！');
+		}
+
+		console.log('前往区域'+(index+1)+'搜索迷宫入口！');
+	
+		cga.walkList([
+			args.table[index]
+		], ()=>{
+			console.log('正在区域'+(index+1)+'搜索迷宫入口...');
+			var entrance = cga.getMapObjects().find((obj)=>{
+	
+				if(args.blacklist && args.blacklist.find((e)=>{
+					return e.mapx == obj.mapx && e.mapy == obj.mapy;
+				}) != undefined)
+				{
+					return false;
+				}
+	
+				return args.filter(obj);
+			});
+
+			if(entrance == undefined){
+				console.log('未找到迷宫入口,尝试下一区域...');
+				cga.getRandomMazeEntrance(args, cb, index+1);
+			} else {
+				if(args.expectmap)
+				{
+					var originalmap = cga.GetMapName();
+					cga.walkList([
+						[entrance.mapx, entrance.mapy, args.expectmap]
+					], (err)=>{
+						if(err && err.message == 'Unexcepted map changed.'){
+							var xy = cga.GetMapXY();
+							args.blacklist.push(entrance);
+							cga.walkList([
+								[xy.x, xy.y, originalmap],
+							], ()=>{
+								console.log('未找到迷宫入口,尝试下一区域...');
+								cga.getRandomMazeEntrance(args, cb, index+1);
+							});
+							return;
+						}
+						cb(entrance);
+					});
+				}
+				else
+				{
+					cb(entrance);
+				}
+			}
+		});
+	}
+
 	/**
 	 * targetFinder返回unit object 或者 true都将停止搜索
 	 * cga.searchMap(units => units.find(u => u.unit_name == '守墓员' && u.type == 1) || cga.GetMapName() == '？？？', result => {
@@ -4263,6 +4828,7 @@ module.exports = function(callback){
 		const getTarget = (noTargetCB) => {
 			const target = targetFinder(cga.GetMapUnits());
 			if (typeof target == 'object') {
+				console.log('成功找到有效目标2');
 				const walkTo = cga.getRandomSpace(target.xpos, target.ypos);
 				if (walkTo) {
 					cga.walkList([walkTo], () => cb(null, target));
@@ -4270,8 +4836,10 @@ module.exports = function(callback){
 					noTargetCB();
 				}
 			} else if (target === true){
+				console.log('成功找到有效目标1');
 				cb(null);
 			} else{
+				console.log('未找到有效目标');
 				noTargetCB();
 			}
 		};
@@ -4305,18 +4873,19 @@ module.exports = function(callback){
 			const current = cga.GetMapXY();
 			//if (!entry && recursion) entry = getFarthestEntry(start);
 			toNextPoint(Object.values(getMovablePoints(walls, current)), current, () => {
-				cb(null);
+				cb(new Error('无法找到符合条件的对象'));
 			});
 		};
 		getTarget(() => {
 			let walls = cga.buildMapCollisionMatrix();
-			if(walls.matrix[0][0] == 1
+			/*if(walls.matrix[0][0] == 1
 				|| walls.matrix[walls.y_size-1][0] == 1
 				|| walls.matrix[walls.y_size-1][walls.x_size-1] == 1
 				|| walls.matrix[0][walls.x_size-1] == 1
 			) {
 				cga.downloadMap(() => findNext(cga.buildMapCollisionMatrix()));
-			} else findNext(walls);
+			} else findNext(walls);*/
+			findNext(walls);
 		});
 	}
 	
@@ -4376,17 +4945,16 @@ module.exports = function(callback){
 		var waitTradeMsg = ()=>{
 			
 			cga.waitSysMsg((msg)=>{
-								
+
 				if(tradeFinished)
 					return false;
-				
-				console.log('等待交易消息：'+msg);
-												
+																
 				if(msg.indexOf('交易完成') >= 0){
 					tradeFinished = true;
 					resolve({
 						success: true,
-						received: receivedStuffs
+						received: receivedStuffs,
+						reason : '交易成功',
 					});
 					return false;
 				} else if(msg.indexOf('交易中止') >= 0 || msg.indexOf('因物品栏已满所以无法交易') >= 0){
@@ -4395,8 +4963,7 @@ module.exports = function(callback){
 					tradeFinished = true;
 					resolve({
 						success: false,
-						received: [],
-						reason : 'refused'
+						reason : '交易被拒绝',
 					});
 					return false;
 				} else if(msg.indexOf('没有可交易的对象') >= 0){
@@ -4404,8 +4971,7 @@ module.exports = function(callback){
 					tradeFinished = true;
 					resolve({
 						success: false,
-						received: [],
-						reason : 'no target'
+						reason : '没有可交易的对象',
 					});
 					return false;
 				}
@@ -4426,10 +4992,6 @@ module.exports = function(callback){
 
 				cga.AsyncWaitTradeStuffs((err, type, args) => {
 				
-					//console.log(err);
-					//console.log(type);
-					//console.log(args);
-
 					if(!args){
 
 						if(getInTradeStuffs == false && !tradeFinished)
@@ -4438,8 +5000,9 @@ module.exports = function(callback){
 						return;
 					}
 					
-					console.log('等待交易物品：'+type);
-															
+					if(type >= cga.TRADE_STUFFS_ITEM && type <= cga.TRADE_STUFFS_GOLD )
+						console.log('正在等待获取交易内容：' + cga.TRADE_STUFFS_TRANSLATION[type]);
+
 					getInTradeStuffs = true;
 						
 					if(type == cga.TRADE_STUFFS_ITEM){
@@ -4465,30 +5028,30 @@ module.exports = function(callback){
 
 					if(tradeFinished)
 						return;
-										
+
 					var timeout_trade = (typeof timeout == 'number') ? timeout : 30000;
 					if( (new Date()).getTime() > beginTime + timeout_trade){
 						tradeFinished = true;
 						cga.DoRequest(cga.REQUEST_TYPE_TRADE_REFUSE);
 						resolve({
 							success: false,
-							received: [],
-							reason : 'refused'
+							reason : '交易被拒绝',
 						});
 						return;
 					}
 					
-					console.log('等待交易状态变更：'+state);
+					if(state != undefined)
+						console.log('交易状态变更为：' + cga.TRADE_STATE_TRANSLATION[state]);
 					
 					if(!err){
 						if (state == cga.TRADE_STATE_READY || state == cga.TRADE_STATE_CONFIRM) {
 							getInTradeStuffs = true;
 							if (!checkParty || tradeStuffsChecked || checkParty(playerName ? playerName : savePartyName, receivedStuffs)) {
 								tradeStuffsChecked = true;
-								console.log('confirm');
+								console.log('确认交易...');
 								cga.DoRequest(cga.REQUEST_TYPE_TRADE_CONFIRM);
 							} else {
-								console.log('refuse');
+								console.log('拒绝交易...');
 								cga.DoRequest(cga.REQUEST_TYPE_TRADE_REFUSE);
 							}
 						} else if (state == cga.TRADE_STATE_SUCCEED || state == cga.TRADE_STATE_CANCEL) {
@@ -4510,9 +5073,13 @@ module.exports = function(callback){
 				return {itemid: e.itemid, itempos: e.pos, count: (e.count > 1 ? e.count : 1)};
 			});
 
+			const tracePets = cga.GetPetsInfo().filter(petFilter).map((e)=>{
+				return e.index;
+			});
+
 			cga.TradeAddStuffs(
 				tradeItems,
-				cga.GetPetsInfo().filter(petFilter).map((p, index) => index),
+				tracePets,
 				(stuff && stuff.gold) ? stuff.gold : 0
 			);
 		}
@@ -4522,7 +5089,7 @@ module.exports = function(callback){
 			if(tradeFinished)
 				return;
 			
-			console.log('等待交易对话框：'+partyLevel);
+			console.log('正在等待交易对话框...');
 			
 			savePartyName = partyName;
 			
@@ -4531,7 +5098,10 @@ module.exports = function(callback){
 			} else {
 				cga.DoRequest(cga.REQUEST_TYPE_TRADE_REFUSE);
 				tradeFinished = true;
-				resolve({success: false, reason : 'trade dialog timeout'});
+				resolve({
+					success: false,
+					reason : '等待交易对话框超时',
+				});
 			}
 		}, 10000);
 		
@@ -4610,49 +5180,147 @@ module.exports = function(callback){
 				console.log('交易失败! 原因：'+arg.reason);
 			}
 		});
+
+		//arg中可能的返回值：
+		{
+			success: false,                 //是否交易成功
+			received: [],                   //交易成功时接受到的物品、宠物、金币
+			reason: '交易被拒绝',              //交易失败的原因
+		}
 	*/
 	cga.positiveTrade = (name, stuff, checkParty, resolve, timeout) => {
+	
+		var resulted = false;
+
 		cga.AsyncWaitPlayerMenu((err, players) => {
+			
+			if(resulted)
+				return false;
+			
 			if(err){
-				console.log('等待交易超时')
-				resolve({success: false, reason : 'player menu timeout'});
+
+				resulted = true;
+				
+				resolve({
+					success: false,
+					reason : '等待交易玩家选择菜单超时',
+				});
+
 				return;
 			}
 			
 			if (!(players instanceof Array)) players = [];
 			var player = players.find((e, index) => typeof name == 'number' ? index == name : e.name == name);
 			if (player !== undefined) {
+
+				resulted = true;
+
 				cga.tradeInternal(stuff, checkParty, resolve, name, timeout);
 				cga.PlayerMenuSelect(player.index);
 			} else {
-				console.log('未找到目标交易对象')
-				resolve({success: false, reason : 'player not found'});
+				
+				resulted = true;
+
+				resolve({
+					success: false, 
+					reason : '未找到目标交易对象',
+				});
+
 			}
-		}, 3000);
+		}, 5000);
+
+		cga.waitSysMsgTimeout((err, msg)=>{
+
+			if(resulted)
+				return false;
+
+			if(err)
+				return false;
+
+			if(msg && msg.indexOf('没有可交易的对象！') >= 0)
+			{
+				resulted = true;
+
+				resolve({
+					success: false, 
+					reason : '没有可交易的对象',
+				});
+
+				return false;
+			}
+
+			return true;
+
+		}, 2000);
 		
 		cga.DoRequest(cga.REQUEST_TYPE_TRADE);
 	}
 	
 	//主动向name玩家发起交易（到开启交易对话框为止），成功或失败时回调resolve
-	cga.requestTrade = (name, resolve, timeout) => {
+	cga.requestTrade = (name, resolve) => {
+		var resulted = false;
+		
 		cga.AsyncWaitPlayerMenu((err, players) => {
+			if(resulted)
+				return;
+
 			if(err){
-				console.log('等待交易超时')
-				resolve({success: false, reason : 'player menu timeout'});
+				resulted = true;
+				
+				resolve({
+					success: false,
+					reason : '等待交易玩家选择菜单超时',
+				});
+
 				return;
 			}
 			
 			if (!(players instanceof Array)) players = [];
 			var player = players.find((e, index) => typeof name == 'number' ? index == name : e.name == name);
 			if (player !== undefined) {
+
+				resulted = true;
+
 				resolve({success: true});
+
 				cga.PlayerMenuSelect(player.index);
+
 			} else {
-				console.log('未找到目标交易对象')
-				resolve({success: false, reason : 'player not found'});
+
+				resulted = true;
+
+				resolve({
+					success: false, 
+					reason : '未找到目标交易对象',
+				});
+
 			}
-		}, 3000);
+		}, 5000);
 		
+		cga.waitSysMsgTimeout((err, msg)=>{
+
+			if(resulted)
+				return false;
+
+			if(err)
+				return false;
+
+			if(msg && msg.indexOf('没有可交易的对象！') >= 0)
+			{
+				resulted = true;
+
+				resolve({
+					success: false, 
+					reason : '没有可交易的对象',
+				});
+
+				return false;
+			}
+
+			return true;
+
+		}, 2000);
+
 		cga.DoRequest(cga.REQUEST_TYPE_TRADE);
 	}
 
@@ -4718,11 +5386,9 @@ module.exports = function(callback){
 			if (player) {
 				cga.tradeInternal(stuff, checkParty, resolve, name, timeout);
 				cga.PlayerMenuSelect(player.index);
-			} else {
-				console.log('未找到目标交易对象');
 			}
-		}, 3000);
-				
+		}, 5000);
+
 		cga.DoRequest(cga.REQUEST_TYPE_TRADE);
 	}
 

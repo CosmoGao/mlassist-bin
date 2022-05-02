@@ -227,6 +227,9 @@ function main()
 		if(tx==0 and ty==0)then goto begin end
 		移动(tx,ty)		
 		当前迷宫楼层=取当前楼层(取当前地图名())	
+		if(string.find(mapName,"隐秘山道") == nil)then	--迷宫
+			goto begin
+		end
 	end	
 	上次迷宫楼层=当前迷宫楼层
 	自动迷宫()	

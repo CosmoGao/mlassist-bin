@@ -339,7 +339,7 @@ function common.toCastle(warpPos)
 		goto checkPos	
 	elseif (当前地图名=="法兰城" )then		
 		common.gotoFaLanCity("s1")
-		移动(141,88,"里谢里雅堡")
+		移动(153,100,"里谢里雅堡")
 		goto checkPos	
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
 		移动( 3, 7)	
