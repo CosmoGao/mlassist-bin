@@ -738,6 +738,7 @@ end
 function 是否需要做营地任务()
 	local needCampMission=false
 	if(取物品数量("承认之戒") < 1)then
+		日志("需要做承认任务",1)
 		return true
 	end
 	
@@ -746,7 +747,7 @@ function 是否需要做营地任务()
 	if(队伍("人数") == 队伍人数)then
 		local teamPlayers = 队伍信息()
 		for index,teamPlayer in ipairs(teamPlayers) do
-			if(teamPlayer.is_me ~= 0)then
+			if(teamPlayer.is_me ~= 1)then
 				local friendCard = 取好友名片(teamPlayer.name)
 				if( friendCard ~= nil)then
 					if(friendCard.title == "需要做承认任务")then
@@ -778,6 +779,11 @@ function 是否需要做营地任务()
 	if(getEro) then
 		goto begin
 	end
+	if(needCampMission)then
+		日志("需要做承认任务",1)
+	else
+		日志("不需要做承认任务",1)
+	end
 	return needCampMission
 end
 function 营地任务()
@@ -792,11 +798,7 @@ function 营地任务()
 	common.checkHealth(医生名称)
 	common.supplyCastle()
 ::begin::	
-	--加个重复判断吧，防止卡在这个函数中
-	needCampMission=是否需要做营地任务()		
-	if(needCampMission==false) then
-		return
-	end
+	--加个重复判断吧，防止卡在这个函数中	
 	if (取物品数量("团长的证明") > 0 ) then
 		goto battleBoss	
 	end
@@ -823,6 +825,9 @@ function 营地任务()
 	common.toCastle()	--默认城堡卖石附近
 	移动(41,84)
 	while (队伍("人数") < 队伍人数) do --等待组队完成
+		if(是否需要做营地任务() == false)then
+			return 
+		end
 		等待(5000)
 	end
 	移动(41,98)	
@@ -842,8 +847,13 @@ function 营地任务()
 
 ::battleBoss::		
 	if(队伍("人数") < 队伍人数) then --等待组队完成
+		日志("队伍人数:"..队伍("人数").." 小于预设人数:"..队伍人数,1)
 		common.toCastle()	--默认城堡卖石附近
 		移动(41,84)
+		needCampMission=是否需要做营地任务()		
+		if(needCampMission==false) then
+			return
+		end
 		common.makeTeam(队伍人数)	
 		移动(41,98)	
 		移动(153,241,"芙蕾雅")
@@ -858,6 +868,8 @@ function 营地任务()
 		goto quMiGong
 	elseif(当前地图名 =="曙光骑士团营地" ) then
 		移动(55,47,"辛希亚探索指挥部")
+		goto quMiGong
+	elseif(当前地图名 =="辛希亚探索指挥部" ) then		
 		goto quMiGong
 	elseif(当前地图名 =="遗迹" ) then
 		goto boss
@@ -891,6 +903,7 @@ function 营地任务()
 		移动(44,22,"废墟地下1层")	
 		goto chuanYueMiGong
 	end	
+	等待(1000)
 	goto battleBoss		
 	-- 移动(55,47,"辛希亚探索指挥部")
 	-- 移动(7,4)
