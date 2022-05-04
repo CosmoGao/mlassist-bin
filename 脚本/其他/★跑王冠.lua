@@ -11,8 +11,109 @@
 doctorName="星落护士"
 
 common=require("common")
+local 身上最少金币=5000			--少于去取
+local 身上最多金币=1000000			--大于去存
+local 身上预置金币=200000			--取和拿后 身上保留金币
+local tradeName=nil
+local tradeBagSpace=nil
+local tradePlayerLine=nil			--仓库人物当前线路
+topicList={"王冠仓库信息"}
+订阅消息(topicList)
 
 
+function waitTopic()
+	
+::begin::
+	等待空闲()
+	tryNum=0
+	if(取当前地图名()~= "银行")then
+		common.gotoFalanBankTalkNpc()
+		银行("全取","王冠")
+		tradeName=nil
+		tradeBagSpace=nil
+		tradePlayerLine=nil
+	end
+	设置("timer",0)
+	topic,msg=等待订阅消息()
+	日志(topic.." Msg:"..msg,1)
+	if(topic == "王冠仓库信息")then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.bagcount
+		tradePlayerLine=recvTbl.line
+	end	
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end
+	
+	if(tradeName ~= nil and tradeBagSpace ~= nil and tradePlayerLine==人物("几线"))then			
+		local wgCount=取物品数量("王冠")
+		while tryNum<3 do
+			tradex=nil
+			tradey=nil
+			units = 取周围信息()
+			if(units ~= nil)then
+				for i,u in pairs(units) do
+					if(u.unit_name==tradeName)then
+						tradex=u.x
+						tradey=u.y
+						break
+					end
+				end
+			else
+				goto begin
+			end
+			if(tradex ~=nil and tradey ~= nil)then
+				移动到目标附近(tradex,tradey)
+			else
+				goto begin
+			end
+			转向坐标(tradex,tradey)				
+			allitems = 物品信息()
+			tradeList="金币:2000;物品:"
+			hasData=false
+			selfTradeCount=0
+			for i,v in pairs(allitems) do
+				if(string.find(v.name,"王冠")~=nil  and v.pos>=8)then					
+					if(hasData)then
+						tradeList=tradeList.."|"..v.name.."|"..v.count.."|".."1"
+					else
+						tradeList=tradeList..v.name.."|"..v.count.."|".."1"			
+					end
+					selfTradeCount=selfTradeCount+1
+					hasData=true
+					if(selfTradeCount >= tradeBagSpace)then
+						break
+					end			
+				end
+			end				
+			日志(tradeList)
+			if(hasData)then
+				交易(tradeName,tradeList,"",10000)
+			end
+			if(wgCount~=取物品数量("王冠") or hasData==false)then	--交易成功 重置交易信息
+				--设置("timer",100)
+				tradeName=nil
+				tradeBagSpace=nil
+				tradePlayerLine=nil				
+				goto checkLine
+			end
+			tryNum=tryNum+1
+		end
+	end
+	goto begin
+::checkLine::
+	--不用换线 仓库线刷即可
+	-- if(人物("几线")~=刷改图线)then
+		-- 切换登录信息("","",刷改图线,"")
+		-- 登出服务器()
+		-- 等待(3000)
+		-- return
+	-- end
+end
 function main()	
 ::kaishi::	
 	等待空闲()
@@ -30,9 +131,7 @@ function main()
 	elseif(当前地图名=="雪拉威森塔前庭")then		
 		goto T101
 	end
-	if(人物("金币")<5000)then
-		common.getMoneyFromBank(-300000)
-	end
+	common.checkGold(身上最少金币,身上最多金币,身上预置金币)
 	common.healPlayer(doctorName)
 	common.recallSoul()
 	common.supplyCastle()
@@ -220,7 +319,10 @@ function main()
    	转向(2)
    	等待服务器返回()
    	银行("全存","王冠")   	
-   	银行("全存","小猫帽")   	
+   	银行("全存","小猫帽")   
+	if(取物品数量("王冠") > 0)then
+		waitTopic()
+	end
    	goto kaishi 
 ::lookbu::
 	local needSupply = false

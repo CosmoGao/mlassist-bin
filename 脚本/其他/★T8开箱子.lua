@@ -100,7 +100,7 @@ function main()
 		goto map59810	
 	end
 	等待(1000)	
-	--回城()
+	回城()
 	goto begin 
 ::aiersha::	
 	移动(165, 153)

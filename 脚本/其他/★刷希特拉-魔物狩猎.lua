@@ -1,4 +1,4 @@
-启动点::艾尔莎,辛美尔 说明:　　目标遗留品的数量是以整队人来计算.并非一定要在一个人身上；同一种目标遗留品只算一个.一直打一处BOSS没有意义。奖品是随机发放的，并不是身上目标遗留品越多奖品就越好，也许你身上一件目标遗留品都没有，但换到了好奖品。 啊、注意（脚本会自动扔碎片）
+启动点::艾尔莎,辛美尔 说明:　　目标遗留品的数量是以整队人来计算.并非一定要在一个人身上；同一种目标遗留品只算一个.一直打一处BOSS没有意义。奖品是随机发放的，并不是身上目标遗留品越多奖品就越好，也许你身上一件目标遗留品都没有，但换到了好奖品。 啊、注意（脚本会自动扔碎片） 队伍人数<1 逃跑
 	
 	
 common=require("common")
@@ -69,8 +69,8 @@ local recordType=true				--移动到哪
 local 已刷狩猎总次数=0				--统计	
 local 已刷壶总数=0					--统计
 local 预置扔鸟档次=0				--0档以上仍 鸟用此选项
-local 预置扔巨人档次=3				--3档以上扔
-local 预置扔地雷档次=0				--0档以上仍
+local 预置扔巨人档次=5				--5档以上扔
+local 预置扔地雷档次=5				--0档以上仍
 local 已刷宠物数量={
 	["希特拉"]={count=0,msg="惊喜,您刷到了稀缺宠物【希特拉】,档次 ",grade=22},
 	["泰坦巨人"]={count=0,msg="恭喜,您刷到了宠物【泰坦巨人】,档次 ",grade=预置扔巨人档次},
@@ -111,10 +111,10 @@ function 临时队长通知变更目标()
 		for i,v in ipairs(队员列表) do
 			发送邮件(v,transText)	
 		end
-		等待(8000)	--等队友接收
+		--等待(3000)	--等队友接收
 	else
 		发送邮件(队长名称,transText)	
-		等待(8000)	--等队长转发
+		--等待(5000)	--等队长转发
 	end
 end
 
@@ -272,6 +272,18 @@ function 字符串拆分取队长名称(sText,startText,endText)
 	return sub_str
 end
 
+--检查队友是否有目标物
+function checkTeammateItem(chatMsg)
+	if(chatMsg==nil)then return false end
+	local teamPlayers = 队伍信息()
+	local teammateCount = common.getTableSize(teamPlayers)	
+	for index,teamPlayer in ipairs(teamPlayers) do
+		if(string.find(聊天(20),teamPlayer.name..": "..chatMsg)~=nil)then 
+			return true
+		end			
+	end  
+	return false	
+end
 --去目标物boss位置
 function toTargetBoss(tgtNumber)
 	if(tgtNumber == nil)then return false end
@@ -294,8 +306,10 @@ function checkCurrentTargetObjAndFilterDrop(tgtNumber)
 	if(tgtNumber == nil)then return false end
 	local curBoss = targetCondition[tgtNumber]
 	local conflict=false
+	local haveTgt=false
 	if(curBoss ~= nil)then
 		if(取物品数量(targetQuarryName..tgtNumber) >= 1)then	--有目标物 判断是否和后续冲突
+			haveTgt=true
 			for i,v in ipairs(curBoss.exclude) do				
 				if(取物品数量(targetQuarryName..v) >= 1)then
 					日志("当前狩猎物"..tgtNumber.."和".. v.."有冲突，扔当前狩猎物品")
@@ -305,10 +319,11 @@ function checkCurrentTargetObjAndFilterDrop(tgtNumber)
 			end			
 		end
 	end		
-	if(conflict==true)then 	--冲突 返回false
-		return false
-	else 
-		return true 		--不冲突 有目标物 返回true
+	if(conflict)then 		--冲突 返回false
+		return false		
+	end
+	if(haveTgt)then
+		return true			--不冲突 有目标物 返回true
 	end
 	return false
 end
@@ -336,9 +351,6 @@ function toTargetMap(tgtMapNum)
 	if(mapNumber==tgtMapNum)then
 		return
 	end
-	if(队伍("人数") < 2)then
-		设置("遇敌全跑",1)
-	end
 	if(tgtMapNum == 59959)then
 		if(mapNumber == 59956)then
 			移动(334,214,59959)
@@ -357,8 +369,7 @@ function toTargetMap(tgtMapNum)
 		elseif(mapNumber == 59956)then
 			移动(196,65,59958)		
 		end
-	end	
-	设置("遇敌全跑",0)
+	end		
 end
 --检查自身拥有的目标物
 function checkSelfHaveItems()
@@ -839,10 +850,7 @@ function main()
 	回城()
 	等待(2000)
 	goto begin 
-::map59505::		--光之路
-	if(队伍("人数") < 2)then
-		设置("遇敌全跑", 1)			-- 遇敌全跑 
-	end
+::map59505::		--光之路	
 	移动(199,94)
 	-- if(isTeamLeader and 队伍("人数") > 1)then	--补血回来 原地集合
 		-- syncTargetTbl.东 = 210
@@ -855,8 +863,7 @@ function main()
 	移动(210,271)
 	if(取物品数量("猎人证") < 1)then	--623000		
 		对话选是(211,271)
-	end
-	设置("遇敌全跑", 0)			-- 关闭遇敌全跑 组队打Boss	
+	end	
 	goto begin
 ::map59956::		--圣炎高地
 	goto map59959	
@@ -892,11 +899,9 @@ function main()
 	goto map59959		
 ::map59959::		--圣炎高地	
 	if(取物品数量("猎人证") < 1)then	--623000	
-		离开队伍()
-		设置("遇敌全跑", 1)		
+		离开队伍()		
 		移动(210,271)
-		对话选是(211,271)
-		设置("遇敌全跑", 0)		
+		对话选是(211,271)		
 	end
 	if(是否临时队长)then		
 		if(队伍("人数") < 队伍人数)then	--数量不足 等待					
@@ -961,11 +966,9 @@ function main()
 			队员检测和同步数据()
 		else					
 			toTargetMap(syncTargetTbl.mapNum)
-			if(是否目标附近(syncTargetTbl.东,syncTargetTbl.南,10) == false)then
-				设置("遇敌全跑", 1)		
+			if(是否目标附近(syncTargetTbl.东,syncTargetTbl.南,10) == false)then				
 				日志("移动到队长附近 东："..syncTargetTbl.东.." 南："..syncTargetTbl.南)
-				移动( tonumber(syncTargetTbl.东),tonumber(syncTargetTbl.南))
-				设置("遇敌全跑", 0)		
+				移动( tonumber(syncTargetTbl.东),tonumber(syncTargetTbl.南))				
 			end	
 			if(syncTargetTbl.leaderName ~= 人物("名称",false))then
 				加入队伍(临时队长名称)
@@ -978,9 +981,10 @@ function main()
 	等待空闲()		
 	if(currentOrder >= 1 and currentOrder <= 16)then		
 		if(checkCurrentTargetObjAndFilterDrop(targetOrder[currentOrder]) == true)then
-			--日志("获得目标物:"..targetOrder[currentOrder],1)	--喊话 通知队友				
+			日志("获得目标物:"..targetOrder[currentOrder],1)	--喊话 通知队友				
 			checkAndSetSelfHaveItems()
 		end
+		--路过打死boss 扔物品
 		if(globalCheckTargetConflict() == true)then			
 			checkAndSetSelfHaveItems()
 		end
@@ -998,7 +1002,7 @@ function main()
 	if(取当前地图编号() == 59556 and 是否目标附近(89,57))then
 		回复(89,57)	
 	end
-	等待(5000)
+	等待(1000)
 	goto teammateAction	
 
 ::loopCheck::
@@ -1015,8 +1019,10 @@ function main()
 	else		--刷剩余的
 		if(是否空闲中())then
 			if(checkCurrentTargetObjAndFilterDrop(targetOrder[currentOrder])==true)then
+				停止遇敌()
 				checkAndSetSelfHaveItems()		
 			end
+			--路过打死boss 扔物品
 			if(globalCheckTargetConflict() == true)then			
 				checkAndSetSelfHaveItems()
 			end
@@ -1027,6 +1033,7 @@ function main()
 			if(队伍("人数") ~= 队伍人数) then 
 				goto begin
 			end
+			--检查队伍目标物
 			if(checkTeamHaveTgtNumber(targetNumber[targetOrder[currentOrder]])==false)then
 				日志("没有目标物："..targetOrder[currentOrder].."，去目标Boss位置")
 				日志("当前第"..currentOrder.."/16步,目标"..targetOrder[currentOrder],1)
@@ -1038,22 +1045,24 @@ function main()
 					return nil
 				end	
 				local needHave = targetNumber[nextBoss.have]
-				local dontHave = targetNumber[nextBoss.dontHave]				
-				local tmpNewLeaderName = getNameFromTeamHaveTgtNumber(needHave,dontHave)
-				
+				local dontHave = targetNumber[nextBoss.dontHave]	
+				--获取新队长
+				local tmpNewLeaderName = getNameFromTeamHaveTgtNumber(needHave,dontHave)				
 				if(tmpNewLeaderName ~= nil and tmpNewLeaderName == 人物("名称",false))then
+					--队长不变
 					日志("下一轮队长名称"..tmpNewLeaderName,1)
 					开始遇敌()
-					while checkTeamHaveTgtNumber(targetNumber[targetOrder[currentOrder]])==false do
+					while checkTeammateItem("获得目标物:"..targetOrder[currentOrder])==false do
 						if(判断是否需要回补())then		
 							停止遇敌()
 							移动到目标附近(取当前坐标(),3)
 							goto 回辛梅尔
 						end					
 						--日志("当前第"..currentOrder.."个顺序目标")
-						等待(4000)						
+						等待(1000)						
 						if(是否空闲中())then
 							if(checkCurrentTargetObjAndFilterDrop(targetOrder[currentOrder]))then
+								日志("获得目标物:"..targetOrder[currentOrder],1)	
 								checkAndSetSelfHaveItems()		
 							end
 							if(globalCheckTargetConflict() == true)then			
@@ -1073,6 +1082,14 @@ function main()
 						end
 					end		
 					停止遇敌()
+					if(checkTeammateItem("获得目标物:"..targetOrder[currentOrder]))then
+						日志("已经有目标物【"..targetOrder[currentOrder].."】继续下一个",1)
+						停止遇敌()
+						currentOrder=currentOrder+1		
+						if(currentOrder <= 16)then
+							日志("下一目标物【"..targetOrder[currentOrder].."】",1)
+						end
+					end
 				elseif(tmpNewLeaderName ~= nil )then
 					日志("新队长名称"..tmpNewLeaderName)
 					syncTargetTbl.leaderName=tmpNewLeaderName
@@ -1116,16 +1133,12 @@ function main()
 		end		
 	end	
 	goto begin
-::回辛梅尔::
-	if(队伍("人数") < 2)then
-		设置("遇敌全跑", 1)			-- 遇敌全跑 
-	end
+::回辛梅尔::	
 	common.checkHealth()		--受伤登出  否则 走回去回补
 	toTargetMap(59959)
 	移动(209,330,"光之路")		
 	移动(201, 19,"辛梅尔")		
-	移动(191,99)
-	设置("遇敌全跑", 0)	
+	移动(191,99)	
 	goto 开始 
 ::出发::	
 	if(取物品数量("王冠") < 1)then		

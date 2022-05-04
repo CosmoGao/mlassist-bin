@@ -20,11 +20,17 @@ end
 --覆盖写入文件
 function common.WriteFileData(name,data)
 	if(data == nil or name ==nil)then return false end
-	local file = io.open(字符串转换(取程序路径().."data/"..name), "w+")		
-	file:write(data)
-	file:close()
-	return true
-	
+	local tryCount=0
+	while tryCount < 3 do
+		local file = io.open(字符串转换(取程序路径().."data/"..name), "w+")		
+		if(file ~= nil)then
+			file:write(data)
+			file:close()
+			return true
+		end
+		tryCount = tryCount + 1
+	end
+	return false
 end
 --文件是否存在
 function common.IsExistFile(name)
