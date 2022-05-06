@@ -8,7 +8,7 @@
 设置("自动加血", 0)			-- 关闭自动加血，脚本对话加血 
 --设置("自动扔",1,"不可思议的鳞片")
 设置("自动扔",1,"地的水晶碎片|水的水晶碎片|火的水晶碎片|风的水晶碎片|德特家的布|火焰之魂|水之宠物水晶LV8|１怪物硬币|水之宠物水晶LV4")
-设置("自动扔",1,"妖草的血|曼陀罗草的皮|风龙蜥的甲壳|５怪物硬币|硬币？|魔石|精灵？")
+设置("自动扔",1,"妖草的血|曼陀罗草的皮|风龙蜥的甲壳|５怪物硬币|硬币？|魔石|精灵？|１０怪物硬币|液体？")
 设置("自动扔",1,"9401,9440")--改造水蜘蛛 设计图  全扔
 设置("自动叠",1,"地的水晶碎片&999")
 设置("自动叠",1,"水的水晶碎片&999")
@@ -33,7 +33,7 @@ doctorName="星落护士"
 
 common=require("common")
 
-local boxList={"谜语箱１","谜语箱２","谜语箱３","谜语箱４","谜语箱５","谜语箱６"}
+local boxList={"谜语箱１","谜语箱２","谜语箱３","谜语箱４","谜语箱５","谜语箱６","谜语箱７"}
 
      
 补魔值=用户输入框( "多少魔以下去补给", "200")
@@ -46,6 +46,62 @@ function 开箱子(name)
 	等待服务器返回()	
 	对话选择(4,0)	
 	等待(500)
+end
+
+function 包裹箱子数量()
+	local boxCount=0
+	for i,v in ipairs(boxList) do
+		local tmpCount=取物品数量(v) 
+		if(tmpCount > 0)then 			
+			boxCount=boxCount+tmpCount
+		end	
+	end    
+	return boxCount
+end
+
+function 循环开箱子()
+	for i,v in ipairs(boxList) do
+		if(取物品数量(v) > 0)then 
+			开箱子(v)
+		end	
+		等待(500)
+	end
+end
+
+function 多余箱子扔和开()
+	local tmpCount=包裹箱子数量()
+	if(tmpCount < 1)then
+		return
+	elseif(tmpCount == 1)then
+		循环开箱子()
+		if(包裹箱子数量()==1)then
+			循环开箱子()		
+		end
+		return
+	end
+::begin::
+	if(tmpCount >= 2)then 
+		移动(119,104)
+		for i,v in ipairs(boxList) do
+			if(取物品数量(v) > 0)then 
+				扔(v)				
+			end			
+		end		
+		等待(2000)
+		tmpCount=包裹箱子数量()
+		goto begin	
+	end
+	--再捡起来开
+	for i,v in ipairs(boxList) do
+		mapUnit=查周围信息(v,0)
+		while mapUnit ~= nil do
+			移动到目标附近(mapUnit.x,mapUnit.y)
+			转向坐标(mapUnit.x,mapUnit.y)
+			等待(2000)
+			循环开箱子()
+			mapUnit=查周围信息(v,0)
+		end	
+	end	
 end
 
 function main()
@@ -159,6 +215,7 @@ function main()
 	if(取当前地图名() == "雪拉威森塔９８层")then
 		goto yd
 	elseif(取当前地图名() == "雪拉威森塔９５层")then
+		转向(2)
 		等待服务器返回()	
 		对话选择("32", "", "")	
 		对话选择("4", "", "")	
@@ -191,36 +248,7 @@ function main()
 	清除系统消息()
 	停止遇敌()
 	等待空闲()
-	if(取物品数量("谜语箱１") >= 2)then 
-		移动(119,104)
-		local items=物品信息()
-		for i,v in ipairs(items) do
-			if(v.name == "谜语箱１")then
-				扔(v.pos)
-				break
-			end
-		end
-		goto ting2
-	end
-	for i,v in ipairs(boxList) do
-		if(取物品数量(v) > 0)then 
-			开箱子(v)
-		end	
-		等待(500)
-	end
-	mapUnit=查周围信息("谜语箱１",0)
-	if(mapUnit ~= nil)then
-		移动到目标附近(mapUnit.x,mapUnit.y)
-		转向坐标(mapUnit.x,mapUnit.y)
-		等待(2000)
-		for i,v in ipairs(boxList) do
-			if(取物品数量(v) > 0)then 
-				开箱子(v)
-			end	
-			等待(500)
-		end
-		goto ting2
-	end
+	多余箱子扔和开()	
 	goto yd
 
 ::sale_2::			-- 存银行

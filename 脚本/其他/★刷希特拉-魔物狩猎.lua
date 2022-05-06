@@ -101,11 +101,13 @@ local targetQuarryName="目标遗留品No"
 local targetNumber={1,2,3,4,5,6,7,8,9,"A","B","C","D","E","F","G"}
 local currentOrder=1
 local 临时队长名称=队长名称			--挑选出来的队长 --临时队长名称
-local syncTargetTbl={leaderName=队长名称,order=currentOrder,东=0,南=0,mapNum=59959}
+local syncTargetTbl={leaderName=队长名称,order=currentOrder,东=0,南=0,mapNum=59959,丢=0}
 
 function 临时队长通知变更目标()
-	syncTargetTbl.order=currentOrder			
+	syncTargetTbl.order=currentOrder	
+	syncTargetTbl.丢=0	
 	local transText=common.TableToStr(syncTargetTbl)
+	
 	--日志("转换表内容"..transText)
 	if(isTeamLeader)then	--发给队员						
 		for i,v in ipairs(队员列表) do
@@ -176,6 +178,11 @@ function 默认队长中转邮件()
 						if(tmpData.mapNum ~= syncTargetTbl.mapNum) then
 							syncTargetTbl.mapNum=tmpData.mapNum						
 						end
+					end		
+					if(tmpData.丢 ~= nil)then
+						if(tmpData.丢 ~= syncTargetTbl.丢) then
+							syncTargetTbl.丢=tmpData.丢						
+						end
 					end								
 					--if(bChangeLeader)then	--等待解散队伍 重新组队
 						--队员发送邮件 变更队长，通知其他队友							
@@ -206,8 +213,10 @@ function 队员检测和同步数据()
 	else
 		mailData = 查看邮件(队长名称,0)			
 		if(mailData ~= nil and mailData.state == 1)then			
-			更新邮件状态(mailData.index,0,0)	--已阅			
+			更新邮件状态(mailData.index,0,0)	--已阅		
+			--日志(mailData.msg)			
 			local tmpData = common.StrToTable(mailData.msg)
+			
 			--判断队长更换 切换目标等			
 			if(tmpData == nil or type(tmpData) == "string")then	--空或是字符串 		直接发送自己的同步表
 				if(tmpData == "同步数据")then
@@ -254,7 +263,16 @@ function 队员检测和同步数据()
 					if(tmpData.mapNum ~= syncTargetTbl.mapNum)then
 						syncTargetTbl.mapNum=tmpData.mapNum						
 					end
-				end					
+				end		
+				if(tmpData.丢 ~= nil)then
+					if(tmpData.丢 ~= syncTargetTbl.丢) then
+						syncTargetTbl.丢=tmpData.丢		
+						if(tmpData.丢 == 1 and currentOrder>= 1 and currentOrder <= 16)then
+							checkCurrentTgtObjAndDrop(targetOrder[currentOrder])
+							syncTargetTbl.丢=0
+						end
+					end
+				end		
 				
 			end
 		end	
@@ -302,6 +320,23 @@ function toTargetBoss(tgtNumber)
 		toTargetMap(nextBoss.mapId)
 		移动(nextBoss.x,nextBoss.y)
 	end	
+end
+
+--扔当前冲突物
+function checkCurrentTgtObjAndDrop(tgtNumber)	
+	local curBoss = targetCondition[tgtNumber]	
+	if(curBoss ~= nil)then
+		if(curBoss.have== nil or 取物品数量(targetQuarryName..curBoss.have) >= 1)then	--有目标物 判断是否和后续冲突				
+			if(curBoss.dontHave == nil)then
+				return
+			end
+			if(取物品数量(targetQuarryName..curBoss.dontHave) >= 1)then
+				日志("当前狩猎物"..tgtNumber.."和".. curBoss.dontHave.."有冲突，扔当前狩猎物品")
+				扔(targetQuarryName..curBoss.dontHave)		
+				checkAndSetSelfHaveItems()
+			end					
+		end
+	end			
 end
 
 function 扔所有目标物()
@@ -1107,7 +1142,7 @@ function main()
 					日志("表：新队长名称"..syncTargetTbl.leaderName)
 					
 					syncTargetTbl.order=currentOrder
-					
+					syncTargetTbl.丢=0
 					syncTargetTbl.东,syncTargetTbl.南 = 取当前坐标()
 					syncTargetTbl.mapNum=取当前地图编号()				
 					if(tmpNewLeaderName==人物("名称",false))then
@@ -1129,6 +1164,19 @@ function main()
 					end
 					离开队伍()
 					goto begin
+				else	--目标物冲突 通知队友扔当前冲突目标物
+					syncTargetTbl.丢=1
+					local transText=common.TableToStr(syncTargetTbl)
+					--日志("转换表内容"..transText)
+					if(isTeamLeader)then	--发给队员						
+						for i,v in ipairs(队员列表) do
+							发送邮件(v,transText)	
+						end
+						等待(8000)	--等队友接收
+					else
+						发送邮件(队长名称,transText)	
+						等待(8000)	--等队长转发
+					end
 				end
 			else
 				日志("已经有目标物【"..targetOrder[currentOrder].."】继续下一个",1)
