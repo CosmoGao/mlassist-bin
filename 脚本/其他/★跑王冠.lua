@@ -26,7 +26,7 @@ function waitTopic()
 ::begin::
 	等待空闲()
 	tryNum=0
-	if(取当前地图名()~= "银行")then
+	if(取当前地图名() ~= "银行" or 取当前地图编号() ~= 1121)then		
 		common.gotoFalanBankTalkNpc()
 		银行("全取","王冠")
 		tradeName=nil
@@ -40,7 +40,7 @@ function waitTopic()
 		recvTbl = common.StrToTable(msg)		
 		tradeName=recvTbl.name
 		tradeBagSpace=recvTbl.bagcount
-		tradePlayerLine=recvTbl.line
+		tradePlayerLine=tonumber(recvTbl.line)	
 	end	
 	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
 		切换登录信息("","",tradePlayerLine,"")
@@ -49,7 +49,8 @@ function waitTopic()
 		goto begin
 	end
 	
-	if(tradeName ~= nil and tradeBagSpace ~= nil and tradePlayerLine==人物("几线"))then			
+	if(tradeName ~= nil and tradeBagSpace ~= nil and tradePlayerLine==人物("几线"))then		
+	
 		local wgCount=取物品数量("王冠")
 		while tryNum<3 do
 			tradex=nil
@@ -117,6 +118,9 @@ end
 function main()	
 ::kaishi::	
 	等待空闲()
+	if(取物品数量("王冠") > 0)then
+		goto qucun
+	end
 	当前地图名=取当前地图名()	
 	if(当前地图名=="雪拉威森塔９６层")then	
 		goto T96

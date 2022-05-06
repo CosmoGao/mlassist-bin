@@ -151,8 +151,13 @@ function 默认队长中转邮件()
 					if(tmpData.order ~= nil)then
 						if(tmpData.order ~= currentOrder)then
 							currentOrder=tmpData.order
-							syncTargetTbl.order=currentOrder						
-							日志("当前第"..currentOrder.."/16步,目标"..targetOrder[currentOrder],1)
+							syncTargetTbl.order=currentOrder	
+							--日志("调试"..currentOrder)
+							if(currentOrder>=1 and currentOrder <= 16)then
+								日志("当前第"..currentOrder.."/16步,目标"..targetOrder[currentOrder],1)
+							elseif(currentOrder > 16)then
+								日志("当前第"..currentOrder.."/16步,去换奖咯！",1)
+							end
 							bChangeLeader=true
 						end
 					end		
@@ -227,7 +232,12 @@ function 队员检测和同步数据()
 					if(tmpData.order ~= currentOrder)then
 						currentOrder=tmpData.order
 						syncTargetTbl.order = currentOrder
-						日志("当前第"..currentOrder.."/16步,目标"..targetOrder[currentOrder],1)
+						if(currentOrder>=1 and currentOrder <= 16)then
+							日志("当前第"..currentOrder.."/16步,目标"..targetOrder[currentOrder],1)
+						elseif(currentOrder > 16)then
+							日志("当前第"..currentOrder.."/16步,去换奖咯！",1)
+						end
+						--日志("当前第"..currentOrder.."/16步,目标"..targetOrder[currentOrder],1)
 					end
 				end		
 				if(tmpData.东 ~= nil)then
@@ -979,7 +989,7 @@ function main()
 	goto begin
 ::teammateAction::	
 	等待空闲()		
-	if(currentOrder >= 1 and currentOrder <= 16)then		
+	--if(currentOrder >= 1 and currentOrder <= 16)then		
 		if(checkCurrentTargetObjAndFilterDrop(targetOrder[currentOrder]) == true)then
 			日志("获得目标物:"..targetOrder[currentOrder],1)	--喊话 通知队友				
 			checkAndSetSelfHaveItems()
@@ -994,11 +1004,11 @@ function main()
 		if(队员检测和同步数据())then
 			goto begin					
 		end		
-	else
-		toTargetMap(59959)
-		移动(206,267)
-		对话选是(207,267)
-	end
+	-- else
+		-- toTargetMap(59959)
+		-- 移动(206,267)
+		-- 对话选是(207,267)
+	--end
 	if(取当前地图编号() == 59556 and 是否目标附近(89,57))then
 		回复(89,57)	
 	end

@@ -3,45 +3,52 @@
 	
 设置("自动战斗", 1)			-- 开启自动战斗，0不自动战斗，1自动战斗
 设置("高速战斗", 1)			-- 开启高速战斗
-设置("高速延时", 4)			-- 高速战斗速度，0不延时 
-设置("遇敌全跑", 1)			-- 开启遇敌全跑 
+--设置("高速延时", 4)			-- 高速战斗速度，0不延时 
+--设置("遇敌全跑", 1)			-- 开启遇敌全跑 
 设置("自动加血", 0)			-- 关闭自动加血，脚本对话加血 
+--设置("自动扔",1,"不可思议的鳞片")
+设置("自动扔",1,"地的水晶碎片|水的水晶碎片|火的水晶碎片|风的水晶碎片|德特家的布|火焰之魂|水之宠物水晶LV8|１怪物硬币|水之宠物水晶LV4")
+设置("自动扔",1,"妖草的血|曼陀罗草的皮|风龙蜥的甲壳|５怪物硬币|硬币？|魔石|精灵？")
+设置("自动扔",1,"9401,9440")--改造水蜘蛛 设计图  全扔
+设置("自动叠",1,"地的水晶碎片&999")
+设置("自动叠",1,"水的水晶碎片&999")
+设置("自动叠",1,"火的水晶碎片&999")
+设置("自动叠",1,"德特家的布&5")
+设置("自动叠",1,"火焰之魂&5")
+设置("自动叠",1,"妖草的血&5")
+设置("自动扔",1,"14801,14882")--妖花之前卡片全扔
+设置("自动扔",1,"14884,14914")--妖花到吓人箱卡片全扔
+设置("自动扔",1,"14921,15055")--纯白吓人箱到半兽人卡片全扔
+设置("自动扔",1,"15600,15621")--生命力回复药 1-10 全扔
+设置("自动扔",1,"18602,18615")--大地鼠 火焰鼠 鸟人 寒冰翼龙设计图  全扔
+设置("自动扔",1,"18641,18652")--水蜘蛛 绿色口臭鬼 设计图  全扔
+设置("自动扔",1,"18939,18943")--改造水蜘蛛 设计图  全扔
+设置("自动扔",1,"606600,606603")--改造水蜘蛛 设计图  全扔
+设置("自动扔",1,"606609,606691")--改造水蜘蛛 设计图  全扔
+
 走路加速值=120	
 走路还原值=100	
 doctorName="星落护士"
 
+
 common=require("common")
 
+local boxList={"谜语箱１","谜语箱２","谜语箱３","谜语箱４","谜语箱５","谜语箱６"}
 
      
-补魔值=用户输入框( "多少魔以下去补给", "100")
-补血值=用户输入框( "多少血以下去补给", "1")
+补魔值=用户输入框( "多少魔以下去补给", "200")
+补血值=用户输入框( "多少血以下去补给", "2")
 宠补魔值=用户输入框( "宠多少魔以下去补给", "50")
 宠补血值=用户输入框( "宠多少血以下去补给", "1")
 
-::lookbu::
-	local needSupply = false
-	if(人物("血") < 人物("最大血") or 人物("魔") < 人物("最大魔")) then
-		needSupply=true
-	end
-	if(宠物("血") < 宠物("最大血") or 宠物("魔") < 宠物("最大魔")) then
-		needSupply=true
-	end
-	if(needSupply == false)then
-		goto kaishi
-	end
-	回城()
-	等待到指定地图("艾尔莎岛")	
-	转向(1)
-	等待服务器返回()
+function 开箱子(name)
+	使用物品(name)
+	等待服务器返回()	
 	对话选择(4,0)	
-	等待到指定地图("里谢里雅堡")		
-	移动(34, 89)	
-	回复(1)	
-	common.healPlayer(doctorName)
-	common.recallSoul()
-	等待(2000)
-	goto kaishi 
+	等待(500)
+end
+
+function main()
 	
 ::kaishi::
 	等待空闲()
@@ -53,13 +60,12 @@ common=require("common")
 	elseif(当前地图名=="雪拉威森塔９８层")then		
 		goto T98	
 	end
-	common.healPlayer(doctorName)
-	common.recallSoul()
+	common.checkHealth(doctorName)	
 	common.supplyCastle()
+	if(取物品数量( "谜语箱４") >=  1)then goto  sale_2 end
 	if(取物品数量("塞特的护身符") > 0)then goto  saite end
 	if(取物品数量("梅雅的护身符") > 0)then goto  meiya end
-	if(取物品数量("提斯的护身符") > 0)then goto  tisi end
-	if(取物品数量( "谜语箱４") >  2)then goto  sale_2 end
+	if(取物品数量("提斯的护身符") > 0)then goto  tisi end	
 	if(当前地图名=="艾尔莎岛")then		
 		goto 雪拉威森塔
 	end
@@ -148,24 +154,74 @@ common=require("common")
 	转向(2)
 	等待服务器返回()
 	对话选择("1", "", "")		
+	等待(2000)
 ::T98::	
-	等待到指定地图("雪拉威森塔９８层")	
-	移动(116, 90)
-	移动(116, 105)
+	if(取当前地图名() == "雪拉威森塔９８层")then
+		goto yd
+	elseif(取当前地图名() == "雪拉威森塔９５层")then
+		等待服务器返回()	
+		对话选择("32", "", "")	
+		对话选择("4", "", "")	
+		对话选择("32", "", "")
+		等待服务器返回()
+		对话选择("1", "", "")	
+		等待到指定地图("雪拉威森塔９６层")	
+		goto kaishi		
+	end		
 ::yd::
+	移动(116, 105)
 	开始遇敌()         -- 开始自动遇敌
 	goto scriptstart 
 ::scriptstart::	
-	if(人物("血") < 补血值)then goto  ting end
-	if(人物("魔") < 补魔值)then goto  ting end
-	if(宠物("血") < 宠补血值)then goto  ting end
-	if(宠物("魔") < 宠补魔值)then goto  ting end
+	if(人物("血") < 补血值) then goto  ting end
+	if(人物("健康") > 0) then goto  ting end
+	if(人物("魔") < 补魔值) then goto  ting end
+	if(宠物("血") < 宠补血值) then goto  ting end
+	if(宠物("魔") < 宠补魔值) then goto  ting end
+	if(取物品数量("谜语箱１") > 0)then goto ting2 end
+	if(取物品数量("谜语箱２") > 0)then goto ting2 end
+	if(取物品数量("谜语箱４") > 0)then goto ting end
 	等待(2000)
 	goto scriptstart          --自动遇敌中 循环判断血魔
 ::ting::
 	清除系统消息()
-	停止遇敌()
+	停止遇敌()	
 	goto lookbu
+::ting2::	--开箱子
+	清除系统消息()
+	停止遇敌()
+	等待空闲()
+	if(取物品数量("谜语箱１") >= 2)then 
+		移动(119,104)
+		local items=物品信息()
+		for i,v in ipairs(items) do
+			if(v.name == "谜语箱１")then
+				扔(v.pos)
+				break
+			end
+		end
+		goto ting2
+	end
+	for i,v in ipairs(boxList) do
+		if(取物品数量(v) > 0)then 
+			开箱子(v)
+		end	
+		等待(500)
+	end
+	mapUnit=查周围信息("谜语箱１",0)
+	if(mapUnit ~= nil)then
+		移动到目标附近(mapUnit.x,mapUnit.y)
+		转向坐标(mapUnit.x,mapUnit.y)
+		等待(2000)
+		for i,v in ipairs(boxList) do
+			if(取物品数量(v) > 0)then 
+				开箱子(v)
+			end	
+			等待(500)
+		end
+		goto ting2
+	end
+	goto yd
 
 ::sale_2::			-- 存银行
 	等待到指定地图("艾尔莎岛")
@@ -178,14 +234,41 @@ common=require("common")
 	转向(2)
 	等待服务器返回()
 ::sale_4::
-    银行("全存","谜语箱４")
+	for i,v in ipairs(boxList) do
+		if(取物品数量(v) > 0)then 			
+			银行("全存",v)
+		end	
+	end    
 	等待(2000)
 	if(取包裹空格() < 2)then
-		goto End
-	end
-	if(取物品数量( "谜语箱４") >  0)then goto  sale_4 end
+		goto manle
+	end	
 	goto kaishi 
-::End::
+::manle::
 	日志("包裹满了，结束",1)
 	等待(15000)
-	goto End 
+	goto manle 
+::lookbu::
+	local needSupply = false
+	if(人物("血") < 人物("最大血") or 人物("魔") < 人物("最大魔")) then
+		needSupply=true
+	end
+	if(宠物("血") < 宠物("最大血") or 宠物("魔") < 宠物("最大魔")) then
+		needSupply=true
+	end
+	if(needSupply == false)then
+		goto kaishi
+	end
+	回城()
+	等待到指定地图("艾尔莎岛")	
+	转向(1)
+	等待服务器返回()
+	对话选择(4,0)	
+	等待到指定地图("里谢里雅堡")		
+	移动(34, 89)	
+	回复(1)	
+	common.checkHealth(doctorName)	
+	等待(2000)
+	goto kaishi 
+end
+main()
