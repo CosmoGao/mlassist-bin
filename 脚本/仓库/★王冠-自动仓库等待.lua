@@ -94,7 +94,7 @@ function 登录游戏id(游戏id)
 		common.gotoFalanBankTalkNpc()
 	end
 	
-	移动(10,11)	
+	移动(10,15)	
 	topicMsg = {name=人物("名称"),bagcount=取包裹空格(),line=人物("几线")}
 	发布消息("王冠仓库信息", common.TableToStr(topicMsg))	
 	if(银行("金币") >= 1000000)then

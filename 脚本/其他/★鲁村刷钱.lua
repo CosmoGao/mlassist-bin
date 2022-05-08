@@ -294,7 +294,7 @@ function checkGold()
 end
 
 function battle()
-	移动(310,883)
+	移动(289,878)
 	开始遇敌()
 	while true do
 		if(人物("血") < 补血值)then break end

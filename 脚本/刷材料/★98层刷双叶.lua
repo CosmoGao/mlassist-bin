@@ -8,7 +8,7 @@
 设置("自动加血", 0)			-- 关闭自动加血，脚本对话加血 
 --设置("自动扔",1,"不可思议的鳞片")
 设置("自动扔",1,"地的水晶碎片|水的水晶碎片|火的水晶碎片|风的水晶碎片|德特家的布|火焰之魂|水之宠物水晶LV8|１怪物硬币|水之宠物水晶LV4")
-设置("自动扔",1,"妖草的血|曼陀罗草的皮|风龙蜥的甲壳|５怪物硬币|硬币？|魔石|精灵？|１０怪物硬币|液体？")
+设置("自动扔",1,"妖草的血|曼陀罗草的皮|风龙蜥的甲壳|５怪物硬币|硬币？|魔石|精灵？|１０怪物硬币|液体？|布？|皮？")
 设置("自动扔",1,"9401,9440")--改造水蜘蛛 设计图  全扔
 设置("自动叠",1,"地的水晶碎片&999")
 设置("自动叠",1,"水的水晶碎片&999")
@@ -33,10 +33,10 @@ doctorName="星落护士"
 
 common=require("common")
 
-local boxList={"谜语箱１","谜语箱２","谜语箱３","谜语箱４","谜语箱５","谜语箱６","谜语箱７"}
+local boxList={"谜语箱１","谜语箱２","谜语箱３","谜语箱４","谜语箱５","谜语箱６","谜语箱７","谜语箱８","谜语箱９","谜语箱１０"}
 
      
-补魔值=用户输入框( "多少魔以下去补给", "200")
+补魔值=用户输入框( "多少魔以下去补给", "400")
 补血值=用户输入框( "多少血以下去补给", "2")
 宠补魔值=用户输入框( "宠多少魔以下去补给", "50")
 宠补血值=用户输入框( "宠多少血以下去补给", "1")
@@ -64,7 +64,7 @@ function 循环开箱子()
 		if(取物品数量(v) > 0)then 
 			开箱子(v)
 		end	
-		等待(500)
+		等待(1000)
 	end
 end
 
@@ -118,7 +118,7 @@ function main()
 	end
 	common.checkHealth(doctorName)	
 	common.supplyCastle()
-	if(取物品数量( "谜语箱４") >=  1)then goto  sale_2 end
+	--if(取物品数量( "谜语箱４") >=  1)then goto  sale_2 end
 	if(取物品数量("塞特的护身符") > 0)then goto  saite end
 	if(取物品数量("梅雅的护身符") > 0)then goto  meiya end
 	if(取物品数量("提斯的护身符") > 0)then goto  tisi end	
@@ -236,9 +236,10 @@ function main()
 	if(宠物("血") < 宠补血值) then goto  ting end
 	if(宠物("魔") < 宠补魔值) then goto  ting end
 	if(取物品数量("谜语箱１") > 0)then goto ting2 end
-	if(取物品数量("谜语箱２") > 0)then goto ting2 end
-	if(取物品数量("谜语箱４") > 0)then goto ting end
-	等待(2000)
+	-- if(取物品数量("谜语箱２") > 0)then goto ting2 end
+	-- if(取物品数量("谜语箱４") > 0)then goto ting2 end
+	if(是否战斗中())then 等待战斗结束() end
+	等待(5000)
 	goto scriptstart          --自动遇敌中 循环判断血魔
 ::ting::
 	清除系统消息()
@@ -284,6 +285,7 @@ function main()
 	if(宠物("血") < 宠物("最大血") or 宠物("魔") < 宠物("最大魔")) then
 		needSupply=true
 	end
+	if(人物("健康") > 0)then needSupply = true end
 	if(needSupply == false)then
 		goto kaishi
 	end

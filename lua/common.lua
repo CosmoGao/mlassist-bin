@@ -829,9 +829,9 @@ function common.healPlayer(doctorName)
 		end 			
 		if doctor ==nil then--找周围医生
 			for index,u in ipairs(units) do		
-				if ((u.flags & 256)~=0) then
-				   --日志(u.unit_name.."icon:"..u.icon.."flags"..(u.flags & 256))
-				end
+				-- if ((u.flags & 256)~=0) then
+				   -- --日志(u.unit_name.."icon:"..u.icon.."flags"..(u.flags & 256))
+				-- end
 				if ((u.flags & 256)~=0 and (string.find(u.title_name,"医")~=nil )) then
 					doctor = u
 					break				
@@ -856,8 +856,15 @@ function common.healPlayer(doctorName)
 					healTryNum = healTryNum+1
 				end
 				if 人物("健康") > 0 then
-					table.insert(filterName,doctor.unit_name)
-					离开队伍()	--重新找医生					
+					-- if(common.isInTable(filterName,u.unit_name)==nil)then
+						-- table.insert(filterName,doctor.unit_name)
+					-- end
+					离开队伍()	--重新找医生
+					for i,v in ipairs(filterName) do
+						if(v == doctor.unit_name)then
+							table.remove(filterName,i)
+						end
+					end
 				end	
 			end
 		end
@@ -866,7 +873,6 @@ function common.healPlayer(doctorName)
 		return
 	end
 	tryNum = tryNum+1
-	等待(10000)
 	goto reTry
 end
 

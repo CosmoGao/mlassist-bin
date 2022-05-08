@@ -141,7 +141,7 @@ function 登录游戏id(游戏id)
 	end	
 
 	if(取当前地图名() ~= "银行")then goto dengru end
-	移动(10,12)
+	移动(10,14)
 	topicMsg = {name=人物("名称"),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
 	发布消息("天狼星仓库信息", common.TableToStr(topicMsg))
 	if(银行("金币") >= 1000000)then
