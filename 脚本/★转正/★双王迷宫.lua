@@ -135,9 +135,9 @@ end
 	移动(140,105)
 	对话选是(1)		
 	goto begin
-::libao::	
-	移动(34,89)
-	回复(1)		
+::libao::		
+	common.checkHealth(doctorName)	
+	common.supplyCastle()	
 	common.sellCastle()
 	移动(41,50,"里谢里雅堡 1楼")
 ::yabao1::
