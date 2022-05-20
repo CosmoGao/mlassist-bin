@@ -656,7 +656,7 @@ function 营地练级(目标等级,练级地名称)
 	elseif(练级地名称 == "黑一")then
 		水晶名称="水火的水晶（5：5）"
 	end
-	
+	日志(练级地名称.."练级",1)
 	--暂时调过
 ::judgeMission::
 	等待空闲()
@@ -1354,8 +1354,8 @@ function main()
 				营地练级(115,"黑一")
 			elseif(avgLevel == 135)then		--龙顶 或 旧日 
 				旧日练级(135)
-			-- elseif(avgLevel == 160)then		--龙顶		
-				-- 营地练级(160,"龙顶")
+			elseif(avgLevel == 160)then		--龙顶		
+				营地练级(160,"龙顶")
 			elseif(avgLevel == 160)then		--半山		
 				半山练级(160)
 			elseif(avgLevel >= 160)then	
