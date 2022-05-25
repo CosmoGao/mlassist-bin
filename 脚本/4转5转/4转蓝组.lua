@@ -106,7 +106,7 @@ function main()
 
 	local oathGroup = 人物("4转属组")
 	日志("当前4转属组:"..oathGroup,1)
-	设置个人简介("玩家称号",人物("4转属组"))
+	设置个人简介("玩家称号","蓝组")
 	teamNameList={}
 	GetOathGroup("绿组","红组")	
 	if(交易对象名称[1] == nil)then		

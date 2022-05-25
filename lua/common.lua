@@ -536,8 +536,8 @@ end
 
 --法兰武器商人卖制造物品 1个起卖
 function common.sellFaLanPile(saleItem)
-	common.toCastle()
-	移动(40, 98,"法兰城")	
+	common.gotoFaLanCity()
+	--移动(40, 98,"法兰城")	
 	移动(150, 123)
 	卖(0,saleItem)		
 end

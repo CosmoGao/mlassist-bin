@@ -495,6 +495,8 @@ function main()
 end
 
 function 鉴定()	
+	取物品数量("硬币？") > 0 and 人物("魔")>= 10 do	
+	工作("鉴定","硬币？",15000,false)	
 	local tryCount=0
 	while 取物品数量("硬币？") > 0 and 人物("魔")>= 10 and tryCount<40  do	
 		工作("鉴定","硬币？",1000)	

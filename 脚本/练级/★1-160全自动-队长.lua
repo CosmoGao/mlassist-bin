@@ -41,7 +41,7 @@ end
 if(设置队员列表 ~= nil and string.find(设置队员列表,"|") ~= nil)then
 	队员列表=common.luaStringSplit(设置队员列表,"|")
 end
-if(是否练宠==nil)then
+if(是否练宠==nil or 是否练宠 ==0)then
 	是否练宠 = 用户输入框("是否练宠,是1，否0",1)
 else
 	是否练宠=tonumber(是否练宠)
