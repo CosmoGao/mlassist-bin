@@ -27,6 +27,39 @@ improvePlan = {
 	{name="哥布林矿工设计图D",count=0},
 	{name="哥布林矿工设计图E",count=0},
 	}
+	
+	
+function FindMaze()
+	local units = 取周围信息()
+	if( units ~= nil) then
+		
+		for index,u in ipairs(units) do			
+			if ((u.flags & 4096)~=0 and u.model_id == 103012) then				
+				移动(u.x,u.y)
+				等待空闲()
+				if(取当前地图名() == "奇怪的洞窟地下1楼")then
+					return true
+				end
+			end
+		end 
+	end	
+	return false
+end
+function findHoleEntry()
+	if(取当前地图名() ~= "芙蕾雅")then
+		return false
+	end
+	local findMazeList={
+		{544,34},{537,41},{529,36}}
+
+	for index,pos in ipairs(findMazeList) do						
+		移动(pos[1],pos[2])	
+		if(FindMaze() == true)then
+			return true
+		end
+	end
+	return false
+end
 function 统计(beginTime)	
 	local playerinfo = 人物信息()
 	local nowTime = os.time() 
@@ -384,10 +417,11 @@ function main()
 	移动(541, 33)
 	移动(540, 33)
 ::fuleiya::	
-	找迷宫= 搜索范围迷宫(520, 15, 40, 40,"549,43;")
-	if(找迷宫) then				
-		goto 狗洞
-	end	
+	if(findHoleEntry())then goto 狗洞 end
+	-- 找迷宫= 搜索范围迷宫(520, 15, 40, 40,"549,43;")
+	-- if(找迷宫) then				
+		-- goto 狗洞
+	-- end	
 	移动(541, 33)
 	移动(540, 33)
 	等待(2000)
