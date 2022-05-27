@@ -295,6 +295,10 @@ function main()
 		waitTopic()
 	end
 	common.checkGold(身上最少金币,身上最多金币,身上预置金币)
+	if(人物("金币") < 5000)then 
+		日志("没有魔币了，脚本退出",1)
+		return
+	end
 	当前地图名=取当前地图名()	
 	if(当前地图名=="雪拉威森塔９６层")then	
 		goto T96
