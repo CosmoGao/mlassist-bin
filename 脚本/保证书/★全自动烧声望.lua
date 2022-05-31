@@ -195,6 +195,9 @@ function 对战长老(target)
 	if(是否战斗中() ) then		
 		goto loopBattle			
 	end
+	if(string.find(取当前地图名(),"海底墓场外苑")==nil)then --迷宫刷新 返回
+		return false
+	end			
 	goto begin
 ::loopBattle::
 	if(取物品叠加数量("长老之证")>=7 or string.find(聊天(50),"长老之证够了")~=nil)then
@@ -1166,6 +1169,7 @@ function main()
 					end						
 				end	
 			end
+			日志("脚本退出")
 			return
 		end		
 	end
