@@ -370,8 +370,10 @@ function 步骤3()
 	移动(201,96,"神殿　伽蓝")	
 	移动(91, 138)		
 	while true do 
-		npc=查周围信息("荷特普",1)
-		if(npc ~= nil) then
+		--npc=查周围信息("荷特普",1)
+		dlg=转向坐标(92,138)
+		dlg=等待服务器返回()
+		if(dlg ~= nil and string.find(dlg.message,"最近每天晚上都会到北边的荒野去喔？")~= nil) then
 			对话选是(92,138)
 			break
 		else
