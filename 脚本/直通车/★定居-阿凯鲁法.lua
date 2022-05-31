@@ -1,11 +1,12 @@
 启动地点，法兰，艾尔莎岛，阿凯鲁法传送石。
 
+common=require("common")
 
 
-设置("timer", 100)
 是否定居=用户复选框("定居否？",0)
 ::begin::
 	if(取当前地图名() == "阿凯鲁法村")then goto  star3 end
+	if(取当前地图名() == "里谢里雅堡")then goto  goto2 end
 	
 	if(取当前地图名() ==  "艾尔莎岛")then goto   star1 end
 	if(人物("坐标")  == "72,123")then	goto  w2 end	-- 西2登录点
@@ -110,6 +111,8 @@
 	转向(2, "")
 	移动(28, 82)	
 ::goto2::
+	common.toTeleRoom("伊尔村")
+	goto ylt 
 	移动(41,50,"里谢里雅堡 1楼")	
 	移动(45,20,"启程之间")	
 	移动(43, 33)

@@ -195,7 +195,7 @@ function 对战长老(target)
 	if(是否战斗中() ) then		
 		goto loopBattle			
 	end
-	if(string.find(取当前地图名(),"海底墓场外苑")==nil)then --迷宫刷新 返回
+	if(string.find(取当前地图名(),"海底墓场外苑")==nil) then --迷宫刷新 返回
 		return false
 	end			
 	goto begin
@@ -374,7 +374,7 @@ function 步骤3()
 	移动(91, 138)		
 	while true do 
 		--npc=查周围信息("荷特普",1)
-		dlg=转向坐标(92,138)
+		转向坐标(92,138)
 		dlg=等待服务器返回()
 		if(dlg ~= nil and string.find(dlg.message,"最近每天晚上都会到北边的荒野去喔？")~= nil) then
 			对话选是(92,138)
