@@ -2371,9 +2371,11 @@ function 龙顶练级(目标等级)
 	end
 	if(队伍("人数") < 队伍人数)then	--数量不足 等待
 		common.makeTeam(队伍人数,队员列表)
+	else
+		喊话("美特斯邦威  飞一般滴感觉",06,0,0)	
+		goto xue	
 	end	
-	喊话("美特斯邦威  飞一般滴感觉",06,0,0)	
-	goto xue	
+	goto StartBegin
 ::lu1::
     等待到指定地图("圣骑士营地",95,72)
 ::lu1a::   
