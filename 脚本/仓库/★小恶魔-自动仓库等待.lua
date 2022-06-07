@@ -284,8 +284,7 @@ function main()
 	-- while i < 84 do
 		-- i = i+1
 		-- table.insert(tmpGid,"wzqcangku0"..i)
-	-- end
-	设置("timer",100)
+	-- end	
 	for k,v in pairs(游戏id列表) do  
 		if(tonumber(string.sub(v,-3)) >= lastGid)then
 			登录游戏id(v)
