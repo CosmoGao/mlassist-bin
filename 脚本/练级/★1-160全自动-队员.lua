@@ -593,6 +593,12 @@ function 营地任务()
 	if(取物品数量("信笺") > 0)then		
 		goto mission
 	end
+	if(取物品数量("信") > 0)then		
+		common.toCastle("f3")
+		对话坐标选是(5,3)	
+		日志("神域任务已完成！")
+		return		
+	end
 	goto begin	
 ::mission::
 	当前地图名 = 取当前地图名()
