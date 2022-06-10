@@ -1293,10 +1293,10 @@ function checkTamerSkillLevel()
 			-- 【一 二 三转任务】 三转先放一下 这个需要队伍联动
 			if(rankLv == 0)then		--1转树精
 				回城()
-				执行脚本("./脚本/★转正/★树精-星落-单人版不等待.lua")	
+				执行脚本("./脚本/★转正/★晋级-树精一转单人版不等待.lua")	
 			elseif(rankLv == 1)then --2转神兽
 				回城()
-				执行脚本("./脚本/★转正/★神兽.lua")	
+				执行脚本("./脚本/★转正/★晋级-神兽二转.lua")	
 			else -- 3 4 5先不做
 				return false
 			end

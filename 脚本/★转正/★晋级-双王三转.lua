@@ -149,7 +149,7 @@ end
 	dlg=等待服务器返回()
 	if(dlg.message~=nil and (string.find(dlg.message,"此传送点的资格")~=nil or string.find(dlg.message,"很抱歉")~=nil ))then
 		回城()
-		执行脚本("./脚本/直通车/★开传送-阿巴尼斯.lua")	
+		执行脚本("./脚本/直通车/★开传送-阿巴尼斯村.lua")	
 	else
 		转向(2)
 		等待服务器返回()
