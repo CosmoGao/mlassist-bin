@@ -11,8 +11,6 @@ local allGoldNum=0	--累计获得金币
 local 练级前时间=os.time() 
 local 走路加速值=125	
 local 走路还原值=100	
-local 卡对话检测次数=0
-
 
 local tradeName=nil
 local tradeBagSpace=nil
@@ -86,9 +84,7 @@ function waitTopic()
 end
 
 function logbackG()
-	当前地图名 = 取当前地图名()
-	x,y=取当前坐标()		
-	if (当前地图名=="哥拉尔镇" and x==120 )then return end			
+	if (取当前地图名()=="哥拉尔镇")then return end			
 	回城()	
 	等待(3000)
 end
@@ -314,21 +310,12 @@ function battle()
 	等待(1000)
 end
 
-function 卡对话检测()
-	
-	while true do
-		if(人物("血") < 补血值)then break end
-		if(人物("魔") < 补魔值)then break end
-		if(宠物("血") < 宠补血值)then break end
-		if(宠物("魔") < 宠补魔值)then break end
-		if(取包裹空格() < 1)then break end
-	end
-
-end
 function main()
 	日志("脚本启动，初始金币："..oldGold.." 总获得金币:"..allGoldNum)
 	local 当前地图名 = ""
 	local 地图编号 = 0
+	local x=0
+	local y=0
 ::begin::
 	等待空闲()
 	当前地图名 = 取当前地图名()
@@ -341,8 +328,20 @@ function main()
 		if(取当前地图名() == "艾尔莎岛")then
 			执行脚本("./脚本/直通车/★公交车-法兰To哥拉尔.lua")		
 		end	
-	elseif(当前地图名=="库鲁克斯岛" and (x >= 290 and x <= 350) and (y >= 870 and y <= 890)) then
-		battle()
+	elseif(当前地图名=="库鲁克斯岛") then
+		if((x >= 290 and x <= 350) and (y >= 870 and y <= 890))then
+			battle()
+		elseif(目标是否可达(476,526))then
+			设置("遇敌全跑",1)
+			移动(176,105,"库鲁克斯岛")
+			移动(476,526)
+			对话选是(477,526)
+			移动(322,883,"鲁米那斯")
+			设置("移动速度",走路还原值)
+			设置("遇敌全跑",0)
+		else
+			battle()
+		end
 	elseif(当前地图名=="鲁米那斯")then
 		移动(88, 51, "杂货店")
 	elseif(当前地图名=="杂货店")then

@@ -3,26 +3,27 @@
 
 common=require("common")
 
-人补魔=用户输入框("人多少魔以下补魔", "50")
-人补血=用户输入框( "人多少血以下补血", "300")
-宠补魔=用户输入框( "宠多少魔以下补魔", "50")
-宠补血=用户输入框( "宠多少血以下补血", "200")	
-自动换水火的水晶耐久值 = 用户输入框("多少耐久以下自动换水火的水晶,不换可不填", "30")        
+local 人补魔=用户输入框("人多少魔以下补魔", "50")
+local 人补血=用户输入框( "人多少血以下补血", "300")
+local 宠补魔=用户输入框( "宠多少魔以下补魔", "50")
+local 宠补血=用户输入框( "宠多少血以下补血", "200")	
+local 自动换水火的水晶耐久值 = 用户输入框("多少耐久以下自动换水火的水晶,不换可不填", "30")        
 设置("遇敌类型",1)
 --设置("遇敌速度",100)	--毫秒
 设置("无一级逃跑",1)	--毫秒
-crystalName="水火的水晶（5：5）"
-sealCardName="封印卡（人形系）"
-sealCardCount=40
+local crystalName="水火的水晶（5：5）"
+local sealCardName="封印卡（人形系）"
+local sealCardCount=40
 
 
 
-topicList={"烈风哥布林仓库信息"}
+
+local topicList={"烈风哥布林仓库信息"}
 订阅消息(topicList)
-抓宠线=人物("几线")
-tradeName=nil				--仓库人物名称
-tradeBagSpace=nil			--仓库人物宠物空格
-tradePlayerLine=nil			--仓库人物当前线路
+local 抓宠线=人物("几线")
+local tradeName=nil				--仓库人物名称
+local tradeBagSpace=nil			--仓库人物宠物空格
+local tradePlayerLine=nil			--仓库人物当前线路
 
 function FindMaze()
 	local units = 取周围信息()
