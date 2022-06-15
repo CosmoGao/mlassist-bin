@@ -782,6 +782,8 @@ end
 
 --去招魂
 function common.recallSoul()
+	local tryCount=0
+::begin::
 	if 人物("灵魂") > 0  then
 		日志("人物掉魂：登出招魂")
 		common.outCastle("n")--出城堡北门	
@@ -789,6 +791,14 @@ function common.recallSoul()
 		移动(14, 7,"礼拜堂")		
 		移动(12, 19)	
 		对话选是(0)
+		if tryCount > 3 then return end
+		
+		tryCount = tryCount+1
+		if 人物("灵魂") > 0  then			
+			日志("没钱招魂了，去看看银行有没钱")
+			common.checkGold(人物("灵魂")*30000,1000001,200000)
+			goto begin
+		end
 	end
 end
 
