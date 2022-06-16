@@ -260,6 +260,10 @@ function 五转任务()
 	local 当前地图名 = 取当前地图名()
 	local x,y=取当前坐标()		
 	if (当前地图名 =="艾尔莎岛" )then goto quYingDi
+	elseif(取当前地图编号() == 27315) then
+		移动(23,25)
+		对话选是(24,24)	
+		goto begin
 	elseif (string.find(当前地图名,"隐秘之洞")~= nil )then goto 穿越迷宫
 	elseif(当前地图名 ==  "里谢里雅堡")then goto quYingDi 
 	elseif(当前地图名 ==  "法兰城")then goto quYingDi 
@@ -270,8 +274,8 @@ function 五转任务()
 	elseif(当前地图名 ==  "工房")then goto lu2
 	elseif(当前地图名 ==  "隐秘之洞地下1层")then goto 穿越迷宫	
 	elseif(当前地图名 ==  "未来之塔入口第1层")then goto outMaze	
-	elseif(当前地图名 ==  "肯吉罗岛")then goto kenDaoPanDuan end
-	回城()
+	elseif(当前地图名 ==  "肯吉罗岛")then goto kenDaoPanDuan
+	else 回城()	end
 	等待(1000)
 	goto begin
 ::outMaze::
@@ -580,8 +584,8 @@ function battleBoss()
 			对话选是(0)
 		end
 	end
-	if(目标是否可达(27,24))then		--27310  火
-		移动(27,24)
+	if(目标是否可达(28,24))then		--27310  火
+		移动(28,24)
 		转向(6)
 		对话选是(6)
 		等待(5000)
@@ -599,6 +603,10 @@ function battleBoss()
 		if(取当前地图编号() == 27305)then
 			对话选是(2)
 		end
+	end
+	if(取当前地图编号() == 27315) then
+		移动(23,25)
+		对话选是(24,24)
 	end
 	--27315  隐秘之洞 最底层   23 25，对话24 24
 end

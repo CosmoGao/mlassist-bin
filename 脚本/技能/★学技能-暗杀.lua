@@ -27,7 +27,7 @@ common=require("common")
 	elseif(mapNum == 21020)then
 		goto map21020
 	end
-	goto begin
+	--goto begin
 	common.outFaLan("s")
 	等待到指定地图("芙蕾雅")
 	移动(409, 294)
