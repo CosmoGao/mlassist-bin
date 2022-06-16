@@ -5,41 +5,45 @@ common=require("common")
 清除系统消息()
     	
 
--- 补血值=取脚本界面数据("人补血")
--- 补魔值=取脚本界面数据("人补魔")
--- 宠补血值=取脚本界面数据("宠补血")
--- 宠补魔值=取脚本界面数据("宠补魔")
--- 队伍人数=取脚本界面数据("队伍人数")
--- if(补血值==nil or 补血值==0)then
-	-- 补血值=用户输入框("多少血以下补血", "430")
--- end
--- if(补魔值==nil or 补魔值==0)then
-	-- 补魔值 = 用户输入框("多少魔以下补魔", "200")
--- end
--- if(宠补血值==nil or 宠补血值==0)then
-	-- 宠补血值 = 用户输入框( "宠多少血以下补血", "50")
--- end
--- if(宠补魔值==nil or 宠补魔值==0)then
-	-- 宠补魔值=用户输入框( "宠多少魔以下补魔", "50")
--- end
+local 补血值=取脚本界面数据("人补血")
+local 补魔值=取脚本界面数据("人补魔")
+local 宠补血值=取脚本界面数据("宠补血")
+local 宠补魔值=取脚本界面数据("宠补魔")
+local 队伍人数=取脚本界面数据("队伍人数")
+local 走迷宫判断血魔=用户复选框("中途判断血魔",1)
+if(补血值==nil or 补血值==0)then
+	补血值=用户输入框("多少血以下补血", "430")
+end
+if(补魔值==nil or 补魔值==0)then
+	补魔值 = 用户输入框("多少魔以下补魔", "200")
+end
+if(宠补血值==nil or 宠补血值==0)then
+	宠补血值 = 用户输入框( "宠多少血以下补血", "50")
+end
+if(宠补魔值==nil or 宠补魔值==0)then
+	宠补魔值=用户输入框( "宠多少魔以下补魔", "50")
+end
 if(队伍人数==nil or 队伍人数==0)then
 	队伍人数 = 用户输入框("练级队伍人数，不足则固定点等待！",5)
 end
-走路加速值=115	--脚本走路中可以设定移动速度  到达目的地后，再还原值即可
-走路还原值=100	--防止掉线 还原速度
-卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
+local 走路加速值=115	--脚本走路中可以设定移动速度  到达目的地后，再还原值即可
+local 走路还原值=100	--防止掉线 还原速度
+local 卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
 
-遇敌总次数=0
-练级前经验=0
-练级前时间=os.time() 
-五转洞名称="隐秘之洞地下1层"
-当前刷碎片属性=nil		--地水火风
-默认刷碎片属性="风"		--地水火风
-刷碎片数量=20--用户输入框("刷碎片数量","20")
-是否卖石=false	
-是否自动5转=true
-指定洞=用户下拉框("当前任务洞:地 水 火 风",{"地","水","火","风"})
-十层等待时间=5000		--毫秒
+local 遇敌总次数=0
+local 练级前经验=0
+local 练级前时间=os.time() 
+local 五转洞名称="隐秘之洞地下1层"
+local 当前刷碎片属性=nil		--地水火风
+local 默认刷碎片属性="风"		--地水火风
+local 刷碎片数量=20--用户输入框("刷碎片数量","20")
+local 是否卖石=false	
+local 是否自动5转=true
+local 指定洞=用户下拉框("当前任务洞:地 水 火 风",{"无","地","水","火","风"})
+local 十层等待时间=5000		--毫秒
+local 上次迷宫楼层=1
+local 当前迷宫楼层=1
+
 --先检查自己的碎片 如果没满20  就先刷某一个，全满继续下一个
 --自己检查完,都满足后，检查队友的
 --地水火风
@@ -232,23 +236,31 @@ function 十层去下面()
 	local u =common.findAroundMaze()
 	if(u~= nil)then
 		移动(u.x,u.y)		
+	else
+		local x,y=取迷宫远近坐标(false)
+		移动(x,y)
+		if(x==0 and y==0)then
+			x,y=取迷宫远近坐标(true)
+			移动(x,y)
+		end
 	end
+	
 end
 function 五转任务()
 	清除系统消息()
 	练级前经验=人物("经验")
 	练级前宠经验=宠物("经验")
 	练级前金币=人物("金币")
-	outMazeX=nil	--蜥蜴和黑一 练级时 记录迷宫坐标
-	outMazeY=nil	
-	水晶名称="水火的水晶（5：5）"
+	local outMazeX=nil	--刷碎片时 记录迷宫坐标
+	local outMazeY=nil	
+	local 水晶名称="水火的水晶（5：5）"
 	
 ::begin::
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
 	local x,y=取当前坐标()		
 	if (当前地图名 =="艾尔莎岛" )then goto quYingDi
-	elseif (string.find(当前地图名,"隐秘之洞")~= nil )then goto yudi
+	elseif (string.find(当前地图名,"隐秘之洞")~= nil )then goto 穿越迷宫
 	elseif(当前地图名 ==  "里谢里雅堡")then goto quYingDi 
 	elseif(当前地图名 ==  "法兰城")then goto quYingDi 
 	elseif(当前地图名 == "医院")then goto StartBegin
@@ -256,7 +268,7 @@ function 五转任务()
 	elseif(当前地图名 ==  "商店")then goto yingDiShangDian
 	elseif(当前地图名 ==  "银行")then goto yingDiYinHang
 	elseif(当前地图名 ==  "工房")then goto lu2
-	elseif(当前地图名 ==  "隐秘之洞地下1层")then goto yudi	
+	elseif(当前地图名 ==  "隐秘之洞地下1层")then goto 穿越迷宫	
 	elseif(当前地图名 ==  "未来之塔入口第1层")then goto outMaze	
 	elseif(当前地图名 ==  "肯吉罗岛")then goto kenDaoPanDuan end
 	回城()
@@ -325,6 +337,7 @@ function 五转任务()
 			当前刷碎片属性="黑一"
 		end
 	end
+	日志("当前任务洞"..当前刷碎片属性,1)
 	喊话("美特斯邦威  飞一般滴感觉",06,0,0)	
 	goto xue	
 ::lu1::
@@ -359,15 +372,15 @@ function 五转任务()
 	goto lu4 
 ::lu4::
 	等待到指定地图("肯吉罗岛")	 
-	if(指定洞 == 0 or 指定洞 == nil)then
+	if(指定洞 == 0 or 指定洞 == nil or 指定洞 == "无")then
 		checkBagChip()
 	else
 		当前刷碎片属性 = 指定洞
 	end
+	日志("当前任务洞"..当前刷碎片属性,1)
 	findHoleEntry(当前刷碎片属性)
 	等待(1000)
 	等待空闲() 	
-::yudi::
 	if(取当前地图名() ~= "隐秘之洞地下1层")then
 		日志("没有找到洞穴，请手动查看问题",1)
 		goto begin
@@ -377,8 +390,11 @@ function 五转任务()
 	if(string.find(当前地图名,"隐秘之洞") == nil) then
 		goto begin	
 	end
-	if(当前地图名 == "隐秘之洞 地下10层")then
+	if(当前地图名 == "隐秘之洞 地下10层")then	
 		等待(十层等待时间)
+		if 当前刷碎片属性==nil then --归位 
+			checkBagChip()
+		end
 		使用物品("隐秘的水晶（"..当前刷碎片属性.."）")
 		等待(3000)
 		curx,cury = 取当前坐标()
@@ -386,7 +402,9 @@ function 五转任务()
 		移动(tgtx,tgty)
 		common.makeTeam(队伍人数)
 		if(队伍("人数")==队伍人数)then
-			十层去下面()			
+			十层去下面()	
+		else
+			goto 穿越迷宫
 		end
 	end	
 	if(当前地图名 == "隐秘之洞 最底层")then
@@ -394,11 +412,29 @@ function 五转任务()
 		等待(4000)
 		battleBoss()
 		--对话完毕，登出
+		if(取当前地图名() == "肯吉罗岛")then
+			日志("打完boss，回城补给",1)
+			回城()
+			goto begin
+		end
 	end
 	if(取队伍人数() ~=  队伍人数)then			--队友掉线-人数太少 登出回城 
 		脚本日志("队友掉线，回补！")
 		goto ting		
 	end
+	if(走迷宫判断血魔) then
+		if(人物("血") < 补血值)then goto  ting end
+		if(人物("魔") < 补魔值)then goto  ting end
+		if(宠物("血") < 宠补血值)then goto  ting end
+		if(宠物("魔") < 宠补魔值)then goto  ting end	
+	end
+	当前迷宫楼层=取当前楼层(取当前地图名())	--从地图名取楼层
+	if(当前迷宫楼层 < 上次迷宫楼层 )then	--反了
+		tx,ty=取迷宫远近坐标(false)	--取最近迷宫坐标
+		移动(tx,ty)		
+		当前迷宫楼层=取当前楼层(取当前地图名())	
+	end	
+	上次迷宫楼层=当前迷宫楼层
 	自动迷宫(1)
 	等待(1000)
 	goto 穿越迷宫         
@@ -439,20 +475,25 @@ function 五转任务()
 	common.statistics(练级前时间,练级前经验,练级前宠经验,练级前金币)	--统计脚本效率
 ::maze::	
 	if(outMazeX == nil or outMazeY==nil) then	
-		if (string.find(当前地图名,"隐秘之洞")== nil )then goto begin end	--不是黑龙沼泽 退回
-		自动迷宫(1,"",0)	--1下载地图 过滤点 0取近距离出口/1远距离出口
-		等待空闲()
-		if(取当前地图名() == "隐秘之洞地下2层") then	--反了
-			local curx,cury = 取当前坐标()
-			local tx,ty=取周围空地(curx,cury,1)--取当前坐标指定距离范围内 空地
-			移动(tx,ty)
-			移动(curx,cury)			
-			等待空闲() 	
-			if(取当前地图名() == "隐秘之洞地下1层") then	
-				自动迷宫(1,"",1)	
+		if (string.find(取当前地图名(),"隐秘之洞")== nil )then goto begin end	
+		if (取当前地图名() == "隐秘之洞地下1层")then 	
+			自动迷宫(1,"",0)	--1下载地图 过滤点 0取近距离出口/1远距离出口
+			等待空闲()
+			if(取当前地图名() == "隐秘之洞地下2层") then	--反了
+				local curx,cury = 取当前坐标()
+				local tx,ty=取周围空地(curx,cury,1)--取当前坐标指定距离范围内 空地
+				移动(tx,ty)
+				移动(curx,cury)			
 				等待空闲() 	
+				if(取当前地图名() == "隐秘之洞地下1层") then	
+					自动迷宫(1,"",1)	
+					等待空闲() 	
+				end
 			end
-		end
+		else
+			回城()
+			goto begin
+		end		
 	else
 		移动(outMazeX,outMazeY)
 	end	
@@ -522,7 +563,8 @@ function battleBoss()
 	if(目标是否可达(24,19))then	--风 27313
 		移动(24,19)
 		转向(4)
-		等待(10000)
+		对话选是(4)
+		等待(5000)
 		等待战斗结束()
 		if(取当前地图编号() == 27314)then
 			对话选是(4)
@@ -531,7 +573,8 @@ function battleBoss()
 	if(目标是否可达(24,29))then		--水 27307
 		移动(24,29)
 		转向(0)
-		等待(10000)
+		对话选是(0)
+		等待(5000)
 		等待战斗结束()
 		if(取当前地图编号() == 27308)then
 			对话选是(0)
@@ -540,7 +583,8 @@ function battleBoss()
 	if(目标是否可达(27,24))then		--27310  火
 		移动(27,24)
 		转向(6)
-		等待(10000)
+		对话选是(6)
+		等待(5000)
 		等待战斗结束()
 		if(取当前地图编号() == 27311)then
 			对话选是(6)
@@ -549,7 +593,8 @@ function battleBoss()
 	if(目标是否可达(19,24))then		--27304  地
 		移动(19,24)
 		转向(2)
-		等待(10000)
+		对话选是(2)
+		等待(5000)
 		等待战斗结束()
 		if(取当前地图编号() == 27305)then
 			对话选是(2)
