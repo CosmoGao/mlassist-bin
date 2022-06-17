@@ -8,13 +8,13 @@ local 宠补魔值=取脚本界面数据("宠补魔")
 
 local 队长名称=取脚本界面数据("队长名称",false)
 if(队长名称==nil or 队长名称=="")then
-	队长名称=用户输入框("请输入队伍名称！","乱￠逍遥")--风依旧￠花依然  乱￠逍遥
+	队长名称=用户输入框("队长名称","乱￠逍遥")--风依旧￠花依然  乱￠逍遥
 end
 if(补血值==nil or 补血值==0)then
-	补血值=用户输入框("多少血以下补血", "430")
+	补血值=用户输入框("人多少血以下补血", "430")
 end
 if(补魔值==nil or 补魔值==0)then
-	补魔值 = 用户输入框("多少魔以下补魔", "200")
+	补魔值 = 用户输入框("人多少魔以下补魔", "200")
 end
 if(宠补血值==nil or 宠补血值==0)then
 	宠补血值 = 用户输入框( "宠多少血以下补血", "50")
@@ -801,7 +801,7 @@ function 营地练级(目标等级,练级地名称)
 	end
 	--金币满存银行检测
 	if(当前地图名 == "圣骑士营地")then
-		if(checkTamerSkillLevel())then		--检测调教技能
+		if(checkMainSkillLevel())then		--检测调教技能
 			设置("遇敌全跑",0)				--防止哪个脚本卡了这个 不行的话 重新读取配置	
 			goto begin						--提升阶级后，重新begin
 		end 
@@ -957,7 +957,7 @@ function 矮人练级(目标等级,练级地名称)
 	if(mapName == "工房")then
 		卖(21,23,卖店物品列表)	
 	elseif(mapName == "矮人城镇")then
-		if(checkTamerSkillLevel())then		--检测调教技能
+		if(checkMainSkillLevel())then		--检测调教技能
 			设置("遇敌全跑",0)				--防止哪个脚本卡了这个 不行的话 重新读取配置	
 			goto begin						--提升阶级后，重新begin
 		end 
@@ -1147,7 +1147,7 @@ function 半山练级(目标等级)
 ::begin::
 	停止遇敌()	
 	等待空闲()
-	if(checkTamerSkillLevel())then		--检测调教技能
+	if(checkMainSkillLevel())then		--检测调教技能
 		设置("遇敌全跑",0)				--防止哪个脚本卡了这个 不行的话 重新读取配置	
 		goto begin						--提升阶级后，重新begin
 	end 
@@ -1305,6 +1305,45 @@ function checkTamerSkillLevel()
 		--不管成功与否 继续回去练级 当然 下次战斗判断 会重复进入此步
 		return true
 	end
+	return false
+end
+--检查忍者职业技能  暂时不扩展，可以用表 把职业技能 和提升阶级脚本关联起来
+function checkNinjaSkillLevel()
+	local nowSkillLv = common.playerSkillLv("暗杀")
+	if(nowSkillLv == 0 or nowSkillLv>=8)then	--3转以后 先屏蔽
+		return false
+	end
+	--4转 5转 不转 这里没有自动调用4转5转任务
+	local rankLv = 人物("职称等级")
+	if(nowSkillLv >= (4 + rankLv*2))then
+		--去提升等价
+		执行脚本("./脚本/★转正/★提升阶级-忍者.lua")	
+		等待(2000)
+		if(rankLv == 人物("职称等级"))then	
+			-- 【一 二 三转任务】 三转先放一下 这个需要队伍联动
+			if(rankLv == 0)then		--1转树精
+				回城()
+				执行脚本("./脚本/★转正/★晋级-树精一转单人版不等待.lua")	
+			elseif(rankLv == 1)then --2转神兽
+				回城()
+				执行脚本("./脚本/★转正/★晋级-神兽二转.lua")	
+			else -- 3 4 5先不做
+				return false
+			end
+			执行脚本("./脚本/★转正/★提升阶级-忍者.lua")
+		end		
+		--不管成功与否 继续回去练级 当然 下次战斗判断 会重复进入此步
+		return true
+	end
+	return false
+end
+function checkMainSkillLevel()
+	local profession=人物("职业")
+	if(profession == "驯兽师")then
+		return checkTamerSkillLevel()
+	elseif(profession == "忍者")then
+		return checkNinjaSkillLevel()
+	end	
 	return false
 end
 --检查魅力 没有完美调教术的 才检查
