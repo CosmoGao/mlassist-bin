@@ -32,33 +32,33 @@ local tradePlayerLine=nil			--仓库人物当前线路
 topicList={"百人道场仓库信息"}
 订阅消息(topicList)
 
-补血值=1000--用户输入框("多少血以下补血", "430")
-补魔值 = 300--用户输入框("多少魔以下补魔", "50")
-宠补血值=1000--用户输入框( "宠多少血以下补血", "50")
-宠补魔值=300--用户输入框( "宠多少魔以下补血", "100")
+local 补血值=用户输入框("多少血以下补血", "1000")
+local 补魔值 = 用户输入框("多少魔以下补魔", "300")
+local 宠补血值=用户输入框( "宠多少血以下补血", "1000")
+local 宠补魔值=用户输入框( "宠多少魔以下补血", "300")
 
 设置("自动战斗", 1)			-- 开启自动战斗，0不自动战斗，1自动战斗
 设置("高速战斗", 1)			-- 高速战斗
-最高楼层=71
+local 最高楼层=用户输入框( "最高楼层", "71")
 
-中奖物品列表={"魔力之泉","小护士家庭号","天空之枪","帕鲁凯斯之斧","村正","鼠王"}
+local 中奖物品列表={"魔力之泉","小护士家庭号","天空之枪","帕鲁凯斯之斧","村正","鼠王"}
 
-队长名称 = 取脚本界面数据("队长名称",false)
-设置队员列表=取脚本界面数据("队员列表")
-队员列表={}
+local 队长名称 = 取脚本界面数据("队长名称",false)
+local 设置队员列表=取脚本界面数据("队员列表")
+local 队员列表={}
 if(队长名称==nil or 队长名称=="")then
 	队长名称=用户输入框("请输入队长名称！","乱￠逍遥")--风依旧￠花依然  乱￠逍遥
 end
-lotteryList={"CH","BCH","BH"}
-抽奖选项=用户下拉框("抽奖项", lotteryList)
+local lotteryList={"CH","BCH","BH"}
+local 抽奖选项=用户下拉框("抽奖项", lotteryList)
 日志("当前抽奖已选择："..抽奖选项,1)
-isTeamLeader=false		--是否队长
+local isTeamLeader=false		--是否队长
 if(人物("名称",false) == 队长名称)then
 	isTeamLeader=true
 	日志("当前是队长",1)
 end
 
-队伍人数=1
+local 队伍人数=1
 if(isTeamLeader)then	
 	队伍人数=取脚本界面数据("队伍人数")	
 	if(队伍人数==nil or 队伍人数==0)then
@@ -107,7 +107,7 @@ end
 --用户输入框("扔换下的旧鞋子或长靴", "是否扔换下的旧鞋子或长靴,扔填11111,不扔填0", "11111")
 
 function 继续下一层()
-	tryCount=0
+	local tryCount=0
 ::warpErShi::
 	if( tryCount > 3 ) then
 		return
@@ -137,7 +137,7 @@ end
 function exchangeShuiJing(水晶列表)
 	等待到指定地图("百人道场大厅")	
 	--判断碎片数量
-	是否换=false
+	local 是否换=false
 	for k,v in ipairs(elements) do	
 		if(取物品叠加数量(v.."地元素碎片") >= 4)then
 			是否换=true
@@ -188,7 +188,7 @@ function exchangeCH()
 	清除系统消息()
 	local elements = {"地","水","风","火"}
 	--三种水晶 去换C奖
-	cNeedCount=0
+	local cNeedCount=0
 	for k,v in ipairs(elements) do
 		if(取物品数量(v.."元素水晶") > 0)then 		
 			cNeedCount=cNeedCount+1
@@ -322,7 +322,7 @@ function exchangeBH()
 	清除系统消息()
 	local elements = {"地","水","风","火"}
 	--三种水晶 去换C奖
-	bNeedCount=0
+	local bNeedCount=0
 	for k,v in ipairs(elements) do
 		if(取物品数量(v.."元素碎片") > 0)then 		
 			bNeedCount=bNeedCount+1
@@ -429,6 +429,8 @@ function main()
 	--重启脚本 默认从1层开始，重新组队，否则掉线容易卡在不同楼层
 	扔("道场记忆")
 	--回城()
+	local mapNum=0
+	local 当前地图名=""
 ::begin::	
 	等待空闲()
 	common.changeLineFollowLeader(队长名称)
