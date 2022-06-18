@@ -3,7 +3,7 @@
 common=require("common")
 
 
-taskStep=用户输入框("输入‘1’从头开始任务，\n"..
+taskStep=用户下拉框("输入‘1’从头开始任务，\n"..
 	"输入‘2’酒吧开始执行，\n"..
    "输入‘3’伊尔村拿纸条，\n"..
    "输入‘4’拿面包，\n"..
@@ -12,37 +12,39 @@ taskStep=用户输入框("输入‘1’从头开始任务，\n"..
    "输入‘7’探听毒岚的信息\n"..
    "输入‘8’维诺亚执行后续\n"..
    "输入‘9’乌克兰执行后续\n"
-   ,0)
+   ,{1,2,3,4,5,6,7,8,9},"1")
 
 answer={
 		["问题一：坐垫总共有几个？"]="十...",
 		["问题二：总共有几扇窗户？"]="八...",
 		["问题三：供奉在神明前的书是什么颜色的？"]="红...",
-		["问题四：从最里面开始数来第５个宝箱是什么色的？"]="蓝...",
+		["问题四：从最里面开始数来第5个宝箱是什么色的？"]="蓝...",
 		["问题五：有放一篮橘子的桌子是前面的还是后面的？"]="后...",
-		["问题六：谜之鸟．１一直说的是什么水果？"]="桃...",
+		["问题六：谜之鸟·1一直说的是什么水果？"]="桃...",
 		["问题七：正中央写的字是什么？"]="忍...",
 		["问题八：草鞋总共有几双？"]="三...",
 		["问题九：绿色的桶子是从里面数来的第几个？"]="五...",
 		["问题十：墙壁是什么颜色的？"]="白...",	
 		
-		["问题一：谜之鸟．２一直说的是什么水果？"]="柿...",
-		["问题二：从里面数来的第一个招牌写了些什么？"]="影...",
-		["问题三：宠物哥不林的名字叫什么？"]="松...",
-		["问题四：哥不林的头盔是什么颜色？"]="绿...",
+		["问题一：谜之鸟·2一直说的是什么水果？"]="柿...",
+		["问题二：从里面数来的第一个招牌上写了些什么？"]="影...",
+		["问题三：宠物哥布林的名字叫什么？"]="松...",
+		["问题四：哥布林的头盔是什么色的？"]="绿...",
 		["问题五：有几只刀？"]="五...",
-		["问题六：时钟指著哪个时间？"]="子...",
+		["问题六：时钟指着哪个时间？"]="子...",
 		["问题七：柜子里放了什么？"]="笔...",
 		["问题八：地板上总共有几本书？"]="三...",
-		["问题九：总共有几颗树？"]="八...",
-		["问题十：宠物幽灵的名字叫什么？"]="梅..."		
-		}
+		["问题九：总共有几棵树？"]="八...",
+		["问题十：宠物幽灵的名字是什么？"]="梅..."		
+		
 	}
 function 学暗杀()
 ::begin::
 	mapNum=取当前地图编号()
 	if(mapNum == 21016)then
 		goto map21016
+	elseif(mapNum == 21015)then	--忍者之家
+		goto map21015
 	elseif(mapNum == 21017)then
 		goto map21017
 	elseif(mapNum == 21018)then
@@ -51,8 +53,15 @@ function 学暗杀()
 		goto map21019
 	elseif(mapNum == 21020)then
 		goto map21020
+	elseif(mapNum == 21023)then	--井的底部
+		goto map21023
+	elseif(mapNum == 21024)then	--通路
+		goto map21024
+	elseif(mapNum == 21025)then	--通路
+		goto map21025	
 	end
 	goto begin
+::map21015::	
 ::map21016::	--忍者之家 
 	if(目标是否可达(59,5))then
 		移动(59,5)		
@@ -78,6 +87,17 @@ function 学暗杀()
 ::map21020::
 	移动(12,17)
 	common.learnPlayerSkill(11,17)
+	goto fini
+::map21023::
+	移动(19,12)
+	goto begin
+::map21024::
+	移动(45,43)
+	goto begin
+::map21025::
+	移动(22,26)
+	goto begin
+::fini::
 	return
 end
 	
@@ -101,7 +121,9 @@ function boss()
 	elseif(mapNum == 2213)then
 		goto map2213
 	elseif(mapNum == 2214)then
-		goto map2214
+		goto map2214	
+	elseif(mapNum == 2216)then	--族长的家地下室
+		goto map2216
 	elseif(mapNum == 21017)then
 		goto map21017
 	elseif(mapNum == 21018)then
@@ -116,12 +138,13 @@ function boss()
 	if(取物品数量("岚之秘传书") > 0)then
 		移动(11,7)
 		转向坐标(11,6)
-		喊话("忍者...",2,3,5)		
-	end
-	移动(10,11)
-	转向(2)
-	喊话("毒...",2,3,1)
-	对话选否(11,11)
+		喊话("忍者...",2,3,5)
+	else
+		移动(10,11)
+		转向(2)
+		喊话("毒...",2,3,1)
+		对话选否(11,11)
+	end	
 	goto begin
 ::map2213::
 	移动(10,11)
@@ -129,9 +152,13 @@ function boss()
 	喊话("毒...",2,3,1)
 	对话选否(11,11)
 	goto begin
-::map2214::
+::map2214::			--打完 有 岚之秘传书
 	转向(2)
-::map2216::
+	if(取物品数量("岚之秘传书") >0)then
+		移动(7,8,"2212")		
+	end
+::map2216::		--组队 8 11  对话选是 11 11
+	移动(10,11)
 	
 ::map21016::	--忍者之家 
 	if(目标是否可达(59,5))then
@@ -314,6 +341,7 @@ function step4()
 	等待(5000)
 	if(取物品数量("陶欧食品店精制面包") > 0)then
 		taskStep = 5
+		return
 	end
 	if(tryNum > 3)then
 		日志("上一步有问题，返回！",1)
@@ -465,6 +493,12 @@ function main()
 	mapNum=取当前地图编号()
 	if(mapNum == 100)then		--芙蕾雅
 		goto map100
+	elseif(mapNum == 2199)then	--维诺亚村
+		移动(5, 1,"村长家的小房间")	
+	elseif(mapNum == 2198)then	--维诺亚村
+		移动(0, 5,"村长的家")	
+	elseif(mapNum == 2112)then	--维诺亚村
+		移动(10, 16,"维诺亚村")	
 	elseif(mapNum == 2100)then	--维诺亚村
 		goto map2100
 	elseif(mapNum == 2200)then	--乌克兰
@@ -477,6 +511,14 @@ function main()
 		goto map2220	
 	elseif(mapNum == 2223)then	--小助的家
 		goto map2223	
+	elseif(mapNum == 2224)then	--小助的家
+		goto map2224
+	elseif(mapNum == 2225)then	--小助的家
+		goto map2225
+	elseif(mapNum == 2226)then	--小助的家
+		goto map2226
+	elseif(mapNum >= 2250 and mapNum <= 2259)then	--小助的家
+		goto map2250	
 	elseif(mapNum == 21014)then	--忍者之家
 		goto map21014
 	elseif(mapNum == 21015)then	--忍者之家
@@ -493,6 +535,8 @@ function main()
 		goto map21050
 	elseif(mapNum == 21051)then	--小路
 		goto map21051
+	else
+		--common.toTeleRoom("维诺亚村")
 	end		
 	goto mapCheck
 	
@@ -537,18 +581,30 @@ function main()
 	end	
 	goto mapCheck
 ::map2200::		--乌克兰 这部分是线性的 判断依据
-	移动(77, 47,"民家")	
-	移动(8, 6)
-	喊话("毒...", "5", "5", "0")
-	对话选择(1,0)
-	移动(1, 10,"乌克兰")	
-	移动(69, 28,"村长的家")	
-	移动(16, 9,"族长的家地下室")	--2213
-	boss()	
+	if(取物品数量("忍者推荐信") > 0)then
+		移动(46, 22,"小助的家")	
+	else
+		移动(77, 47,"民家")	
+		移动(8, 6)
+		喊话("毒...", "5", "5", "0")
+		对话选择(1,0)
+		移动(1, 10,"乌克兰")	
+		移动(69, 28,"村长的家")	
+		移动(16, 9,"族长的家地下室")	--2213
+		boss()	
+	end
 	goto mapCheck
 
 ::map2212::		--村长的家
-	移动(16, 9,"族长的家地下室")	
+	if(取物品数量("忍者推荐信") > 0)then
+		移动(2,22,"乌克兰")
+	elseif(取物品数量("岚之秘传书") > 0)then
+		移动(11,7)
+		转向坐标(11,6)
+		喊话("忍者...",2,3,5)
+	else
+		移动(16, 9,"族长的家地下室")
+	end			
 	goto mapCheck
 ::map2213::		--族长的家地下室
 	boss()
@@ -572,17 +628,69 @@ function main()
 	移动(7,6)	
 	对话选是(0)
 	goto mapCheck
-::map2250::
-	转向(0)
-	dlg=等待服务器返回()
-	if(dlg ~= nil )then
-		for q,a in pairs(answer) do
-			if(string.find(dlg.message,q) ~= nil)then
-				喊话(a,2,3,5)
-				break
-			end
-		end		
+::map2226::
+	if(人物("职业") == "忍者")then
+		日志("转职忍者完成,去学暗杀",1)
+		移动(6,15,"乌克兰")
+		移动(90,84,21025)
+		移动(22,26,21024)
+		移动(45,43,21023)
+		移动(19,12,21015)		
+		学暗杀()
+		return
 	end
+	移动(7,5)	
+	if(取物品数量("转职保证书") < 1)then
+		日志("没有转职保证书，转职失败，返回！")
+		return
+	end
+	转向(0)
+	等待服务器返回()
+	对话选择(0,1)
+	等待服务器返回()
+	对话选择(32,-1)
+	等待服务器返回()
+	对话选择(0,0)
+	等待(2000)		
+	goto mapCheck
+::map2250::
+::map2251::
+::map2252::
+::map2253::
+::map2254::
+::map2255::
+::map2256::
+::map2257::
+::map2258::
+::map2259::		--白天和黑夜坐标位置不一样，懒得判断时间了，直接判断坐标
+	unitData=取周围信息()
+	qusu=nil
+	zuozhu=nil
+	for i,u in ipairs(unitData) do
+		if(u.model_id == 10416)then
+			qusu=u	
+		elseif(u.model_id == 14004)then
+			zuozhu=u
+		end
+	end
+	if(qusu ~= nil)then
+		移动到目标附近(qusu.x,qusu.y)
+		转向坐标(qusu.x,qusu.y)
+		dlg=等待服务器返回()
+		if(dlg ~= nil )then
+			for q,a in pairs(answer) do
+				if(string.find(dlg.message,q) ~= nil)then
+					if(zuozhu~= nil) then
+						移动到目标附近(zuozhu.x,zuozhu.y)
+						转向坐标(zuozhu.x,zuozhu.y)
+						喊话(a,2,3,5)
+						等待(2000)
+						break
+					end
+				end
+			end		
+		end
+	end	
 	goto mapCheck
 	
 	

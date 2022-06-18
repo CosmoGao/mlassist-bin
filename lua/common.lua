@@ -63,6 +63,18 @@ function common.getTableSize(tmpTable)
 	end
 	return nSize
 end
+--查找表index   数组可用
+function common.findTableIndex(tmpTable,tVal)
+	if(tmpTable == nil) then
+		return 0		
+	end	
+	for i,v in ipairs(tmpTable) do
+		if v == tVal then
+			return i
+		end
+	end
+	return 0
+end
 -- 分隔字符串
 -- 参数:待分割的字符串,分割字符
 -- 返回:子串表.(含有空串)
@@ -536,8 +548,8 @@ end
 
 --法兰武器商人卖制造物品 1个起卖
 function common.sellFaLanPile(saleItem)
-	common.toCastle()
-	移动(40, 98,"法兰城")	
+	common.gotoFaLanCity()
+	--移动(40, 98,"法兰城")	
 	移动(150, 123)
 	卖(0,saleItem)		
 end
@@ -782,6 +794,8 @@ end
 
 --去招魂
 function common.recallSoul()
+	local tryCount=0
+::begin::
 	if 人物("灵魂") > 0  then
 		日志("人物掉魂：登出招魂")
 		common.outCastle("n")--出城堡北门	
@@ -789,6 +803,14 @@ function common.recallSoul()
 		移动(14, 7,"礼拜堂")		
 		移动(12, 19)	
 		对话选是(0)
+		if tryCount > 3 then return end
+		
+		tryCount = tryCount+1
+		if 人物("灵魂") > 0  then			
+			日志("没钱招魂了，去看看银行有没钱")
+			common.checkGold(人物("灵魂")*30000,1000001,200000)
+			goto begin
+		end
 	end
 end
 
@@ -2774,5 +2796,343 @@ function common.waitTeammateChat(chatMsg)
 	end		
 	count=0
 	goto begin	
+end
+
+
+function common.登录游戏id(游戏id,tFileName,lastGidInfo,functionAction,funArg,dstRole)
+
+	local 左右角色=0
+	--如果是最后一次gid  则使用记录的左右角色值 登录
+	if dstRole then 左右角色=lastGidInfo.role end
+	--切换游戏id
+	local worldStatus=0
+	local gameStatus=0
+	local loginState,loginMsg = 取登录状态()
+	local mapNum=0
+	local mapName=""
+	local topicMsg={}
+::switchCharacter::
+	if(左右角色 > 1)then	--左右都已获取仓库 去下一个		
+		return
+	end
+	重置登录状态()
+	设置登录子账号(游戏id)
+	设置登录角色(左右角色)	--左边
+	登录游戏()
+::checkCharacter::	--检查游戏角色和状态
+	worldStatus=世界状态()
+	gameStatus=游戏状态()
+	if(loginState == 0 and string.find(loginMsg,"无法连上服务器") ~= nil)then
+		重置登录状态()
+		登录游戏()		
+	end
+	if(游戏窗口状态() == false)then --窗口被服务器干掉了 重新运行窗口
+		重置登录状态()
+		打开游戏窗口()
+		等待(2000)
+		for tryNum=1,15 do		--等15秒 判断是否连接成功
+			if(游戏窗口状态() == true )then break end
+			等待(1000)
+		end
+	end
+	if(worldStatus ==3  and gameStatus == 11)then  --判断有没有角色
+		loginState,loginMsg = 取登录状态()
+		if(loginState == 3 and string.find(loginMsg,"no character") ~= nil)then
+			左右角色=左右角色+1				
+			回到选择线路()
+			goto switchCharacter
+		elseif((loginState == 10000 or loginState == 0) and string.find(loginMsg,"角色数据读取失败") ~= nil)then
+			--跳过 游戏已经登录
+			左右角色=左右角色+1				
+			回到选择线路()
+			goto switchCharacter
+		end	
+	elseif(worldStatus ==2  and gameStatus == 1)then  --没有连接线
+		登录游戏()
+	end
+	if(是否空闲中())then
+		goto begin
+	end	
+	等待(1000)
+	goto checkCharacter
+::begin::
+	functionAction(funArg)		--回调用户自定义行为
+	获取仓库信息()
+	保存仓库信息()
+	左右角色=左右角色+1
+	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
+		lastGidInfo.role=人物("左右角色")
+		lastGidInfo.gid=人物("gid")
+		lastGidInfo.roleName=人物("名称")
+		lastGidInfo.index=common.findTableIndex(获取游戏子账户(),人物("gid"))		
+		common.WriteFileData(tFileName,common.TableToStr(lastGidInfo))
+		登出服务器()
+		return
+	end
+	重置登录状态()
+	设置登录子账号(游戏id)
+	设置登录角色(左右角色)	--左边		
+	登出服务器()
+	等待(1000)	
+	goto switchCharacter
+
+end
+--仓库在线等待函数 
+--tFileName 仓库本地文件名  百人道场仓库.txt
+function common.warehouseOnlineWait(tFileName,functionAction,funArg)
+	local cgGidList={}	--游戏Gid列表
+	local lastGidInfo={gid="",role=0,roleName="",index=1}	--最后一次仓库信息
+--循环等待获取游戏的所有子id  成功后去下一步
+::begin::
+	cgGidList=获取游戏子账户()	--登录成功才能获取
+	if(common.getTableSize(cgGidList) > 0)then
+		goto switchGid
+	else
+		打开游戏窗口()
+		等待(10000)
+	end
+	
+	等待(1000)
+	goto begin
+--控制切换游戏id
+::switchGid::
+	local readFileMsg = common.ReadFileData(tFileName)
+	if(readFileMsg == nil)then
+		lastGidInfo.gid = cgGidList[1]
+	else
+		lastGidInfo = common.StrToTable(readFileMsg)	
+	end
+	
+	if(lastGidInfo==nil or type(lastGidInfo) ~= "table")then 
+		lastGidInfo={gid="",role=0,roleName="",index=1}
+	end
+	日志("上次仓库index".. lastGidInfo.index.." gid"..lastGidInfo.gid.." 角色"..lastGidInfo.role)	
+	if(lastGidInfo.gid ~= 人物("gid"))then
+		登出服务器()
+	end
+	for k,v in pairs(cgGidList) do  
+		if(k == lastGidInfo.index)then
+			日志("登录最后一次仓库")
+			common.登录游戏id(v,tFileName,lastGidInfo,functionAction,funArg,true)
+		elseif(k > lastGidInfo.index)then
+			common.登录游戏id(v,tFileName,lastGidInfo,functionAction,funArg,false)
+		end
+	end  
+	--获取完成 退出
+	return
+
+end 
+--预置交易金币函数
+common.waitTradeGoldAction=function(args)
+	local mapName=""
+	local mapNum=0
+::begin::
+	等待空闲()
+	mapName = 取当前地图名()
+	mapNum =取当前地图编号()
+	if (mapName=="艾尔莎岛" or mapName=="法兰城" or mapName=="里谢里雅堡" )then	
+		common.gotoFalanBankTalkNpc()
+		goto bankWait
+	elseif (mapName=="银行" and mapNum== 1121)then	
+		goto bankWait
+	elseif (mapName=="召唤之间" )then	--登出 bank
+		移动(3,9)
+		对话选是(4,9)
+		回城()
+		common.gotoFalanBankTalkNpc()
+		goto bankWait
+	end	
+	回城()
+	等待(1000)	
+	goto begin
+::bankWait::
+	if(取当前地图编号() ~= 1121)then
+		common.gotoFalanBankTalkNpc()
+	end
+	移动(args.x,args.y)
+	topicMsg = {name=人物("名称"),gold=1000000-人物("金币"),line=人物("几线")}
+	发布消息(args.topic, common.TableToStr(topicMsg))
+	等待交易("","","",10000)
+	if(人物("金币") > 900000)then
+		goto cun
+	end	
+	goto bankWait
+::cun::
+	移动(11,8)
+	面向("东")
+	等待服务器返回()
+	bankGold = 银行("金币")
+	cGold=人物("金币")
+	if(bankGold > 1000000)then	--银行金币大于100万 取最小值
+		cGold =  math.min(10000000-bankGold,cGold)
+	else
+		cGold =  math.min(1000000-bankGold,cGold)
+	end
+	银行("存钱",cGold)
+	等待(2000)
+	if(人物("金币")>=1000000)then	
+		return	--登出 切换仓库
+	end
+	goto bankWait	
+end
+--预置交易道具函数
+common.waitTradeItemsAction=function(args)
+	local mapName=""
+	local mapNum=0
+::begin::
+	等待空闲()
+	mapName = 取当前地图名()
+	mapNum =取当前地图编号()
+	if (mapName=="艾尔莎岛" or mapName=="法兰城" or mapName=="里谢里雅堡" )then	
+		common.gotoFalanBankTalkNpc()
+		goto bankWait
+	elseif (mapName=="银行" and mapNum== 1121)then	
+		goto bankWait
+	elseif (mapName=="召唤之间" )then	--登出 bank
+		移动(3,9)
+		对话选是(4,9)
+		回城()
+		common.gotoFalanBankTalkNpc()
+		goto bankWait
+	end	
+	回城()
+	等待(1000)	
+	goto begin
+::bankWait::
+	if(取当前地图编号() ~= 1121)then
+		common.gotoFalanBankTalkNpc()
+	end
+	
+	移动(args.x,args.y)	
+	topicMsg = {name=人物("名称"),bagcount=取包裹空格(),line=人物("几线")}
+	发布消息(args.topic, common.TableToStr(topicMsg))	
+	if(银行("金币") >= 1000000)then
+		if(人物("金币") > 998000)then
+			等待交易("","金币:2000","",10000)
+		else
+			等待交易("","","",10000)
+		end
+	else
+		if(人物("金币") > 900000)then		
+			goto cun
+		else
+			等待交易("","","",10000)
+		
+		end
+	end	
+	if(取包裹空格() < 1)then
+		goto cun
+	end
+	goto bankWait
+::cun::
+	移动(11,8)
+	面向("东")
+	等待服务器返回()
+	bankGold = 银行("金币")
+	cGold=人物("金币")
+	if(bankGold > 1000000)then	--银行金币大于100万 取最小值
+		cGold =  math.min(10000000-bankGold,cGold)
+	else
+		cGold =  math.min(1000000-bankGold,cGold)
+	end
+	银行("存钱",cGold)
+	等待(1000)
+	银行("取钱",2000)
+	if(银行("已用空格") == 20)then	--默认20
+		if(取包裹空格() < 1)then
+			return	--登出 切换仓库
+		end
+	else
+		i=8
+		while i<= 28 do
+			银行("存包裹位置",i)
+			i=i+1
+			等待(1000)
+		end
+	end
+	goto bankWait
+end
+--预置交易宠物函数
+common.waitTradePetsAction=function(args)
+	local mapName=""
+	local mapNum=0
+::begin::
+	等待空闲()
+	mapName = 取当前地图名()
+	mapNum =取当前地图编号()
+	if (mapName=="艾尔莎岛" or mapName=="法兰城" or mapName=="里谢里雅堡" )then	
+		common.gotoFalanBankTalkNpc()
+		goto bankWait
+	elseif (mapName=="银行" and mapNum== 1121)then	
+		goto bankWait
+	elseif (mapName=="召唤之间" )then	--登出 bank
+		移动(3,9)
+		对话选是(4,9)
+		回城()
+		common.gotoFalanBankTalkNpc()
+		goto bankWait
+	end	
+	回城()
+	等待(1000)	
+	goto begin
+::bankWait::
+	if(取当前地图编号() ~= 1121)then
+		common.gotoFalanBankTalkNpc()
+	end
+	if(common.getTableSize(全部宠物信息()) == 5)then
+		移动(11,8)
+		面向("东")
+		等待服务器返回()
+		if(银行("宠物数") == 5)then	--默认20
+			return
+		end
+	end		
+	移动(args.x,args.y)
+	topicMsg = {name=人物("名称"),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
+	发布消息(args.topic, common.TableToStr(topicMsg))
+	if(银行("金币") >= 1000000)then
+		if(人物("金币") > 998000)then
+			等待交易("","金币:2000","",20000)
+		else
+			等待交易("","","",20000)
+		end
+	else
+		if(人物("金币") > 900000)then		
+			goto cun
+		else
+			等待交易("","","",20000)
+		end
+	end	
+	if(common.getTableSize(全部宠物信息()) == 5)then
+		goto cun
+	end
+	goto bankWait
+::cun::
+	移动(11,8)
+	面向("东")
+	等待服务器返回()
+	bankGold = 银行("金币")
+	cGold=人物("金币")
+	if(bankGold > 1000000)then	--银行金币大于100万 取最小值
+		cGold =  math.min(10000000-bankGold,cGold)
+	else
+		cGold =  math.min(1000000-bankGold,cGold-2000)
+	end
+	银行("存钱",cGold)
+	等待(2000)
+	银行("取钱",2000)
+	if(银行("宠物数") == 5)then	--默认20
+		if(common.getTableSize(全部宠物信息()) == 5)then
+			return
+		end
+	else
+		i=0
+		while i<= 5 do
+			银行("存宠",i)
+			i=i+1
+			等待(1000)
+		end
+	end
+	goto bankWait
 end
 return common

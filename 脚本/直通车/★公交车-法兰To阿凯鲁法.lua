@@ -206,11 +206,12 @@
 	end	
 	goto TOA
 ::aoqy::
-    等待(150000)
+    等待(15000)
 ::aoqy1::
 	if(string.find(最新系统消息(),"本船已到达了阿凯鲁法港")~=nil)then
 		goto xia
 	end
+	等待(3000)
 	goto aoqy1
 ::xia::
 	移动(70, 26)

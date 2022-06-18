@@ -1,24 +1,22 @@
-脚本支持发蓝和艾尔莎岛启动，支持传送羽毛，请设置好自动战斗,谢谢支持魔力辅助程序
+脚本支持法兰城、艾尔莎岛、哥拉尔启动，建议定居哥拉尔，请设置好自动战斗
 
 common=require("common")
-补魔值 = 50--用户输入框("多少魔以下补魔", "50")
-补血值=430--用户输入框("多少血以下补血", "430")
-宠补血值=50--用户输入框( "宠多少血以下补血", "50")
-宠补魔值=100--用户输入框( "宠多少魔以下补血", "100")
-卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶|口袋龙的卡片|地狱看门犬的卡片"		--可以增加多个 不影响速度
-oldGold = 人物("金币")
-allGoldNum=0	--累计获得金币
-练级前时间=os.time() 
-走路加速值=125	
-走路还原值=100	
-卡对话检测次数=0
-
+local 补魔值 = 50--用户输入框("多少魔以下补魔", "50")
+local 补血值=430--用户输入框("多少血以下补血", "430")
+local 宠补血值=50--用户输入框( "宠多少血以下补血", "50")
+local 宠补魔值=100--用户输入框( "宠多少魔以下补血", "100")
+local 卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶|口袋龙的卡片|地狱看门犬的卡片"		--可以增加多个 不影响速度
+local oldGold = 人物("金币")
+local allGoldNum=0	--累计获得金币
+local 练级前时间=os.time() 
+local 走路加速值=125	
+local 走路还原值=100	
 
 local tradeName=nil
 local tradeBagSpace=nil
 local tradePlayerLine=nil			--仓库人物当前线路
 --topicList={"金币仓库名称","金币仓库余钱","金币仓库几线"}
-topicList={"金币仓库信息"}
+local topicList={"金币仓库信息"}
 订阅消息(topicList)	
 
 function waitTopic()
@@ -86,9 +84,7 @@ function waitTopic()
 end
 
 function logbackG()
-	当前地图名 = 取当前地图名()
-	x,y=取当前坐标()		
-	if (当前地图名=="哥拉尔镇" and x==120 )then return end			
+	if (取当前地图名()=="哥拉尔镇")then return end			
 	回城()	
 	等待(3000)
 end
@@ -294,7 +290,8 @@ function checkGold()
 end
 
 function battle()
-	移动(289,878)
+	--移动(289,878)
+	移动(307,871)
 	开始遇敌()
 	while true do
 		if(人物("血") < 补血值)then break end
@@ -313,31 +310,38 @@ function battle()
 	等待(1000)
 end
 
-function 卡对话检测()
-	
-	while true do
-		if(人物("血") < 补血值)then break end
-		if(人物("魔") < 补魔值)then break end
-		if(宠物("血") < 宠补血值)then break end
-		if(宠物("魔") < 宠补魔值)then break end
-		if(取包裹空格() < 1)then break end
-	end
-
-end
 function main()
 	日志("脚本启动，初始金币："..oldGold.." 总获得金币:"..allGoldNum)
-
+	local 当前地图名 = ""
+	local 地图编号 = 0
+	local x=0
+	local y=0
 ::begin::
 	等待空闲()
 	当前地图名 = 取当前地图名()
 	x,y=取当前坐标()	
 	地图编号=取当前地图编号()	
-	if (当前地图名=="艾尔莎岛" )then	
-		
-	elseif (当前地图名=="里谢里雅堡" )then	
-		  	
-	elseif(当前地图名=="库鲁克斯岛" and (x >= 290 and x <= 350) and (y >= 870 and y <= 890)) then
-		battle()
+	if (当前地图名=="艾尔莎岛" or 当前地图名=="里谢里雅堡" or 当前地图名=="法兰城")then	
+		回城()
+		等待(2000)
+		等待空闲()
+		if(取当前地图名() == "艾尔莎岛")then
+			执行脚本("./脚本/直通车/★公交车-法兰To哥拉尔.lua")		
+		end	
+	elseif(当前地图名=="库鲁克斯岛") then
+		if((x >= 290 and x <= 350) and (y >= 870 and y <= 890))then
+			battle()
+		elseif(目标是否可达(476,526))then
+			设置("遇敌全跑",1)
+			移动(176,105,"库鲁克斯岛")
+			移动(476,526)
+			对话选是(477,526)
+			移动(322,883,"鲁米那斯")
+			设置("移动速度",走路还原值)
+			设置("遇敌全跑",0)
+		else
+			battle()
+		end
 	elseif(当前地图名=="鲁米那斯")then
 		移动(88, 51, "杂货店")
 	elseif(当前地图名=="杂货店")then

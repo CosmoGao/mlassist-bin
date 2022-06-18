@@ -1,32 +1,67 @@
 脚本支持法蓝和艾尔莎岛启动，自动存改图以及自动改哥布林，请设置好自动战斗
 
-补魔值 = 50--用户输入框("多少魔以下补魔", "50")
-补血值=430--用户输入框("多少血以下补血", "430")
-宠补血值=50--用户输入框( "宠多少血以下补血", "50")
-宠补魔值=150--用户输入框( "宠多少魔以下补血", "150")
-自动换水晶耐久值=30--用户输入框( "多少耐久以下自动换水晶,不换可不填", "30")        
-迷宫最后入口坐标={}
-护士所在坐标={}
-迷宫是否已刷新=1
-刷之前金币=人物("金币")
-卖店物品列表="魔石|卡片？|锹型虫的卡片|虎头蜂的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
+common=require("common")
+
+local 补魔值 = 50--用户输入框("多少魔以下补魔", "50")
+local 补血值=430--用户输入框("多少血以下补血", "430")
+local 宠补血值=50--用户输入框( "宠多少血以下补血", "50")
+local 宠补魔值=150--用户输入框( "宠多少魔以下补血", "150")
+local 自动换水晶耐久值=30--用户输入框( "多少耐久以下自动换水晶,不换可不填", "30")        
+local 迷宫最后入口坐标={}
+local 护士所在坐标={}
+local 迷宫是否已刷新=1
+local 刷之前金币=人物("金币")
+local 卖店物品列表="魔石|卡片？|锹型虫的卡片|虎头蜂的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
 topicList={"烈风哥布林改图仓库信息"}
 订阅消息(topicList)
-刷改图线=人物("几线")
-tradeName=nil				--仓库人物名称
-tradeBagSpace=nil			--仓库人物宠物空格
-tradePlayerLine=nil			--仓库人物当前线路
+local 刷改图线=人物("几线")
+local tradeName=nil				--仓库人物名称
+local tradeBagSpace=nil			--仓库人物宠物空格
+local tradePlayerLine=nil			--仓库人物当前线路
 
 --练级统计信息打印
-刷改图总数=0
-开始刷图时间=os.time()
-improvePlan = {
+local 刷改图总数=0
+local 开始刷图时间=os.time()
+local improvePlan = {
 	{name="哥布林矿工设计图A",count=0},
 	{name="哥布林矿工设计图B",count=0},
 	{name="哥布林矿工设计图C",count=0},
 	{name="哥布林矿工设计图D",count=0},
 	{name="哥布林矿工设计图E",count=0},
 	}
+	
+	
+function FindMaze()
+	local units = 取周围信息()
+	if( units ~= nil) then
+		
+		for index,u in ipairs(units) do			
+			if ((u.flags & 4096)~=0 and u.model_id == 103012) then				
+				移动(u.x,u.y)
+				等待空闲()
+				if(取当前地图名() == "奇怪的洞窟地下1楼")then
+					return true
+				end
+			end
+		end 
+	end	
+	return false
+end
+function findHoleEntry()
+	if(取当前地图名() ~= "芙蕾雅")then
+		return false
+	end
+	local findMazeList={
+		{544,34},{537,41},{529,36}}
+
+	for index,pos in ipairs(findMazeList) do						
+		移动(pos[1],pos[2])	
+		if(FindMaze() == true)then
+			return true
+		end
+	end
+	return false
+end
 function 统计(beginTime)	
 	local playerinfo = 人物信息()
 	local nowTime = os.time() 
@@ -242,7 +277,7 @@ end
 function main()
 ::begin::	
 	等待空闲()
-	--common.checkHealth()
+	common.checkHealth()
 	if(人物("金币") < 4000)then
 		去银行拿钱(500000)				
 		if(人物("金币") < 4000)then
@@ -384,10 +419,11 @@ function main()
 	移动(541, 33)
 	移动(540, 33)
 ::fuleiya::	
-	找迷宫= 搜索范围迷宫(520, 15, 40, 40,"549,43;")
-	if(找迷宫) then				
-		goto 狗洞
-	end	
+	if(findHoleEntry())then goto 狗洞 end
+	-- 找迷宫= 搜索范围迷宫(520, 15, 40, 40,"549,43;")
+	-- if(找迷宫) then				
+		-- goto 狗洞
+	-- end	
 	移动(541, 33)
 	移动(540, 33)
 	等待(2000)

@@ -195,6 +195,9 @@ function 对战长老(target)
 	if(是否战斗中() ) then		
 		goto loopBattle			
 	end
+	if(string.find(取当前地图名(),"海底墓场外苑")==nil) then --迷宫刷新 返回
+		return false
+	end			
 	goto begin
 ::loopBattle::
 	if(取物品叠加数量("长老之证")>=7 or string.find(聊天(50),"长老之证够了")~=nil)then
@@ -370,8 +373,10 @@ function 步骤3()
 	移动(201,96,"神殿　伽蓝")	
 	移动(91, 138)		
 	while true do 
-		npc=查周围信息("荷特普",1)
-		if(npc ~= nil) then
+		--npc=查周围信息("荷特普",1)
+		转向坐标(92,138)
+		dlg=等待服务器返回()
+		if(dlg ~= nil and string.find(dlg.message,"最近每天晚上都会到北边的荒野去喔？")~= nil) then
 			对话选是(92,138)
 			break
 		else
@@ -467,15 +472,31 @@ function 步骤4()
 	移动(242,117, 59716)
 ::map59716::
 	移动(221, 188)
-	对话选否(222,188)	
-	if 是否战斗中() == false then
+	转向(2)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(8,0)
+	等待服务器返回()
+	对话选择(1,0)
+	--对话选否(222,188)	
+	等待(500)
+	if(是否战斗中) then 
 		等待(2000)
-		if 是否战斗中() == false then
-			goto map59716
-		end
-	end			
-	等待(1000)
-	回城()
+		回城() 
+	else
+		goto map59716
+	end
 	任务步骤= 任务步骤+1	
 end
 
@@ -1150,6 +1171,7 @@ function main()
 					end						
 				end	
 			end
+			日志("脚本退出")
 			return
 		end		
 	end
