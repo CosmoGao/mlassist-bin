@@ -765,7 +765,7 @@ function common.checkCrystal(crystalName,equipsProtectValue)
 	crystal=nil
 	--需要更换 检查身上是否有备用水晶
 	for i,item in ipairs(itemList)do
-		if(item.name == crystalName and item.durability > equipsProtectValue)then
+		if(item.pos > 7 and item.name == crystalName and item.durability > equipsProtectValue)then
 			crystal = item
 			break
 		end
@@ -781,7 +781,61 @@ function common.checkCrystal(crystalName,equipsProtectValue)
 	等待(1000)	--等待刷新
 	使用物品(crystalName)
 end
+--检查平民装备
+function common.checkEquipDurable(equipPos,equipName,equipProtectValue)
+	if(equipProtectValue==nil)then equipProtectValue =20 end
+	if(equipName == nil)then  return end
+	if(equipPos == nil)then  return end
+	local itemList = 物品信息()
+	local tgtEquip = nil
+	for i,item in ipairs(itemList)do
+		if(item.pos == equipPos)then
+			tgtEquip = item
+			break
+		end
+	end
+	--当前水晶不需要更换
+	--喊话(crystal.name.."耐久"..crystal.durability.."设置值"..equipsProtectValue)
+	if(tgtEquip~=nil and tgtEquip.name == equipName and tgtEquip.durability > equipProtectValue) then
+		return
+	end
+	tgtEquip=nil
+	--需要更换 检查身上是否有备用水晶
+	for i,item in ipairs(itemList)do
+		if(item.pos > 7 and item.name == equipName and item.durability > equipProtectValue)then
+			tgtEquip = item
+			break
+		end
+	end
 
+	if(tgtEquip~=nil ) then
+		交换物品(tgtEquip.pos,equipPos,-1)
+		return
+	end
+	--买水晶
+	common.buyPopulaceEquip(equipName,1)
+	扔(equipPos)--扔旧的
+	等待(1000)	--等待刷新
+	使用物品(equipName)
+end
+
+--购买平民装备
+function common.buyPopulaceEquip(equipName,buyCount)
+	common.gotoFaLanCity()
+	local sWeapon="平民剑|平民斧|平民枪|平民弓|平民回力镖|平民小刀|平民杖"
+	if(string.find(sWeapon,equipName) ~= nil)then
+		--移动(40, 98,"法兰城")	
+		移动(150, 123)
+		转向(0)
+		等待服务器返回()
+		common.buyDstItem(equipName,buyCount)	
+	else
+		移动(156, 123)
+		转向(0)
+		等待服务器返回()
+		common.buyDstItem(equipName,buyCount)	
+	end
+end
 --去里堡打卡处并打卡
 function common.toCastleBeginWork()
 	common.toCastle("c")	
@@ -1979,9 +2033,11 @@ function common.outCastle(dir)
 
 end
 function common.gotoFalanBankTalkNpc()
-	common.gotoFaLanCity("e1")		
-	等待到指定地图("法兰城")	
-	移动(238,111,"银行")	
+	if(取当前地图编号() ~= 1121)then
+		common.gotoFaLanCity("e1")		
+		等待到指定地图("法兰城")	
+		移动(238,111,"银行")	
+	end
 	移动(11,8)
 	面向("东")
 	等待服务器返回()

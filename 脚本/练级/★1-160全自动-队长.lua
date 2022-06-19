@@ -362,7 +362,10 @@ function 布拉基姆高地练级(目标等级,练级坐标x,练级坐标y,练�
 		goto back		
 	elseif 是否战斗中() then
 		遇敌总次数=遇敌总次数+1
-		等待战斗结束()
+		等待战斗结束()	
+	elseif 取当前地图名() ~= "布拉基姆高地" then
+		停止遇敌()     
+		goto begin		
 	end		
 	等待(1000)	
 	goto battle      
@@ -492,6 +495,9 @@ function 洞窟练级(目标等级)
 	if(取队伍人数() ~= 队伍人数)then	--掉线 回城
 		脚本日志("队友掉线，回城！")
 		goto  ting		
+	elseif 取当前地图名() ~= "布拉基姆高地" then
+		停止遇敌()     
+		goto begin
 	end
 	等待(1000)	
 	goto yudi  
