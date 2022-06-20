@@ -27,8 +27,15 @@ local sEquipHatName=用户下拉框("帽子名称",{"平民帽","平民盔"})			
 local sEquipClothesName=用户下拉框("衣服名称",{"平民衣","平民铠","平民袍"})	--衣服名称
 local sEquipShoesName=用户下拉框("鞋名称",{"平民鞋","平民靴"})				--鞋名称
 --local sEquipShieldName=用户下拉框("盾名称",{"平民盾"})						--盾名称	
-	
-topicList={"十年攻戒信息","十年魔戒信息"}
+local bossData={
+	{name="露比",x=15,y=110,nexty=103},
+	{name="法尔肯",x=15,y=99,nexty=92},
+	{name="犹大",x=15,y=88,nexty=81},
+	{name="海贼",x=15,y=77,nexty=70},
+	{name="双王",x=15,y=66,nexty=59},
+	{name="小帕",x=15,y=55,nexty=48}
+	}	
+local topicList={"十年攻戒信息","十年魔戒信息"}
 订阅消息(topicList)
 
 function waitToNextBoss(name,x,y,nexty)
@@ -80,7 +87,7 @@ function waitTopic(tgtTopic,tgtItemID)
 ::begin::
 	等待空闲()
 	topic,msg=等待订阅消息()
-	日志(topic.." Msg:"..msg)
+	--日志(topic.." Msg:"..msg)
 	if(topic == tgtTopic)then
 		recvTbl = common.StrToTable(msg)		
 		tradeName=recvTbl.name
@@ -138,7 +145,7 @@ function waitTopic(tgtTopic,tgtItemID)
 				end			
 			end
 		end	
-		日志(tradeList)
+		--日志(tradeList)
 		if(hasData)then
 			交易(tradeName,tradeList,"",10000)
 		else				
@@ -153,6 +160,7 @@ function waitTopic(tgtTopic,tgtItemID)
 	goto begin
 end
 
+
 function main()
 	日志("欢迎使用星落刷十年戒指脚本",1)
 	日志("当前职业："..人物("职业"),1)
@@ -164,7 +172,7 @@ function main()
 		isTeamLeader=true
 		日志("当前是队长:"..人物("名称",false),1)
 		if(队伍人数==nil or 队伍人数==0)then
-			队伍人数 = 用户输入框("练级队伍人数，不足则固定点等待！",5)
+			队伍人数 = 用户输入框("队伍人数",5)
 		else
 			队伍人数=tonumber(队伍人数)
 		end
@@ -197,13 +205,18 @@ function main()
 	common.checkEquipDurable(1,sEquipClothesName,20)
 	common.checkEquipDurable(4,sEquipShoesName,20)
 	common.checkGold(身上最少金币,身上最多金币,身上预置金币)
-	common.supplyCastle()
-	common.sellCastle()		--默认卖
+	if(人物("金币") < 5000)then 
+		日志("没有魔币了，脚本退出",1)
+		return
+	end
+	if(取当前地图名() == "法兰城")then 回城() end
 	common.checkHealth(医生名称)
 	common.checkCrystal(水晶名称)
+	common.supplyCastle()
+	common.sellCastle()		--默认卖	
 	common.toCastle()
 	移动(30,81)
-	对话选是(30,80)
+	对话选是(30,79)
 	goto begin
         
 ::battle::
@@ -222,30 +235,18 @@ function main()
 				等待(2000)
 			end	
 		else
-			if(waitToNextBoss("露比",15,110,103) == -1)then 			
-				回城()
-				goto begin
-			end
-			if(waitToNextBoss("法尔肯",15, 99,92) == -1)then 			
-				回城()
-				goto begin
-			end
-			if(waitToNextBoss("犹大",15, 88,81) == -1)then 			
-				回城()
-				goto begin
-			end
-			if(waitToNextBoss("海贼",15, 77,70) == -1)then 			
-				回城()
-				goto begin
-			end
-			if(waitToNextBoss("双王",15, 66,59) == -1)then 			
-				回城()
-				goto begin
-			end
-			if(waitToNextBoss("小帕",15, 55,48) == -1)then 			
-				回城()
-				goto begin
-			end
+			for i,v in ipairs(bossData) do
+				if(waitToNextBoss(v.name,v.x,v.y,v.nexty) == -1)then 			
+					回城()
+					goto begin
+				end		
+				if(队伍("人数") < 队伍人数) then	
+					日志("中途队友掉线，回城",1)
+					回城()	
+					等待(2000)
+					goto begin
+				end				
+			end			
 			if leaderLastTalk() then goto begin end			
 		end		
 	else

@@ -241,6 +241,7 @@ function common.joinTeam(leaderName,tryCount)
 	if(tryCount == nil)then tryCount=99999 end
 	local tryNum=0
 	local orix,oriy=取当前坐标()
+	local srcMapName=取当前地图名()
 ::begin::	
 	加入队伍(leaderName)
 	if(取队伍人数()>1)then
@@ -251,6 +252,9 @@ function common.joinTeam(leaderName,tryCount)
 		end		
 	end
 	if(是否空闲中()==false)then
+		return
+	end
+	if(取当前地图名() ~= srcMapName )then
 		return
 	end
 	if(tryNum>tryCount)then
@@ -713,7 +717,7 @@ function common.buyDstItem(itemName,buyCount)
 		对话选择(-1,0)
 		return true
 	else
-		日志("购买道具失败！")
+		日志("购买道具"..itemName.."失败！")
 		return false
 	end
 	return false
