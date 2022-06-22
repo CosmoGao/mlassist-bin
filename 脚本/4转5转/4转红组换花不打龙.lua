@@ -7,10 +7,10 @@
 
 --分组名称={"红组"="","绿组"="","蓝组"="","黄组"=""}
 
-交易对象名称={}
+local 交易对象名称={}
 
 --622043 622051
-队伍人数=2	--用户输入框("队伍人数", "2")
+local 队伍人数=2	--用户输入框("队伍人数", "2")
 
 --设置("timer", 100)			-- 设置定时器，单位毫秒 内置100毫秒 不要太快
 设置("自动战斗", 1)			-- 开启自动战斗，0不自动战斗，1自动战斗
@@ -18,8 +18,8 @@
 设置("高速延时", 4)			-- 高速战斗速度，0不延时 
 设置("遇敌全跑", 1)			-- 开启遇敌全跑 
 设置("自动加血", 0)			-- 关闭自动加血，脚本对话加血 
-走路加速值=125	
-走路还原值=100	
+local 走路加速值=125	
+local 走路还原值=100	
 
 
 function 等待队伍人数达标()				--等待队友	
@@ -42,6 +42,7 @@ function GetTableSize(tmpTable)
 	end
 	return nSize
 end
+
 function GetOathGroup()
 	local teamPlayers
 	local dstGroup=0
@@ -61,6 +62,10 @@ function GetOathGroup()
 	if(dstGroup >= 2)then
 		return
 	end
+	if(队伍("人数") < 2)then
+		return
+	end
+	等待(1000)
 	goto begin
 end
 function main()
@@ -76,11 +81,12 @@ function main()
 	日志("当前4转属组:"..oathGroup,1)
 	设置个人简介("玩家称号",人物("4转属组"))
 	teamNameList={}
-	if(队伍("人数") < 4)then		
+	GetOathGroup()	
+	if(交易对象名称[1] == nil)then		
 		交易对象名称[1]=用户下拉框("黄组名称", teamNameList)
+	end	
+	if(交易对象名称[2] == nil)then	
 		交易对象名称[2]=用户下拉框("蓝组名称", teamNameList)			
-	else
-		GetOathGroup()
 	end
 	日志("黄组名称:"..交易对象名称[1],1)
 	日志("蓝组名称:"..交易对象名称[2],1)	
