@@ -128,7 +128,7 @@ function waitTopic(tgtTopic,tgtItemID)
 		end
 		转向坐标(tradex,tradey)		
 		local items = 物品信息()
-		tradeList="金币:2000;物品:"
+		tradeList="金币:20;物品:"
 		hasData=false
 		selfTradeCount=0
 		for i,v in pairs(items) do		

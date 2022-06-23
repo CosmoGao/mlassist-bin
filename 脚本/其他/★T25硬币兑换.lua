@@ -75,7 +75,7 @@ function waitTopic()
 			end
 			转向坐标(tradex,tradey)				
 			pets = 全部宠物信息()
-			tradeList="金币:2000;宠物:"
+			tradeList="金币:20;宠物:"
 			hasData=false
 			selfTradeCount=0
 			for i,v in pairs(pets) do
@@ -88,7 +88,7 @@ function waitTopic()
 				end
 			end	
 			tradeList = tradeList..tradePetRealName.."|"..selfTradeCount
-			--金币:2000;物品:设计图？|0|1|誓约之花|0|1|
+			--金币:20;物品:设计图？|0|1|誓约之花|0|1|
 			--string.sub(tradeList,1,string.len(tradeList)-1)
 			
 			日志(tradeList)

@@ -511,7 +511,7 @@ end
 		end
 		转向坐标(tradex,tradey)				
 		items = 物品信息()
-		tradeList="金币:2000;物品:"
+		tradeList="金币:20;物品:"
 		hasData=false
 		selfTradeCount=0
 		for i,v in pairs(items) do
@@ -529,7 +529,7 @@ end
 				end			
 			end
 		end	
-		--金币:2000;物品:设计图？|0|1|誓约之花|0|1|
+		--金币:20;物品:设计图？|0|1|誓约之花|0|1|
 		--string.sub(tradeList,1,string.len(tradeList)-1)
 		日志(tradeList)
 		if(hasData)then
