@@ -155,7 +155,7 @@ function main()
 				end			
 			end
 		end	
-		--金币:2000;物品:设计图？|0|1|誓约之花|0|1|
+		--金币:20;物品:设计图？|0|1|誓约之花|0|1|
 		--string.sub(tradeList,1,string.len(tradeList)-1)
 		日志(tradeList)
 		if(hasData)then

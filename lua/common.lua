@@ -3068,7 +3068,7 @@ common.waitTradeItemsAction=function(args)
 	发布消息(args.topic, common.TableToStr(topicMsg))	
 	if(银行("金币") >= 1000000)then
 		if(人物("金币") > 998000)then
-			等待交易("","金币:2000","",10000)
+			等待交易("","金币:20","",10000)
 		else
 			等待交易("","","",10000)
 		end
@@ -3152,7 +3152,7 @@ common.waitTradePetsAction=function(args)
 	发布消息(args.topic, common.TableToStr(topicMsg))
 	if(银行("金币") >= 1000000)then
 		if(人物("金币") > 998000)then
-			等待交易("","金币:2000","",20000)
+			等待交易("","金币:20","",20000)
 		else
 			等待交易("","","",20000)
 		end
