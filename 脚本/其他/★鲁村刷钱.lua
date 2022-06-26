@@ -105,8 +105,8 @@ function statistics(beginTime)
 		goldContent = "已持续刷钱【"..time.."】分钟，共获得".."【"..allGoldNum.."】金币，平均每小时【"..avgGold.."】金币"
 		日志(goldContent)
 		oldGold=人物("金币")
-	-- else
-		-- oldGold = 人物("金币")
+	else
+		oldGold = 人物("金币")
 		-- allGoldNum=0	--累计获得金币
 	end
 end
@@ -220,7 +220,7 @@ function checkCrystal(crystalName,equipsProtectValue)
 	--当前水晶不需要更换
 	--喊话(crystal.name.."耐久"..crystal.durability.."设置值"..equipsProtectValue)
 	if(crystal~=nil and crystal.name == crystalName and crystal.durability > equipsProtectValue) then
-		return
+		return false
 	end
 	crystal=nil
 	--需要更换 检查身上是否有备用水晶
@@ -233,7 +233,7 @@ function checkCrystal(crystalName,equipsProtectValue)
 
 	if(crystal~=nil ) then
 		交换物品(crystal.pos,7,-1)
-		return
+		return false
 	end
 	logbackG()	
 	--买水晶
@@ -242,6 +242,7 @@ function checkCrystal(crystalName,equipsProtectValue)
 	等待(1000)	--等待刷新
 	使用物品(crystalName)
     logbackG()	
+	return true
 end
 
 function checkHealth()
@@ -282,11 +283,12 @@ function checkGold()
 			tradeName=nil
 			tradeBagSpace=nil
 			waitTopic()	
-			return
+			return true
 		end
 		oldGold = 人物("金币")	--重新记录金币
+		return true
 	end
-
+	return false
 end
 
 function battle()
@@ -347,8 +349,8 @@ function main()
 	elseif(当前地图名=="杂货店")then
 		移动(11, 12)
 		卖(2,卖店物品列表)	
-		checkGold()
-		checkCrystal()
+		if checkGold() then goto  begin end
+		if checkCrystal() then goto  begin end
 		移动(4,13,"鲁米那斯")
 		移动(87,35,"医院")		
 	elseif(当前地图名=="医院")then
@@ -363,7 +365,16 @@ function main()
 		logbackG()
 		checkHealth()
 		checkSupply()
-		checkGold()
+		if checkGold()==false then
+			logbackG()
+			移动(167,66,"银行")
+			移动(25,10)
+			转向(2)
+			等待(2000)		
+			日志("银行现有【"..银行("金币").."】金币",1)
+			转向(2)
+			logbackG()
+		end		
 		设置("遇敌全跑",1)
 		移动(176,105,"库鲁克斯岛")
         移动(476,526)

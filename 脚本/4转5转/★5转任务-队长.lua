@@ -24,7 +24,7 @@ if(宠补魔值==nil or 宠补魔值==0)then
 	宠补魔值=用户输入框( "宠多少魔以下补魔", "50")
 end
 if(队伍人数==nil or 队伍人数==0)then
-	队伍人数 = 用户输入框("练级队伍人数，不足则固定点等待！",5)
+	队伍人数 = 用户输入框("队伍人数",5)
 end
 local 是否交任务=用户复选框("是否交任务",0)
 local 走路加速值=115	--脚本走路中可以设定移动速度  到达目的地后，再还原值即可
@@ -45,6 +45,12 @@ local 十层等待时间=5000		--毫秒
 local 上次迷宫楼层=1
 local 当前迷宫楼层=1
 
+日志(type(是否交任务))
+if 是否交任务 then 
+	日志("是否交任务:1")
+else
+	日志("是否交任务:0")
+end
 --先检查自己的碎片 如果没满20  就先刷某一个，全满继续下一个
 --自己检查完,都满足后，检查队友的
 --地水火风
@@ -234,18 +240,23 @@ function 营地存取金币(金额,存取)
 	end
 end
 function 十层去下面()
-	local u =common.findAroundMaze()
-	if(u~= nil)then
-		移动(u.x,u.y)		
-	else
-		local x,y=取迷宫远近坐标(false)
-		移动(x,y)
-		if(x==0 and y==0)then
-			x,y=取迷宫远近坐标(true)
-			移动(x,y)
+	local mazeEnt = 取迷宫出入口()
+	for i,v in ipairs(mazeEnt) do
+		if(目标是否可达(v.x,v.y))then
+			移动(v.x,v.y)
 		end
 	end
-	
+	-- local u =common.findAroundMaze()
+	-- if(u~= nil)then
+		-- 移动(u.x,u.y)		
+	-- else
+		-- local x,y=取迷宫远近坐标(false)
+		-- 移动(x,y)
+		-- if(x==0 and y==0)then
+			-- x,y=取迷宫远近坐标(true)
+			-- 移动(x,y)
+		-- end
+	-- end	
 end
 function 五转任务()
 	清除系统消息()
@@ -255,7 +266,7 @@ function 五转任务()
 	local outMazeX=nil	--刷碎片时 记录迷宫坐标
 	local outMazeY=nil	
 	local 水晶名称="水火的水晶（5：5）"
-	
+	设置("自动吃深蓝",0)
 ::begin::
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
@@ -390,6 +401,8 @@ function 五转任务()
 		日志("没有找到洞穴，请手动查看问题",1)
 		goto begin
 	end
+	设置("自动吃深蓝",1)
+	使用物品("香水：深蓝九号")
 ::穿越迷宫::
 	当前地图名 = 取当前地图名()
 	if(string.find(当前地图名,"隐秘之洞") == nil) then
@@ -413,15 +426,20 @@ function 五转任务()
 		end
 	end	
 	if(当前地图名 == "隐秘之洞 最底层")then
+		设置("自动吃深蓝",0)
 		--战斗
 		等待(4000)
 		battleBoss()
 		--对话完毕，登出
 		if(取当前地图名() == "肯吉罗岛")then
+			设置("自动吃深蓝",0)
 			日志("打完boss，回城补给",1)
 			回城()
 			goto begin
+		elseif(取当前地图名() == "艾尔莎岛")then
+			goto begin
 		end
+		goto 穿越迷宫
 	end
 	if(取队伍人数() ~=  队伍人数)then			--队友掉线-人数太少 登出回城 
 		脚本日志("队友掉线，回补！")
@@ -564,60 +582,80 @@ function 五转任务()
 	return
 end
 
-function battleBoss()
+function battleBoss()	
 	if(目标是否可达(24,19))then	--风 27313
-		移动(24,19)
-		转向(4)
-		对话选是(4)
-		等待(5000)
-		等待战斗结束()
+		if(是否战斗中()==false)then
+			移动(24,19)
+			转向(4)
+			对话选是(4)
+			等待(5000)
+			等待战斗结束()
+		end
 		if(取当前地图编号() == 27314)then
 			if(是否交任务) then
 				对话选是(4)
 			else
 				回城()
+				等待(3000)		
 			end
 		end
 	end
-	if(目标是否可达(24,29))then		--水 27307
-		移动(24,29)
-		转向(0)
-		对话选是(0)
-		等待(5000)
-		等待战斗结束()
+	if(目标是否可达(24,29))then		--水 27307		
+		if(是否战斗中()==false)then
+			移动(24,29)
+			转向(0)
+			对话选是(0)
+			等待(5000)
+			等待战斗结束()
+		end
 		if(取当前地图编号() == 27308)then
 			if(是否交任务) then
 				对话选是(0)
 			else
 				回城()
+				等待(3000)				
 			end
 		end
 	end
-	if(目标是否可达(28,24))then		--27310  火
-		移动(28,24)
-		转向(6)
-		对话选是(6)
-		等待(5000)
-		等待战斗结束()
+	if(目标是否可达(29,24))then		--27310  火
+		if(是否战斗中()==false)then
+			移动(29,24)
+			转向(6)
+			对话选是(6)
+			等待(5000)
+			等待战斗结束()
+		end
 		if(取当前地图编号() == 27311)then
 			if(是否交任务) then
 				对话选是(6)
 			else
 				回城()
+				等待(3000)				
 			end
 		end
 	end
 	if(目标是否可达(19,24))then		--27304  地
-		移动(19,24)
-		转向(2)
-		对话选是(2)
-		等待(5000)
-		等待战斗结束()
 		if(取当前地图编号() == 27305)then
 			if(是否交任务) then
 				对话选是(2)
 			else
 				回城()
+				等待(3000)			
+			end
+		end
+		if(是否战斗中()==false)then
+			移动(19,24)
+			转向(2)
+			对话选是(2)
+			等待(5000)
+			等待战斗结束()
+		end
+		if(取当前地图编号() == 27305)then
+			if(是否交任务) then
+				对话选是(2)
+			else
+				回城()
+				等待(3000)			
 			end
 		end
 	end

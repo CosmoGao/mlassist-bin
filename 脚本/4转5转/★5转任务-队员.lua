@@ -163,7 +163,7 @@ function 五转碎片()
 		对话选是(1)
 	end
 	common.changeLineFollowLeader(队长名称)		
-	等待(2000)
+	等待(1000)
 	goto scriptstart  
 	
 ::ting::	

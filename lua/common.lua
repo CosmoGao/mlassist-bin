@@ -1842,7 +1842,7 @@ function common.autoLearnSkill(skillName)
 		移动(120, 65)							
 		common.learnPlayerSkill(120, 64)			
 	end
-	if(skillName=="抗中毒" or skillName=="抗昏睡" or skillName=="抗石化" or skillName=="抗酒醉" or skillName=="抗混乱" or skillName=="抗遗忘")then		
+	if(skillName=="抗毒" or skillName=="抗昏睡" or skillName=="抗石化" or skillName=="抗酒醉" or skillName=="抗混乱" or skillName=="抗遗忘")then		
 		if(取队伍人数()>1)then
 			离开队伍()
 		end

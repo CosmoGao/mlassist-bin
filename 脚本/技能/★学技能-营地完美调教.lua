@@ -9,6 +9,9 @@ function 去营地()
 		goto star2
 	elseif (当前地图名=="法兰城" )then	
 		goto begin
+	else
+		回城()
+		等待(2000)
 	end	
 ::star1::
 	移动(140,105)
