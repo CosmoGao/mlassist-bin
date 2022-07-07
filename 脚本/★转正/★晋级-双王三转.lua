@@ -755,6 +755,7 @@ end
 	if(队伍("人数") < 2)then
 		goto createTeam
 	end
+	等待(1500)
 	mapNum=取当前地图编号()
 	if(mapNum == 24059)then goto map24059	
 	elseif(mapNum == 24060)then goto map24060	
@@ -768,6 +769,7 @@ end
 	elseif(mapNum == 24068)then goto map24068	
 	elseif(mapNum == 24074)then goto map24074	
 	end
+	
 	goto begin
 ::map24059::
 ::six::

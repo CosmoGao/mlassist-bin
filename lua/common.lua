@@ -3195,4 +3195,34 @@ common.waitTradePetsAction=function(args)
 	end
 	goto bankWait
 end
+--检查是否有某称号
+function common.checkTitle(dstTitle)
+	local player=人物信息()
+	for i,title in ipairs(player.titles) do
+		if(title.name == dstTitle)then
+			return true
+		end
+	end
+	return false
+end
+function common.secondsToTime(ts)
+    local seconds = math.fmod(ts, 60)
+    local min = math.floor(ts/60)
+    local hour = math.floor(min/60) 
+    local day = math.floor(hour/24)    
+    local str = ""        
+    if tonumber(seconds) > 0 and tonumber(seconds) < 60 then
+        str = ""..seconds.."秒" ..str
+    end
+    if tonumber(min - hour*60)>0 and tonumber(min - hour*60)<60 then
+        str = ""..(min - hour*60).."分"..str
+    end
+    if tonumber(hour - day*24)>0 and tonumber(hour - day*60)<24 then
+        str = (hour - day*24).."时"..str
+    end    
+    if tonumber(day) > 0 then
+        str = day.."天"..str
+    end
+    return str
+end
 return common

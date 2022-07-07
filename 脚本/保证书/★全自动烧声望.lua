@@ -9,24 +9,26 @@ common=require("common")
 设置("不带宠二动",1)  
 设置("二动防御",1)  
 
-刷声望前时间=os.time() 
-刷声望回补总计=0
-刷声望前金币=人物("金币")
+local 脚本启动时间=os.date("%Y-%m-%d %H:%M:%S",os.time())
+local 脚本启动秒数=os.time()
+local 刷声望前时间=os.time() 
+local 刷声望回补总计=0
+local 刷声望前金币=人物("金币")
 
-刷之前称号=人物("称号")
-刷之前声望进度=nil
+local 刷之前称号=人物("称号")
+local 刷之前声望进度=nil
 
-目标称号数据=nil
-不达标多刷金币=10000	--刷到指定金币 但称号未达到 多刷的金币数
-多刷次数=0		--每次多刷1万金币 最多3次
-不达标多刷金币倍数=1
-任务步骤=1
-是否缓存任务中=false  --缓存保证书任务中途-天亮 中断用
-刷称号阶段=用户下拉框("选择‘1’从（现称号）开始刷，\n"..
+local 目标称号数据=nil
+local 不达标多刷金币=10000	--刷到指定金币 但称号未达到 多刷的金币数
+local 多刷次数=0		--每次多刷1万金币 最多3次
+local 不达标多刷金币倍数=1
+local 任务步骤=1
+local 是否缓存任务中=false  --缓存保证书任务中途-天亮 中断用
+local 刷称号阶段=用户下拉框("选择‘1’从（现称号）开始刷，\n"..
     "选择‘2’从当前进行转职并开始刷，\n"..
     "选择‘3’从指定称号开始刷，\n"
 	,{"1","2","3"})	
-指定初始称号列表={ "恶人",
+local 指定初始称号列表={ "恶人",
 			"忌讳的人",
 			"受挫折的人",
 			"无名的旅人",
@@ -53,7 +55,7 @@ common=require("common")
 			"万物创造者",
 			"持石之贤者" }
 
-target={}
+local target={}
 function 统计消耗(beginTime)	
 	local nowTime = os.time() 
 	local time = math.floor((nowTime - beginTime)/60)--已持续时间
@@ -924,7 +926,9 @@ function 称号提交二次判断()
 	goto faLan	
 ::faLan::
 	x,y=取当前坐标()	
-	if (x==72 and y==123 )then	-- 西2登录点
+	if(取当前地图名() ~= "法兰城")then 
+		goto begin 
+	elseif (x==72 and y==123 )then	-- 西2登录点
 		goto  w2
 	elseif (x==233 and y==78 )then	-- 东2登录点
 		goto  e2
@@ -1031,9 +1035,11 @@ function main()
 	if(playerMaxMp <= 500 )then
 		不达标多刷金币倍数 = 2
 	elseif(playerMaxMp > 500 and playerMaxMp < 1000)then
-		不达标多刷金币倍数 = 1.5
-	elseif(playerMaxMp >= 1000 and playerMaxMp < 1500)then
+		--不达标多刷金币倍数 = 1.5
 		不达标多刷金币倍数 = 1.3
+	elseif(playerMaxMp >= 1000 and playerMaxMp < 1500)then
+		--不达标多刷金币倍数 = 1.3
+		不达标多刷金币倍数 = 1
 	elseif(playerMaxMp >= 1500)then
 		不达标多刷金币倍数 = 1
 	else
@@ -1171,6 +1177,9 @@ function main()
 					end						
 				end	
 			end
+			日志("脚本启动时间："..脚本启动时间.." 结束时间："..os.date("%Y-%m-%d %H:%M:%S",os.time()))
+			local diffSecTime = os.time()-脚本启动秒数					
+			日志("间隔时间："..common.secondsToTime(diffSecTime))
 			日志("脚本退出")
 			return
 		end		

@@ -2,15 +2,25 @@
 
 common=require("common")
 
-队长名称=取脚本界面数据("队长名称")
+local 队长名称=取脚本界面数据("队长名称")
 if(队长名称==nil or 队长名称=="")then
 	队长名称=用户输入框("请输入队伍名称！","风依旧￠花依然")--风依旧￠花依然  乱￠逍遥
 end
-
-isTeamLeader=false		--是否队长
-if(人物("名称") == 队长名称)then
+local 队伍人数=取脚本界面数据("队伍人数")
+local isTeamLeader=false
+if(人物("名称",false) == 队长名称)then
 	isTeamLeader=true
-end
+	日志("当前是队长:"..人物("名称",false),1)
+	if(队伍人数==nil or 队伍人数==0)then
+		队伍人数 = 用户输入框("队伍人数",5)
+	else
+		队伍人数=tonumber(队伍人数)
+	end
+	日志("队伍人数:"..队伍人数,1)
+	
+else	
+	日志("当前是队员:"..人物("名称",false),1)	
+end	
 
 ::begin::	
 	等待空闲()
@@ -23,7 +33,9 @@ end
 		等待到指定地图("里谢里雅堡")
 		goto liBao
 	elseif (当前地图名=="里谢里雅堡" )then	
-		goto liBao	
+		goto liBao		
+	elseif (当前地图名=="里谢里雅堡 1楼" )then	
+		goto liBaoYiLow	
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
 		移动( 3, 7)	
 		等待到指定地图("里谢里雅堡")	
@@ -41,8 +53,11 @@ end
 	goto begin
         
 ::liBao::      
-	移动(34,89)
-	回复(1)			-- 转向北边恢复人宠血魔		
+	common.checkHealth()
+	common.checkCrystal()
+	common.supplyCastle()
+	common.sellCastle()		--默认卖	
+	common.toCastle()
 	移动(41,50)
 ::liBaoYiLow::
 	等待到指定地图("里谢里雅堡 1楼")	
@@ -144,11 +159,18 @@ end
 	移动(570,275,"蒂娜村")	
 	goto diNaCunLi	
 ::dinahanhua::
+	if(取当前地图编号()==4200)then
+		goto diNaCunLi
+	end
+::map4201::			--夜晚蒂娜
 	设置("遇敌全跑",0)
 	--喊话("Boss到了，请手动战斗",02,03,05)	
 	if(isTeamLeader)then
-		common.makeTeam(5)
-		对话选是(64,51)
+		common.makeTeam(队伍人数)
+		if(队伍("人数") >= 队伍人数) then  
+			移动(64,50)
+			对话选是(64,51)
+		end
 	else
 		common.joinTeam(队长名称)
 	end	

@@ -1,24 +1,53 @@
 ★半山3脚本，起点艾尔莎岛登入点，根据提示执行脚本
 
+common=require("common")
 设置("自动战斗", 1)			-- 开启自动战斗，0不自动战斗，1自动战斗
 设置("高速战斗", 1)			-- 开启高速战斗
 设置("高速延时", 4)			-- 高速战斗速度，0不延时 
 
 
 
-队长名称=取脚本界面数据("队长名称")
+local 队长名称=取脚本界面数据("队长名称")
 if(队长名称==nil or 队长名称=="")then
 	队长名称=用户输入框("请输入队伍名称！","风依旧￠花依然")--风依旧￠花依然  乱￠逍遥
 end
-
-isTeamLeader=false		--是否队长
-if(人物("名称") == 队长名称)then
+local 队伍人数=取脚本界面数据("队伍人数")
+local isTeamLeader=false
+if(人物("名称",false) == 队长名称)then
 	isTeamLeader=true
+	日志("当前是队长:"..人物("名称",false),1)
+	if(队伍人数==nil or 队伍人数==0)then
+		队伍人数 = 用户输入框("队伍人数",5)
+	else
+		队伍人数=tonumber(队伍人数)
+	end
+	日志("队伍人数:"..队伍人数,1)
+	
+else	
+	日志("当前是队员:"..人物("名称",false),1)	
+end	
+
+
+
+function map57180()	--地下实验室
+	移动(19,11)
+	对话选是(0)
 end
-
-
-common=require("common")
-
+function map57181()	--瑞娜的家 57181
+	移动(11,13)
+	对话选是(0)
+	喊话("阿鲁卡那斯",3,4,5)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(32,0)
+	等待服务器返回()
+	对话选择(1,0)
+end
 function checkTeammateItem(chatMsg)
 	if(chatMsg==nil)then return end
 	local teamPlayers = 队伍信息()
@@ -55,13 +84,14 @@ function main()
 	elseif(当前地图名 ==  "圣鸟之巢")then goto birdnest
 	elseif(当前地图名 ==  "圣山之巅")then goto mountainPeak
 	elseif(当前地图名 ==  "杰诺瓦镇的传送点")then goto jiecun
-	elseif(当前地图名 ==  "蒂娜村的传送点")then goto jiecun
+	elseif(当前地图名 ==  "蒂娜村的传送点")then goto dina
+	elseif(当前地图名 ==  "莎莲娜")then goto map400
+	elseif(当前地图名 ==  "半山腰")then leaderAction()
 	elseif(mapNum ==  57180)then map57180()
 	elseif(mapNum ==  57181)then map57181()
 	elseif(mapNum ==  57185)then map57185() --打完boss
-	end	
-	回城()
-	等待(1000)
+	else 回城()	end		
+	等待(2000)
 	goto begin
 ::toIsland::	
 	common.checkHealth()
@@ -93,6 +123,7 @@ function main()
 	移动(54, 43)
 	移动(54, 35)
 	移动(71, 18)
+::map400::
 	设置("遇敌全跑",1)
 	等待到指定地图("莎莲娜")	
 	移动(668,319)	
@@ -108,6 +139,7 @@ function main()
 	设置("遇敌全跑",1)	
 	移动(668,319)	
 	对话选是(669,319)
+	goto island	
 ::library::					--图书室
 	移动(18,18)
 	对话选是(18,19)
@@ -119,6 +151,13 @@ function main()
 ::island::
 	if(取当前地图名() ~= "小岛")then
 		goto begin
+	end
+	if(取物品数量("匆忙写下的笔录") > 0)then
+		回城()
+		goto begin
+		common.toCastle("f2")
+		移动(0,74,"图书室")		
+		goto library		
 	end
 	设置("遇敌全跑",0)
 	if(isTeamLeader)then
@@ -160,6 +199,7 @@ function main()
 	else
 		teammateAction()
 	end	
+	goto begin
 	-- 移动(23,23)
 	-- 对话选是(23,22)
 	-- if(取当前地图名() == "法兰城")then
@@ -182,6 +222,7 @@ function leaderAction()
 	elseif(当前地图名 ==  "小岛")then goto island
 	elseif(当前地图名 ==  "圣鸟之巢")then goto anhao	
 	elseif(当前地图名 ==  "圣山之巅")then goto boss	
+	elseif(当前地图名 ==  "半山腰")then 移动(78,52)
 	elseif(mapNum ==  57180)then map57180()
 	elseif(mapNum ==  57181)then map57181()
 	elseif(mapNum ==  57185)then map57185()
@@ -192,9 +233,10 @@ function leaderAction()
 	if(取当前地图名() ~= "小岛")then
 		goto begin
 	end
-	if(队伍("人数") ~= 5)then
-		移动(66, 97)
-		common.makeTeam(5)
+	if(队伍("人数") ~= 队伍人数)then
+		移动(66, 97)	
+		common.makeTeam(队伍人数)
+		goto island
 	end	
 	if(取物品数量("暗号") > 0)then		
 		checkTeammateItem("已拿到暗号")
@@ -220,6 +262,21 @@ function leaderAction()
 			if(取物品数量("暗号") > 0)then
 				checkTeammateItem("已拿到暗号")
 			end			
+		elseif(取物品数量("匆忙写下的笔录") > 0)then
+			回城()
+			return
+		else
+			移动(58,78)
+			移动(58,77)
+			移动(58,78)
+			移动(58,77)
+			移动(58,78)
+			对话选是(59,78)	
+			等待(2000)
+			对话选是(59,78)	--地下实验室  57180
+			map57180()
+			等待(2000)
+			map57181()
 		end	
 	end	
 	goto begin
@@ -230,6 +287,9 @@ function leaderAction()
 	自动穿越迷宫("圣鸟之巢")
 	if(取当前地图名()=="圣鸟之巢")then
 		goto anhao
+	end
+	if(取当前地图名()=="半山腰")then
+		移动(78,52)
 	end
 	等待(1000)
 	goto crossMaze
@@ -252,12 +312,18 @@ function leaderAction()
 	if(取当前地图名() ~= "圣山之巅")then
 		goto begin
 	end
-	移动(32,27)
-	common.makeTeam(5)
-	移动(23,23)
-	对话选是(23,22)
-	goto begin
-	
+	if(取当前地图编号() == 57185)then 
+		map57185() 
+	else
+		移动(32,27)	
+		if(队伍("人数") ~= 队伍人数)then		
+			common.makeTeam(队伍人数)
+			goto boss
+		end	
+		移动(23,23)
+		对话选是(23,22)
+	end	
+	goto begin	
 end
 function teammateAction()
 ::begin::	
@@ -276,8 +342,7 @@ function teammateAction()
 ::island::
 	if(取当前地图名() ~= "小岛")then
 		goto begin
-	end	
-	
+	end		
 	
 	if(是否目标附近(79, 88))then
 		if(取物品数量("暗号") > 0)then
@@ -292,6 +357,15 @@ function teammateAction()
 		else			
 			喊话("已拿到星鳗饭团",2,3,5)	
 		end
+	end	
+	if(是否目标附近(59,78))then			
+		if(取物品数量("匆忙写下的笔录") > 0)then
+			日志("已拿到半山3任务物品",1)
+			回城()
+			return
+		end		
+		对话选是(59,78)			
+		goto begin
 	end	
 	if(取队伍人数() < 2)then	
 		common.joinTeam(队长名称)

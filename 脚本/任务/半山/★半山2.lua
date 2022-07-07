@@ -1,16 +1,28 @@
 ★半山2脚本，起点艾尔莎岛登入点
 
-队长名称=取脚本界面数据("队长名称")
+
+common=require("common")
+
+local 队长名称=取脚本界面数据("队长名称")
 if(队长名称==nil or 队长名称=="")then
 	队长名称=用户输入框("请输入队伍名称！","风依旧￠花依然")--风依旧￠花依然  乱￠逍遥
 end
-日志("队长名称:"..队长名称,1)
-isTeamLeader=false		--是否队长
-if(人物("名称") == 队长名称)then
+local 队伍人数=取脚本界面数据("队伍人数")
+local isTeamLeader=false
+if(人物("名称",false) == 队长名称)then
 	isTeamLeader=true
-end
+	日志("当前是队长:"..人物("名称",false),1)
+	if(队伍人数==nil or 队伍人数==0)then
+		队伍人数 = 用户输入框("队伍人数",5)
+	else
+		队伍人数=tonumber(队伍人数)
+	end
+	日志("队伍人数:"..队伍人数,1)
+	
+else	
+	日志("当前是队员:"..人物("名称",false),1)	
+end	
 
-common=require("common")
 
 
 清除系统消息()
@@ -68,6 +80,7 @@ function main()
 	mapNum = 取当前地图编号()
 	if (当前地图名 =="艾尔莎岛" )then goto toIsland
 	elseif(当前地图名 ==  "里谢里雅堡")then goto toIsland 
+	elseif(当前地图名 ==  "里谢里雅堡 1楼")then goto toIsland 
 	elseif(当前地图名 ==  "法兰城")then goto toIsland 	
 	elseif(当前地图名 ==  "图书室")then goto library
 	elseif(当前地图名 ==  "小岛")then goto island			--57176
@@ -189,9 +202,10 @@ function leaderAction()
 	if(取当前地图名() ~= "小岛")then
 		goto begin
 	end
-	if(队伍("人数") ~= 5)then
+	if(队伍("人数") ~= 队伍人数)then
 		移动(66, 97)
-		common.makeTeam(5)
+		common.makeTeam(队伍人数)
+		goto begin
 	end
 	if(取物品数量("机器零件") > 0)then
 		goto fini
@@ -255,9 +269,10 @@ function leaderAction()
 	end
 	goto boss
 ::fini::
-	if(队伍("人数") ~= 5)then
+	if(队伍("人数") ~= 队伍人数)then
 		移动(82,22)
-		common.makeTeam(5)
+		common.makeTeam(队伍人数)
+		goto fini
 	end	
 	移动(58,78)
 	移动(58,77)
@@ -290,7 +305,7 @@ function teammateAction()
 		goto begin
 	end		
 	
-	if(是否目标附近(59,78))then			
+	if(是否目标附近(59,78,2))then			
 		if(取物品数量("匆忙写下的笔录") > 0)then
 			日志("已拿到半山3任务物品",1)
 		end

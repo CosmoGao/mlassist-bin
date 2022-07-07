@@ -586,6 +586,9 @@ function 营地任务()
 	common.supplyCastle()
 	common.toCastle()
 ::begin::		
+	if(取物品数量("怪物碎片") > 0)then 
+		goto mission
+	end
 	if(取物品数量("信笺") < 1 and 取物品数量("信") < 1 and 取物品数量("承认之戒") < 1)then
 		common.toCastle("f3")
 		对话坐标选是(5,3)		
@@ -915,6 +918,7 @@ function 矮人练级(目标等级,练级地名称)
 ::quYingDi::
 	设置("移动速度",走路加速值)
 	common.checkHealth(医生名称)
+	common.supplyCastle()
 	if(是否自动购买水晶==1)then common.checkCrystal(水晶名称) end
 	common.去营地()
 	设置("移动速度",走路还原值)
@@ -1348,8 +1352,9 @@ function checkMainSkillLevel()
 end
 --检查魅力 没有完美调教术的 才检查
 function checkCharisma()
-	if(是否有完美调教)then return end
-	if(人物("魅力") < 60 and 宠物("忠诚") < 60)then
+	if(是否有完美调教)then return false end
+	--if(人物("魅力") < 60 and 宠物("忠诚") < 60)then
+	if(人物信息().value_charisma  < 60 and 宠物("忠诚") < 60)then
 		if(人物("金币") > 200000)then	--40w 金币 去买魅力
 			执行脚本("./脚本/其他/★花钱买魅力.lua")
 			return true
