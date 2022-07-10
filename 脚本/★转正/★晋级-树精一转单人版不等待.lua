@@ -18,6 +18,7 @@
 	if(取当前地图名() ==  "里谢里雅堡")then goto start end
 	if(取当前地图名() ==  "维诺亚村")then goto weiCun end
 	if(取当前地图名() ==  "维诺亚村的传送点")then goto quyiyuan end
+	if(取当前地图名() ==  "芙蕾雅")then goto fuleiya end
 	if(取当前地图名() ==  "医院")then goto qudashu end
 	if(取当前地图名() ==  "叹息之森林")then goto dashujing end
 	if(取当前地图名() ==  "叹息森林")then goto naShuMiao end--15508
@@ -97,10 +98,10 @@
 	goto begin 
 ::qudashu::	
 	移动( 2, 9,"维诺亚村")			
-	移动(67, 46,"芙蕾雅")		
+	移动(67, 46,"芙蕾雅")	
+::fuleiya::
 	移动(380, 353,"布满青苔的洞窟1楼")	
-::wancheng::
-	
+::wancheng::	
 	自动穿越迷宫("叹息之森林")
 	等待(3000)
 	goto begin 

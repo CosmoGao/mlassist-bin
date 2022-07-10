@@ -3205,6 +3205,7 @@ function common.checkTitle(dstTitle)
 	end
 	return false
 end
+--秒转日期格式
 function common.secondsToTime(ts)
     local seconds = math.fmod(ts, 60)
     local min = math.floor(ts/60)
@@ -3224,5 +3225,17 @@ function common.secondsToTime(ts)
         str = day.."天"..str
     end
     return str
+end
+--获取身上指定宠物数量
+function common.getTgtPetCount(tgtPetName)
+	if tgtPetName==nil then return 0 end
+	local newPetList = 全部宠物信息()
+	local petCount=0
+	for i,n in ipairs(newPetList) do	
+		if(n.realname == tgtPetName)then
+			petCount=petCount+1
+		end		
+	end		
+	return petCount
 end
 return common
