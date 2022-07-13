@@ -13,6 +13,12 @@ local 队伍人数=取脚本界面数据("队伍人数")
 if(队长名称==nil or 队长名称=="" or 队长名称==0)then
 	队长名称=用户输入框("请输入队伍名称！","风依旧￠花依然")--风依旧￠花依然  乱￠逍遥
 end
+local 设置队员列表=取脚本界面数据("队员列表")
+local 队员列表={}
+if(设置队员列表 ~= nil and string.find(设置队员列表,"|") ~= nil)then
+	队员列表=common.luaStringSplit(设置队员列表,"|")
+end
+--日志(设置队员列表)
 local sEquipWeaponName=用户下拉框("武器名称",{"平民剑","平民斧","平民枪","平民弓","平民回力镖","平民小刀","平民杖"})		--武器名称
 local sEquipHatName=用户下拉框("帽子名称",{"平民帽","平民盔"})				--帽子名称
 local sEquipClothesName=用户下拉框("衣服名称",{"平民衣","平民铠","平民袍"})	--衣服名称
@@ -44,6 +50,9 @@ local 已刷宠物数量={
 	
 local topicList={"依格罗斯仓库信息","麒麟仓库信息","翼龙仓库信息"}
 订阅消息(topicList)
+
+local 当前任务编号=3
+
 function 取新开出的宠信息(oldPetList,newPetList)
 	if(oldPetList ==nil or newPetList ==nil )then return nil end
 	local findNewPet=false
@@ -76,7 +85,7 @@ function waitTopic(tgtTopic,tgtPetName)
 	--日志(tgtTopic)
 ::begin::
 	等待空闲()
-	topic,msg=等待订阅消息()
+	topic,msg=已接收订阅消息(tgtTopic)	
 	--日志(topic.." Msg:"..msg)
 	if(topic == tgtTopic)then
 		recvTbl = common.StrToTable(msg)		
@@ -217,7 +226,14 @@ function main()
 		日志("当前是队员:"..人物("名称",false),1)
 	end
 	日志("队长名称："..队长名称.." 角色名称:" .. 人物("名称",false))	
-	
+	-- if(取物品数量("托尔丘的记忆") > 0)then
+		-- if(common.checkTitle("天界变革者"))then
+			-- 当前任务编号=3
+		-- else
+			-- 当前任务编号=2
+		-- end
+		-- 设置个人简介("玩家称号",当前任务编号)
+	-- end
 	local mapNum=0
 	local mapName=""
 ::begin::	
@@ -284,20 +300,30 @@ function main()
 	common.sellCastle()		--默认卖	
 	
 	if(取物品数量("托尔丘的记忆") < 1)then
+		当前任务编号=1
+		设置个人简介("玩家称号",当前任务编号)
 		日志("包裹没有记忆，去做【记忆之接触者】任务",1)
 	--	设置("敌平均级小于逃跑",0,45)
-		执行脚本("./脚本/任务/天界/★守护1-记忆之接触者.lua")		
+		执行脚本("./脚本/任务/天界/★守护1-记忆之接触者.lua")	
+		当前任务编号=3
+		设置个人简介("玩家称号",当前任务编号)		
 		if(取当前地图名()~="艾尔莎岛")then 回城() end
 		goto begin
 	end	
 	if(common.checkTitle("天界变革者")==false)then
+		当前任务编号=2
+		设置个人简介("玩家称号",当前任务编号)
 		日志("未做守护任务2，去做【天界之变革者】任务",1)
 		--设置("敌平均级小于逃跑",1,45)
-		执行脚本("./脚本/任务/天界/★守护2-天界变革者.lua")		
+		执行脚本("./脚本/任务/天界/★守护2-天界变革者.lua")	
+		当前任务编号=3
+		设置个人简介("玩家称号",当前任务编号)			
 		if(取当前地图名()~="艾尔莎岛")then 回城() end
 		goto begin
 	end
 	if(取当前地图名()~="艾尔莎岛")then 回城() end
+	当前任务编号=3
+	设置个人简介("玩家称号",当前任务编号)
 	等待空闲()
 	等待到指定地图("艾尔莎岛")		
 	--设置("敌平均级小于逃跑",0,45)		--守护2才需要开启
@@ -402,10 +428,17 @@ function main()
 	if(目标是否可达(203, 14))then	
 		if isTeamLeader then			
 			if(队伍("人数") < 队伍人数)then
-				common.makeTeam(队伍人数)	
+				if(checkTeammateSameFloor())then
+					common.makeTeam(队伍人数)	
+				else
+					扔("托尔丘的记忆")
+					回城()
+					goto begin
+				end				
 			else
 				移动(203, 14,"通向顶端的阶梯1楼")		
 			end		
+			
 		else
 			if(队伍("人数") > 1)then
 				if(common.judgeTeamLeader(队长名称)==true) then
@@ -413,8 +446,14 @@ function main()
 				else
 					离开队伍()
 				end	
-			else				
-				common.joinTeam(队长名称)							
+			else			
+				if(checkTeamLeaderTask())then
+					common.joinTeam(队长名称)
+				else
+					扔("托尔丘的记忆")
+					回城()
+					goto begin
+				end													
 			end
 		end				
 	end
@@ -451,10 +490,20 @@ function main()
 	goto begin
 ::map59757::			--星之领域　１层
 	等待到指定地图("星之领域　１层")    
+	if(队伍("人数") <2)then
+		日志("队伍人数小于2，回城")
+		回城()
+		goto begin
+	end
 	移动(98,17)
 	移动(99,17)	
 ::map59758::    
-    等待到指定地图("星之领域　２层")  	
+    等待到指定地图("星之领域　２层")  
+	if(队伍("人数") <2)then
+		日志("队伍人数小于2，回城")
+		回城()
+		goto begin
+	end
 	if(目标是否可达(29, 89))then			
 		移动(29,89)	
 	elseif(目标是否可达(166,102))then		
@@ -463,6 +512,11 @@ function main()
 	goto map59759 	
 ::map59759::    
     等待到指定地图("星之领域　３层")	
+	if(队伍("人数") <2)then
+		日志("队伍人数小于2，回城")
+		回城()
+		goto begin
+	end
 	if(目标是否可达(107,167))then			
 		移动(107,167)	
 	elseif(目标是否可达(97,28))then		
@@ -470,32 +524,43 @@ function main()
 	end		
 	goto begin
 ::map59760::    
-    等待到指定地图("星之领域　４层")    	
+    等待到指定地图("星之领域　４层")  
+	if(队伍("人数") <2)then
+		日志("队伍人数小于2，回城")
+		回城()
+		goto begin
+	end  	
 	移动(107,98)
 	移动(108,98)	
 	等待(1000)	
 	goto map59761 	
 ::map59761::    
     --等待到指定地图("星之领域　５层", 110,97) 
-	if(目标是否可达(39,99))then			
+	if(目标是否可达(39,99))then		
+		if(队伍("人数") <2)then
+			日志("队伍人数小于2，回城")
+			回城()
+			goto begin
+		end
 		移动(39,99)	
 		对话选是(40,99)
+		if(是否战斗中())then 
+			等待战斗结束()
+			等待(5000)
+			等待空闲()
+			if(取当前地图编号() ~= 59761)then
+				goto begin
+			elseif(取当前地图编号() == 59761 and 人物("血") <= 2)then
+				日志("没有打过boss,登出回城")
+				回城()
+				goto begin						
+			end			
+		end
 	elseif(目标是否可达(141,113))then		
 		移动(141,113)	
 		转向(2)		
 		等待(3000)
 	end	
-	goto begin
-::jiance::    
-	if(人物("坐标")   ==  "83,129")then	goto  conglai end
-	if(人物("坐标")   ==  "32,99")then	goto  jieshu end	
-	goto jiance 	
-::conglai::
-    移动(83,126)
-	移动(69,126)
-	goto map59761 	
-::jieshu::
-    移动(35,99)
 	goto begin
 ::map59993::		--约尔克神庙
 	-- 移动(41,27)
@@ -554,42 +619,49 @@ function TeammateAction()
 	end
 end
 
--- --获取好友的当前任务
--- function getFriendSetText(name)
-	-- local friendCard = 取好友名片(name)
-	-- if( friendCard ~= nil)then
-		-- return tonumber(friendCard.title)		--转换失败 返回Nil
-	-- end	
-	-- return nil
--- end
--- --检查队友和队长是否同一任务
--- function checkTeammateSameFloor()
-	-- local selfFloor = getCurrentFloorFromNum(取当前地图编号())
-	-- if(selfFloor == 200)then return true end 
-	
-	-- for i,u in pairs(队员列表) do
-		-- local friendFloor=getFriendSetText(u)
-		-- if(friendFloor~=nil)then		--成功设置楼层的才判断，其余默认在同一楼层
-			-- if(friendFloor ~= 200 and selfFloor ~= friendFloor)then
-				-- 日志(u.."的楼层和队长楼层不一致，重新从1层开始,队长楼层:"..selfFloor.." 队员楼层:"..friendFloor,1)
-				-- return false
-			-- end
-		-- end
-	-- end
-	-- return true
--- end
--- --检查队长是否在同一楼层
--- function checkTeamLeaderFloor()
-	-- local selfFloor = getCurrentFloorFromNum(取当前地图编号())
-	-- if(selfFloor == 200)then return true end 	
-	
-	-- local leaderFloor=getFriendSetText(队长名称)
-	-- if(leaderFloor~=nil)then		--成功设置楼层的才判断，其余默认在同一楼层
-		-- if(leaderFloor ~= 200 and selfFloor ~= leaderFloor)then
-			-- 日志("队员楼层和队长楼层不一致，重新从1层开始,队长楼层:"..leaderFloor.." 队员楼层:"..selfFloor,1)
-			-- return false
-		-- end
-	-- end
-	-- return true
--- end
+
+--获取好友的当前任务
+function getFriendSetText(name)
+	local friendcard = 取好友名片(name)
+	if( friendcard ~= nil)then
+		return tonumber(friendcard.title)		--转换失败 返回nil
+	end	
+	return nil
+end
+--检查队友和队长是否同一任务
+function checkTeammateSameFloor()	
+	--日志("当前任务"..当前任务编号)
+	for i,u in pairs(队员列表) do
+		日志(u)
+		local friendTask=getFriendSetText(u)
+		if(friendTask~=nil)then		--成功设置楼层的才判断，其余默认在同一楼层
+			--日志(u..friendTask)
+			if(friendTask == 1 or friendTask == 2 or friendTask == 3)then
+				if( 当前任务编号 ~= friendTask)then
+					日志(u.."的任务编号和队长任务不一致，重新从任务1开始,队长任务编号:"..当前任务编号.." 队员任务:"..friendTask,1)
+					return false
+				end
+			end
+		end
+	end
+	return true
+end
+--检查队长是否在同一楼层
+function checkTeamLeaderTask()	
+	--日志(队长名称)
+	local leaderTask=getFriendSetText(队长名称)
+	if(leaderTask~=nil)then		
+		--日志(type(leaderTask))
+		--日志(type(当前任务编号))
+		--日志(leaderTask.." "..当前任务编号)
+		if(leaderTask ~= 1 and leaderTask ~= 2 and leaderTask ~= 3)then
+			return true
+		end
+		if(leaderTask ~= 当前任务编号) then
+			日志("队员任务编号和队长任务不一致，重新从1开始,队长任务:"..leaderTask.." 队员任务:"..当前任务编号,1)
+			return false
+		end		
+	end
+	return true
+end
 main()

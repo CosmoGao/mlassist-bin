@@ -2731,7 +2731,7 @@ function common.卵4(step,队长名称,队伍人数,队员列表)
 		step=1
 	end
 	if(队长名称 == nil)then
-		队长名称=人物("名称")
+		队长名称=人物("名称",false)
 	end
 	if(队伍人数 == nil)then
 		队伍人数=1
@@ -2923,7 +2923,7 @@ function common.登录游戏id(游戏id,tFileName,lastGidInfo,functionAction,fun
 	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
 		lastGidInfo.role=人物("左右角色")
 		lastGidInfo.gid=人物("gid")
-		lastGidInfo.roleName=人物("名称")
+		lastGidInfo.roleName=人物("名称",false)
 		lastGidInfo.index=common.findTableIndex(获取游戏子账户(),人物("gid"))		
 		common.WriteFileData(tFileName,common.TableToStr(lastGidInfo))
 		登出服务器()
@@ -3010,7 +3010,7 @@ common.waitTradeGoldAction=function(args)
 		common.gotoFalanBankTalkNpc()
 	end
 	移动(args.x,args.y)
-	topicMsg = {name=人物("名称"),gold=1000000-人物("金币"),line=人物("几线")}
+	topicMsg = {name=人物("名称",false),gold=1000000-人物("金币"),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))
 	等待交易("","","",10000)
 	if(人物("金币") > 900000)then
@@ -3064,7 +3064,7 @@ common.waitTradeItemsAction=function(args)
 	end
 	
 	移动(args.x,args.y)	
-	topicMsg = {name=人物("名称"),bagcount=取包裹空格(),line=人物("几线")}
+	topicMsg = {name=人物("名称",false),bagcount=取包裹空格(),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))	
 	if(银行("金币") >= 1000000)then
 		if(人物("金币") > 998000)then
@@ -3148,7 +3148,7 @@ common.waitTradePetsAction=function(args)
 		end
 	end		
 	移动(args.x,args.y)
-	topicMsg = {name=人物("名称"),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
+	topicMsg = {name=人物("名称",false),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))
 	if(银行("金币") >= 1000000)then
 		if(人物("金币") > 998000)then
@@ -3194,6 +3194,162 @@ common.waitTradePetsAction=function(args)
 		end
 	end
 	goto bankWait
+end
+
+--预置发放道具函数 itemName  itemId因为从银行获取不到 只支持名称
+--args.x args.y args.topic args.publish
+--args.itemName args.itemCount args.itemPileCount 交易物品名 或id 交易数量以及交易叠加数量 默认1
+--坐标以及通知消息和接受交易信息
+common.waitProvideTradeItemsAction=function(args)
+	local mapName=""
+	local mapNum=0
+	local topic=""
+	local msg=""
+	local topicMsg={}
+	if(args.itemName ==nil)then 
+		日志("发放物品名为空，请检查后再启用脚本",1)
+	end
+	if(args.itemCount ==nil)then args.itemCount=1 end
+	if(args.itemPileCount ==nil)then args.itemPileCount=1 end
+	local provideTradeInfo="物品:"..args.itemName.."|"..args.itemPileCount.."|"..args.itemCount
+	local tryCount=0
+	local preTradeItemCount=0
+	local recvTbl=nil
+	local topicList={args.publish}
+	订阅消息(topicList)
+::begin::
+	等待空闲()
+	mapName = 取当前地图名()
+	mapNum =取当前地图编号()
+	if (mapName=="艾尔莎岛" or mapName=="法兰城" or mapName=="里谢里雅堡" )then	
+		common.gotoFalanBankTalkNpc()
+		goto bankWait
+	elseif (mapName=="银行" and mapNum== 1121)then	
+		goto bankWait
+	elseif (mapName=="召唤之间" )then	--登出 bank
+		移动(3,9)
+		对话选是(4,9)
+		回城()
+		common.gotoFalanBankTalkNpc()
+		goto bankWait
+	end	
+	回城()
+	等待(1000)	
+	goto begin
+::bankWait::
+	if(取当前地图编号() ~= 1121)then
+		common.gotoFalanBankTalkNpc()
+	end
+	移动(args.x,args.y)	
+	topicMsg = {name=人物("名称",false),bagcount=取包裹空格(),line=人物("几线")}
+	发布消息(args.topic, common.TableToStr(topicMsg))	
+	topic,msg=已接收订阅消息(args.publish)	
+	--日志(topic.." Msg:"..msg)
+	if(topic == args.publish)then
+		recvTbl = common.StrToTable(msg)			
+	end	
+	等待空闲()	
+	if(recvTbl~=nil and recvTbl.name ~= nil and recvTbl.bagcount ~= nil)then	
+		preTradeItemCount=取物品数量(recvTbl.name)
+		tryCount=0
+		while tryCount < 3 do
+			tryCount=tryCount+1
+			日志("等待交易"..recvTbl.name)		
+			等待交易(recvTbl.name,provideTradeInfo,"",10000)	
+			--交易成功 就终止
+			if(preTradeItemCount ~= 取物品数量(recvTbl.name))then
+				break
+			end
+		end
+		recvTbl=nil
+	else
+		人物动作(14)	
+	end
+	if(取物品数量(args.itemName) < 1)then
+		goto 从银行取
+	end
+	goto bankWait
+::从银行取::
+	移动(11,8)
+	转向(2)
+	等待服务器返回()
+	银行("全取",args.itemName)
+	等待(5000)
+	if(取物品数量(args.itemName) < 1)then
+		return  --切换账号
+	end
+	goto bankWait
+end
+--去银行领取物品
+--args.topic  args.publish args.itemName  args.itemPileCount args.itemCount
+common.gotoBankRecvTradeItemsAction=function(args)
+	local tryCount=0
+	local topicList={args.topic}
+	订阅消息(topicList)
+	local topic=""
+	local msg=""
+	local recvTbl=nil
+	local topicMsg={}
+::begin::
+	等待空闲()	
+	topic,msg=已接收订阅消息(args.topic)	
+	--日志(topic.." Msg:"..msg)
+	if(topic == args.topic)then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.bagcount
+		tradePlayerLine=recvTbl.line
+	else
+		goto begin
+	end	
+	--日志(tradeName.." "..tradeBagSpace .." " ..tradePlayerLine)
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end	
+	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
+		if(取当前地图名()~= "银行" and 取当前地图编号() ~= 1121)then			
+			common.gotoFalanBankTalkNpc()		
+		end	
+		tryCount=0
+		while tryCount < 3 do
+			tryCount=tryCount+1
+			topicMsg = {name=人物("名称",false),bagcount=取包裹空格(),line=人物("几线")}
+			发布消息(args.publish, common.TableToStr(topicMsg))
+			tradex=nil
+			tradey=nil
+			units = 取周围信息()
+			if(units ~= nil)then
+				for i,u in pairs(units) do
+					if(u.unit_name==tradeName)then
+						tradex=u.x
+						tradey=u.y
+						break
+					end
+				end
+			else
+				goto begin
+			end
+			if(tradex ~=nil and tradey ~= nil)then
+				移动到目标附近(tradex,tradey)
+			else
+				goto begin
+			end
+			转向坐标(tradex,tradey)		
+			--日志(tradeList)		
+			交易(tradeName,"","",10000)
+			if(取物品数量(args.itemName) >= args.itemCount)then
+				tradeName=nil
+				tradeBagSpace=nil
+				tradePlayerLine=nil	
+				--回城()
+				return
+			end		
+		end
+	end
+	goto begin
 end
 --检查是否有某称号
 function common.checkTitle(dstTitle)

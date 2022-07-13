@@ -21,6 +21,7 @@ local 身上预置金币=500000		--取和拿后 身上保留金币
 local 脚本运行前时间=os.time()	--统计效率
 local 脚本运行前金币=人物("金币")	--统计金币
 local 是否学一击必中=用户勾选框("是否学一击必中",0)
+local 是否领取王冠=用户勾选框("是否领取王冠",1)		--需要有王冠发放员
 	
 local bossData={
 {name="梦魔1",x=207,y=238,nexty=235},	--204 235
@@ -270,7 +271,7 @@ function main()
 	--日志("当前职称："..人物("职称"),1)
 	--common.baseInfoPrint()
 	--common.statisticsTime(脚本运行前时间,脚本运行前金币)	
-	
+	--日志("是否领取王冠"..tostring(是否领取王冠),1)
 	if(人物("名称",false) == 队长名称)then
 		isTeamLeader=true
 		日志("当前是队长:"..人物("名称",false),1)
@@ -325,7 +326,14 @@ function main()
 		等待(2000)
 		if(取物品数量("王冠") < 1)then
 			日志("脚本需要王冠，如果没有的话，请走到辛美尔在启动",1)	
-			跑王冠()	
+			日志("是否领取王冠"..tostring(是否领取王冠),1)
+			回城()
+			等待空闲()
+			if(是否领取王冠)then			
+				common.gotoBankRecvTradeItemsAction({topic="王冠发放员",publish="领取王冠",itemName="王冠",itemCount=1,itemPileCount=1})
+			else
+				跑王冠()	
+			end
 			等待(2000)
 			goto begin
 		else

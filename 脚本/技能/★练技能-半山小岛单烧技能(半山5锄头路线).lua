@@ -13,8 +13,8 @@ local 补血值=用户输入框("多少血以下去补给","400")
 local 补魔值=用户输入框("多少魔以下去补给","400")
 local 宠补血值=用户输入框("宠多少血以下补血","100")
 local 宠补魔值=用户输入框("宠多少魔以下去补给","400")
-
-
+local 技能达标是否切换配置=用户勾选框("技能达标是否切换配置",0)
+local sEquipWeaponName=用户下拉框("武器名称",{"平民剑","平民斧","平民枪","平民弓","平民回力镖","平民小刀","平民杖"})		--武器名称
 local 技能名称="强力补血魔法"
 local 下个配置文件=""
 local 技能目标等级=10
@@ -65,9 +65,14 @@ function main()
 	common.checkHealth()
 	common.supplyCastle()
 	if(技能等级() >= 技能目标等级)then
-		--读取配置("配置/小岛超补.save")
-		读取配置("配置/"..下个配置文件..".save")
+		if(技能达标是否切换配置==1)then
+			--读取配置("配置/小岛超补.save")
+			读取配置("配置/"..下个配置文件..".save")
+		else
+			return
+		end
 	end
+	common.checkEquipDurable(2,sEquipWeaponName,20)
 	拿钱()
 	回城()
 	等待到指定地图("艾尔莎岛")
