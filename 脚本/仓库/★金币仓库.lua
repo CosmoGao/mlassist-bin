@@ -1,0 +1,58 @@
+
+common=require("common")
+
+
+-- waitAction = function()
+	-- local mapName=""
+	-- local mapNum=0
+-- ::begin::
+	-- 等待空闲()
+	-- mapName = 取当前地图名()
+	-- mapNum =取当前地图编号()
+	-- if (mapName=="艾尔莎岛" or mapName=="法兰城" or mapName=="里谢里雅堡" )then	
+		-- common.gotoFalanBankTalkNpc()
+		-- goto bankWait
+	-- elseif (mapName=="银行" and mapNum== 1121)then	
+		-- goto bankWait
+	-- elseif (mapName=="召唤之间" )then	--登出 bank
+		-- 移动(3,9)
+		-- 对话选是(4,9)
+		-- 回城()
+		-- common.gotoFalanBankTalkNpc()
+		-- goto bankWait
+	-- end	
+	-- 回城()
+	-- 等待(1000)	
+	-- goto begin
+-- ::bankWait::
+	-- if(取当前地图编号() ~= 1121)then
+		-- common.gotoFalanBankTalkNpc()
+	-- end
+	-- 移动(10,13)
+	-- topicMsg = {name=人物("名称"),gold=1000000-人物("金币"),line=人物("几线")}
+	-- 发布消息("金币仓库信息", common.TableToStr(topicMsg))
+	-- 等待交易("","","",10000)
+	-- if(人物("金币") > 900000)then
+		-- goto cun
+	-- end	
+	-- goto bankWait
+-- ::cun::
+	-- 移动(11,8)
+	-- 面向("东")
+	-- 等待服务器返回()
+	-- bankGold = 银行("金币")
+	-- cGold=人物("金币")
+	-- if(bankGold > 1000000)then	--银行金币大于100万 取最小值
+		-- cGold =  math.min(10000000-bankGold,cGold)
+	-- else
+		-- cGold =  math.min(1000000-bankGold,cGold)
+	-- end
+	-- 银行("存钱",cGold)
+	-- 等待(2000)
+	-- if(人物("金币")>=1000000)then	
+		-- return	--登出 切换仓库
+	-- end
+	-- goto bankWait	
+-- end
+-- common.warehouseOnlineWait("金币仓库.txt",waitAction)
+common.warehouseOnlineWait("金币仓库.txt",common.waitTradeGoldAction,{x=10,y=13,topic="金币仓库信息"})
