@@ -39,6 +39,7 @@ local mapNum=0
 local mapName=""
 ::begin::	
 	等待空闲()
+	common.changeLineFollowLeader(队长名称)		--同步服务器线路	
 	mapNum=取当前地图编号()
 	mapName=取当前地图名()
 	if(mapNum == 59505)then goto map59505 		--光之路

@@ -3150,17 +3150,31 @@ common.waitTradePetsAction=function(args)
 	移动(args.x,args.y)
 	topicMsg = {name=人物("名称",false),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))
+	开关(4,1)		--打开交易
 	if(银行("金币") >= 1000000)then
-		if(人物("金币") > 998000)then
-			等待交易("","金币:20","",20000)
+		if(人物("金币") > 998000)then			--钱太多 交易给对方20
+			--等待交易("","金币:20","",20000)			
+			tradeDlg = 已接收最新交易消息()		--默认5秒内交易消息 可以传毫秒进去
+			if(tradeDlg.level ~= 0)then
+				交易物品验证确认("","金币:20","",20000)
+			end
 		else
-			等待交易("","","",20000)
+			
+			tradeDlg = 已接收最新交易消息()		--默认5秒内交易消息 可以传毫秒进去
+			if(tradeDlg.level ~= 0)then
+				交易物品验证确认("","","",20000)
+			end
+			--等待交易("","","",20000)
 		end
 	else
 		if(人物("金币") > 900000)then		
 			goto cun
 		else
-			等待交易("","","",20000)
+			tradeDlg = 已接收最新交易消息()	--默认5秒内交易消息 可以传毫秒进去
+			if(tradeDlg.level ~= 0)then
+				交易物品验证确认("","","",20000)
+			end
+			--等待交易("","","",20000)
 		end
 	end	
 	if(common.getTableSize(全部宠物信息()) == 5)then
@@ -3310,7 +3324,7 @@ common.gotoBankRecvTradeItemsAction=function(args)
 		goto begin
 	end	
 	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
-		if(取当前地图名()~= "银行" and 取当前地图编号() ~= 1121)then			
+		if(取当前地图编号() ~= 1121)then			
 			common.gotoFalanBankTalkNpc()		
 		end	
 		tryCount=0
@@ -3348,6 +3362,99 @@ common.gotoBankRecvTradeItemsAction=function(args)
 				return
 			end		
 		end
+	end
+	goto begin
+end
+
+--去银行交易宠物
+--args.topic  args.publish args.itemName  args.itemPileCount args.itemCount
+common.gotoBankStorePetsAction=function(args)	
+	local tradex=nil
+	local tradey=nil
+	local topic=""
+	local msg=""
+	local recvTbl={}
+	local units=nil
+	local tradeList=""
+	local hasData=false
+	local selfTradeCount=0
+	local tradeName=""
+	local tradeBagSpace=0
+	local tradePlayerLine =0
+	local topicList={args.topic}
+	订阅消息(topicList)
+	--日志(args.tgtTopic)
+::begin::
+	等待空闲()
+	topic,msg=已接收订阅消息(args.topic)	
+	--日志(topic.." Msg:"..msg)
+	if(topic == args.topic)then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.pets
+		tradePlayerLine=recvTbl.line
+	else
+		goto begin
+	end	
+	--日志(tradeName.." "..tradeBagSpace .." " ..tradePlayerLine)
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end	
+	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
+		if(取当前地图编号() ~= 1121)then			
+			common.gotoFalanBankTalkNpc()		
+		end	
+		tradex=nil
+		tradey=nil
+		units = 取周围信息()
+		if(units ~= nil)then
+			for i,u in pairs(units) do
+				if(u.unit_name==tradeName)then
+					tradex=u.x
+					tradey=u.y
+					break
+				end
+			end
+		else
+			goto begin
+		end
+		if(tradex ~=nil and tradey ~= nil)then
+			移动到目标附近(tradex,tradey)
+		else
+			goto begin
+		end
+		转向坐标(tradex,tradey)			
+		local pets = 全部宠物信息()
+		tradeList="金币:20;宠物:"
+		hasData=false
+		selfTradeCount=0
+		for i,v in pairs(pets) do
+			if(v.realname == args.petName and v.level==1)then					
+				if(selfTradeCount >= tradeBagSpace)then
+					break
+				end		
+				selfTradeCount=selfTradeCount+1
+				hasData=true				
+			end
+		end	
+		tradeList = tradeList..args.petName.."|"..selfTradeCount			
+		
+		日志(tradeList)
+		if(hasData)then
+			交易(tradeName,tradeList,"",10000)
+		else	
+			--设置("timer",100)
+			--下次说不定是哪个仓库 设置为nil
+			tradeName=nil
+			tradeBagSpace=nil
+			tradePlayerLine=nil	
+			--回城()
+			return
+		end
+		tryNum=tryNum+1	
 	end
 	goto begin
 end

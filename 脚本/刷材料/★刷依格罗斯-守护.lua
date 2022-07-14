@@ -238,6 +238,7 @@ function main()
 	local mapName=""
 ::begin::	
 	等待空闲()
+	common.changeLineFollowLeader(队长名称)		--同步服务器线路	
 	mapNum=取当前地图编号()
 	mapName=取当前地图名()
 	if(mapNum == 59513)then goto map59513 
@@ -337,6 +338,10 @@ function main()
 	等待到指定地图("利夏岛")	
 	移动(90,99,"国民会馆")
 ::map59552::		--国民会馆
+	if(取物品数量("托尔丘的记忆") < 1)then
+		回城()
+		goto begin
+	end
 	移动(115,51)
 	对话选是(116,50)
 	goto begin
@@ -632,7 +637,7 @@ end
 function checkTeammateSameFloor()	
 	--日志("当前任务"..当前任务编号)
 	for i,u in pairs(队员列表) do
-		日志(u)
+		--日志(u)
 		local friendTask=getFriendSetText(u)
 		if(friendTask~=nil)then		--成功设置楼层的才判断，其余默认在同一楼层
 			--日志(u..friendTask)

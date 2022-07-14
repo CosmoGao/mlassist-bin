@@ -290,6 +290,7 @@ function main()
 	local mapName=""
 ::begin::	
 	等待空闲()
+	common.changeLineFollowLeader(队长名称)		--同步服务器线路	
 	mapNum=取当前地图编号()
 	mapName=取当前地图名()
 	if(mapNum == 59513)then goto map59513 
@@ -341,6 +342,14 @@ function main()
 			goto begin
 		end
 	end
+	if(取物品数量("王冠")>1)then
+		common.gotoBankTalkNpc()
+		银行("全存","王冠")
+		等待(2000)
+		银行("取物","王冠",1)
+		等待(2000)
+		goto begin
+	end
 	移动(165,153)	
 	转向(4, "")
 	等待服务器返回()	
@@ -350,7 +359,7 @@ function main()
 	等待到指定地图("利夏岛")	
 	移动(90,99,"国民会馆")	
 	移动(108,39,"雪拉威森塔１层")
-	移动(34,95)	
+	移动(34,95)		
 	转向(2, "")
 	等待服务器返回()	
 	对话选择("4", "", "")
