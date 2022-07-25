@@ -1066,6 +1066,62 @@ function common.checkHealth(doctorName)
 		common.healPet()
 	end
 end
+--去哥拉尔
+function common.toGle()
+	local x,y=取当前坐标()		
+	if (取当前地图名()=="哥拉尔镇" and x==120 )then return end			
+	回城()	
+	等待(3000)
+end
+function common.gleCheckHealth(doctorName)
+	local health = 人物("健康")
+	local petinfo = 宠物信息()
+	if( 人物("健康") > 0 or 人物("灵魂") > 0 or 宠物("健康") > 0)then
+		--登出 去治疗 招魂
+		common.toGle()
+		common.gleRecallSoul()	
+		common.gleHealPlayer(doctorName)		
+	end
+end
+--哥拉尔招魂
+function common.gleRecallSoul()
+	if( 人物("灵魂") > 0 )then
+		日志("触发登出补给:人物掉魂")
+		common.toGle()
+		转向(0)
+		等待(1000)
+		移动(140,214,"白之宫殿")
+		移动(47, 36, 43210)
+		移动(61, 46)
+		对话选是(2)
+		等待(1000)		
+	end
+end
+function common.gleSupply()
+	local needSupply = common.isNeedSupply()	
+	if(needSupply == false)then
+		return
+	end
+	if (取当前地图名()~="哥拉尔镇" )then common.toGle() end			
+	移动(165,91,"医院")
+	移动(29,26)	
+	回复(30,26)	
+end
+
+--哥拉尔医院医生治疗
+function common.gleHealPlayer(doctorName)
+	if( 人物("健康") > 0  or 宠物("健康") > 0)then
+		common.toGle()
+		日志("人物受伤")
+		移动(165,91,"医院")
+		移动(29,15)
+		转向(2)
+		等待服务器返回()
+		对话选择(-1,6)
+		移动(29,26)
+		回复(30,26)	
+	end      
+end
 --检查人物金币 不足去拿 
 --minGold人物最少金币 少于此值去银行拿钱
 --maxGold人物最多金币 大于此值去银行存钱
@@ -1342,6 +1398,10 @@ function common.toTeleRoomTemplate(warpData)
 		goto goWarp
 	elseif (当前地图名=="里谢里雅堡" )then	
 		goto goWarp		
+	elseif (当前地图名=="里谢里雅堡 1楼" )then	
+		goto map1520	
+	elseif (当前地图名=="启程之间" )then	
+		goto map1522		
 	end	
 	common.toCastle()
 ::goWarp::		
@@ -1350,7 +1410,9 @@ function common.toTeleRoomTemplate(warpData)
 		goto Begin
 	end		
 	移动(41,50,"里谢里雅堡 1楼")
+::map1520::
 	移动(45,20,"启程之间")	
+::map1522::
 	移动(25, 27) 	
 	if (是否队长()) then
 		移动(warpData[1].x,warpData[1].y)
@@ -3365,7 +3427,115 @@ common.gotoBankRecvTradeItemsAction=function(args)
 	end
 	goto begin
 end
-
+--去银行交易道具
+--args.topic  args.publish args.itemName  args.itemPileCount args.itemCount
+common.gotoBankStoreItemsAction=function(args)	
+	local tradex=nil
+	local tradey=nil
+	local topic=""
+	local msg=""
+	local recvTbl={}
+	local units=nil
+	local tradeList=""
+	local hasData=false
+	local selfTradeCount=0
+	local tradeName=""
+	local tradeBagSpace=0
+	local tradePlayerLine =0
+	local topicList={args.topic}
+	订阅消息(topicList)
+	if(args.itemCount == nil )then args.itemCount=0 end
+	if(args.itemPileCount == nil )then args.itemPileCount=0 end
+	local tryNum=0
+	--日志(args.tgtTopic)
+::begin::
+	等待空闲()
+	topic,msg=已接收订阅消息(args.topic)	
+	--日志(topic.." Msg:"..msg)
+	if(topic == args.topic)then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeBagSpace=recvTbl.bagcount
+		tradePlayerLine=recvTbl.line
+	else
+		等待(5000)		--给内部时间  去接收收到的信息
+		goto begin
+	end	
+	--日志(tradeName.." "..tradeBagSpace .." " ..tradePlayerLine)
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end	
+	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
+		if(取当前地图编号() ~= 1121)then			
+			common.gotoFalanBankTalkNpc()		
+		end	
+		tradex=nil
+		tradey=nil
+		units = 取周围信息()
+		if(units ~= nil)then
+			for i,u in pairs(units) do
+				if(u.unit_name==tradeName)then
+					tradex=u.x
+					tradey=u.y
+					break
+				end
+			end
+		else
+			goto begin
+		end
+		if(tradex ~=nil and tradey ~= nil)then
+			移动到目标附近(tradex,tradey)
+		else
+			goto begin
+		end
+		转向坐标(tradex,tradey)			
+		local items = 物品信息()
+		tradeList="金币:20;物品:"
+		hasData=false
+		selfTradeCount=0
+		for i,v in pairs(items) do		
+			if v.pos > 7 and (v.itemid == args.itemID or v.name == args.itemName) then
+				if(v.count==0 or v.count >= args.itemPileCount)then	--数量够 再进行下一步
+					if(args.itemID ~= nil)then
+						if(hasData)then
+							tradeList=tradeList.."|"..args.itemID.."|"..v.count.."|".."1"
+						else
+							tradeList=tradeList..args.itemID.."|"..v.count.."|".."1"			
+						end
+					else
+						if(hasData)then
+							tradeList=tradeList.."|"..args.itemName.."|"..v.count.."|".."1"
+						else
+							tradeList=tradeList..args.itemName.."|"..v.count.."|".."1"			
+						end
+					end
+					selfTradeCount=selfTradeCount+1
+					hasData=true
+					if(selfTradeCount >= tradeBagSpace)then
+						break
+					end		
+				end				
+			end
+		end			
+		日志(tradeList)
+		if(hasData)then
+			交易(tradeName,tradeList,"",10000)
+		else	
+			--设置("timer",100)
+			--下次说不定是哪个仓库 设置为nil
+			tradeName=nil
+			tradeBagSpace=nil
+			tradePlayerLine=nil	
+			--回城()
+			return
+		end
+		tryNum=tryNum+1	
+	end
+	goto begin
+end
 --去银行交易宠物
 --args.topic  args.publish args.itemName  args.itemPileCount args.itemCount
 common.gotoBankStorePetsAction=function(args)	
@@ -3394,6 +3564,7 @@ common.gotoBankStorePetsAction=function(args)
 		tradeBagSpace=recvTbl.pets
 		tradePlayerLine=recvTbl.line
 	else
+		等待(5000)		--给内部时间  去接收收到的信息
 		goto begin
 	end	
 	--日志(tradeName.." "..tradeBagSpace .." " ..tradePlayerLine)
@@ -3500,5 +3671,131 @@ function common.getTgtPetCount(tgtPetName)
 		end		
 	end		
 	return petCount
+end
+
+--哥拉尔检查封印卡 需要定居哥拉尔 不在哥拉尔 会回城
+function common.gleCheckSaelCard(cardName,cardCount)
+	local mapName = ""
+	local mapNum = 0
+	local tryCount=0
+	if(取物品叠加数量(cardName) < cardCount)then 	
+		goto begin 
+	else
+		return
+	end	
+::begin::
+	mapName = 取当前地图名()
+	mapNum = 取当前地图编号()
+	if(mapName == "哥拉尔镇")then 
+		移动(146, 117,"魔法店")		
+		移动(18, 12)	
+		转向(2, "")
+		等待服务器返回()
+		return common.buyDstItem(cardName,cardCount)			
+	else
+		if(tryCount >= 3)then
+			日志("此接口需要定居哥拉尔，或者在哥拉尔镇执行此函数!",1)
+			return
+		end
+		tryCount=tryCount+1
+		回城()
+		等待(2000)
+	end
+	goto begin
+end
+
+--城堡卖魔石 卡片等
+function common.gleSellItems(saleItems)
+	local saleList=
+	{
+		"魔石","锥形水晶","卡片？","锹型虫的卡片","水晶怪的卡片","哥布林的卡片","红帽哥布林的卡片","迷你蝙蝠的卡片","绿色口臭鬼的卡片","锥形水晶"
+	}
+	--不判断是否有重复名称了  这里直接合并一个表
+	if(saleItems ~= nil)then
+		if(type(saleItems) == "string")then
+			table.insert(saleList,saleItems)
+		elseif(type(saleItems) == "table")then		
+			for i,item in ipairs(saleItems) do
+				table.insert(saleList, item)
+			end
+		end		
+	end
+	local needSale=false
+	for i,item in ipairs(saleList)do
+		if(取物品数量(item) > 0) then
+			needSale = true
+			break
+		end
+	end
+	if(needSale == false)then return end
+::begin::	
+	等待空闲()
+	local 当前地图名 = 取当前地图名()
+	if (当前地图名=="艾尔莎岛" )then			
+		移动(140,105)				
+		转向(1)
+		等待服务器返回()
+		对话选择(4,0)		
+		goto liBao
+	elseif (当前地图名=="里谢里雅堡" )then	
+		goto liBao	
+	elseif (当前地图名=="工房" )then	
+		goto gongFang
+	elseif (当前地图名=="召唤之间" )then	--登出 bank
+		移动( 3, 7)	
+		等待到指定地图("里谢里雅堡")	
+		goto liBao	
+	elseif (当前地图名=="哥拉尔镇" )then	--登出 bank
+		移动(146, 117,"魔法店")			
+		goto 哥拉尔魔法店
+	end	
+	回城()
+	等待(2000)
+	goto begin
+::liBao::		
+	if(取当前地图名() ~= "里谢里雅堡")then
+		等待(2000)
+		goto begin
+	end
+	移动(31,77)		
+	for i,item in ipairs(saleList)do
+		if(取物品数量(item) > 0) then
+			卖(6,item)
+		end
+	end    
+	for i,item in ipairs(saleList)do
+		if(取物品数量(item) > 0) then
+			卖(6,item)
+		end
+	end 
+	goto goEnd
+::gongFang::
+	if(是否目标附近(21,23,1)==true) then
+		for i,item in ipairs(saleList)do
+			if(取物品数量(item) > 0) then
+				卖(21,23,item)
+			end
+		end    
+		for i,item in ipairs(saleList)do
+			if(取物品数量(item) > 0) then
+				卖(21,23,item)
+			end
+		end  
+	end
+	goto goEnd
+::哥拉尔魔法店::
+	移动(18, 12)	
+	for i,item in ipairs(saleList)do
+		if(取物品数量(item) > 0) then
+			卖(2,item)
+		end
+	end    
+	for i,item in ipairs(saleList)do
+		if(取物品数量(item) > 0) then
+			卖(2,item)
+		end
+	end  
+::goEnd::
+	return
 end
 return common

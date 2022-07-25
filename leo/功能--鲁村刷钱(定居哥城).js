@@ -247,7 +247,7 @@ require(process.env.CGA_DIR_PATH_UTF8+'/leo').then(async (cga) => {
         var mapInfo = leo.getMapInfo();
         if (mapInfo.name == '库鲁克斯岛' && (mapInfo.x >= 290 && mapInfo.x <= 350) && (mapInfo.y >= 870 && mapInfo.y <= 890)) {
             console.log(leo.logTime() + '开始战斗');
-            await leo.autoWalk([310,883])
+            await leo.autoWalk([307,871])
             await leo.encounterTeamLeader(protect)  //队长遇敌
             console.log(leo.logTime() + "触发回补");
             await leo.autoWalk([322,883,'鲁米那斯'])
