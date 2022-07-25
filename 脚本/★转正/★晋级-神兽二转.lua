@@ -8,11 +8,6 @@ common=require("common")
 设置("遇敌全跑",1)
 
 	等待空闲()
-	common.checkHealth()
-	common.checkCrystal(水晶名称)
-	--回城()
-	common.supplyCastle()
-	common.sellCastle()		--默认卖
 ::begin::
 	等待空闲()
 	等待(2000)
@@ -37,8 +32,12 @@ common=require("common")
 	对话选择("4", "", "")
 ::liBao::
 	等待到指定地图("里谢里雅堡")	
-	移动(34,89)
-	回复(1)			-- 转向北边恢复人宠血魔
+	common.checkHealth()
+	common.checkCrystal(水晶名称)
+	--回城()
+	common.supplyCastle()
+	common.sellCastle()		--默认卖
+	common.toCastle()
 	移动(41, 50,"里谢里雅堡 1楼")
 	移动(45, 20,"启程之间")
 ::warproom::

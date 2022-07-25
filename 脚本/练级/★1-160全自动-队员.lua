@@ -385,13 +385,17 @@ function 洞窟练级(目标等级)
 	等待到指定地图("艾夏岛")
 	移动(112, 81)	
 ::erYiYuan::
-	等待到指定地图("医院")		
+	等待到指定地图("医院")	
+	leaderSetLv=getLeaderSetLv()	
+	if(leaderSetLv ~= nil and leaderSetLv ~= 目标等级) then
+		return
+	end
 	if(取队伍人数() > 1)then
 		goto yudi
 	end	
 	移动(28, 46) 
 	common.changeLineFollowLeader(队长名称)	
-	common.joinTeam(队长名称)
+	common.joinTeam(队长名称,10)	
 	goto begin
 ::addTeam::
 	等待到指定地图("布拉基姆高地")	
@@ -535,16 +539,16 @@ function 回廊练级(目标等级)
 	回城()
 	goto begin
 ::liBao::
-	移动(34, 89)	
-	回复(1)		
+	common.supplyCastle()
 	common.checkHealth(医生名称)
 	common.toCastle()
-	移动(30, 79)
-	卖(0,卖店物品列表)		
+	common.sellCastle(卖店物品列表)	
 	移动(52, 72)	
 	对话选是(2)	
 ::addTeam::
-	等待到指定地图("过去与现在的回廊")	
+	if(取当前地图名() ~= "过去与现在的回廊")then
+		goto begin
+	end	
 	if(取队伍人数() > 1)then
 		if(common.judgeTeamLeader(队长名称)==true) then
 			goto yudi

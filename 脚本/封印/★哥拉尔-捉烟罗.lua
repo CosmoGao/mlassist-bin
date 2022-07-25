@@ -372,6 +372,22 @@ function main()
 ::ting::
 	停止遇敌()
 	等待空闲()
+	等待(5000)			--如果有血瓶 等吃血瓶
+	--二次判断 成功就回城
+	if(人物("魔") < 人补魔)then goto  backbu end		-- 魔小于100
+	if(人物("血") < 人补血)then goto  backbu end
+	if(宠物("血") < 宠补血)then goto  backbu end
+	if(宠物("魔") < 宠补魔)then goto  backbu end
+	if(取物品叠加数量(封印卡名称) < 1)then goto  backbu end	
+	if (人物("宠物数量") >= 5 )then	
+		日志("宠物数量满了，回城存储！")
+		goto backbu	
+	end
+	if( 人物("灵魂") > 0 )then
+		goto  backbu 
+	end
+	goto scriptLoop
+::backbu::	
 	回城()     
 	goto begin 
 	

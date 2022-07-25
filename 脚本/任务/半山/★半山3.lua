@@ -323,6 +323,13 @@ function leaderAction()
 		移动(23,23)
 		对话选是(23,22)
 	end	
+	if(是否战斗中())then
+		等待战斗结束()
+		if(取当前地图名() == "小岛")then
+			日志("半山3任务完成")
+			return
+		end
+	end
 	goto begin	
 end
 function teammateAction()
@@ -393,6 +400,13 @@ function teammateAction()
 	if(是否目标附近(23,22))then		
 		对话选是(23,22)		
 	end	
+	if(是否战斗中())then
+		等待战斗结束()
+		if(取当前地图名() == "小岛")then
+			日志("半山3任务完成")
+			return
+		end
+	end
 	goto begin
 end
 main()

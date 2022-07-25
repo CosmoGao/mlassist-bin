@@ -19,6 +19,7 @@ if(设置队员列表 ~= nil and string.find(设置队员列表,"|") ~= nil)then
 	队员列表=common.luaStringSplit(设置队员列表,"|")
 end
 --日志(设置队员列表)
+local 扔海豚点位=用户下拉框("扔海豚点位",{1,2,3,4,5})
 local sEquipWeaponName=用户下拉框("武器名称",{"平民剑","平民斧","平民枪","平民弓","平民回力镖","平民小刀","平民杖"})		--武器名称
 local sEquipHatName=用户下拉框("帽子名称",{"平民帽","平民盔"})				--帽子名称
 local sEquipClothesName=用户下拉框("衣服名称",{"平民衣","平民铠","平民袍"})	--衣服名称
@@ -48,8 +49,7 @@ local 已刷宠物数量={
 	["罗修"]={count=0,msg="恭喜,您刷到了个性宠物【罗修】,档次 ",grade=预置扔罗修档次},
 	}		--希特拉 泰坦巨人 萨普地雷 托罗帝鸟 岩地跑者
 	
-local topicList={"依格罗斯仓库信息","麒麟仓库信息","翼龙仓库信息"}
-订阅消息(topicList)
+
 
 local 当前任务编号=3
 
@@ -72,7 +72,8 @@ function 取新开出的宠信息(oldPetList,newPetList)
 end
 
 function waitTopic(tgtTopic,tgtPetName)
-	
+	local topicList={"依格罗斯仓库信息","麒麟仓库信息","翼龙仓库信息","罗修仓库信息"}
+	订阅消息(topicList)		--重新订阅 防止中途加载其他脚本 干掉了订阅
 	local tradex=nil
 	local tradey=nil
 	local topic=""
@@ -93,6 +94,7 @@ function waitTopic(tgtTopic,tgtPetName)
 		tradeBagSpace=recvTbl.pets
 		tradePlayerLine=recvTbl.line
 	else
+		等待(5000)
 		goto begin
 	end	
 	--日志(tradeName.." "..tradeBagSpace .." " ..tradePlayerLine)
@@ -160,6 +162,30 @@ end
 
 function 开奖()
 	if(取物品数量("偏方多面体的卵") > 0)then
+		if(扔海豚点位 == 1)then
+			移动(144,108)
+		elseif(扔海豚点位 == 2)then
+			移动(144,111)
+		elseif(扔海豚点位 == 3)then
+			移动(136,106)
+		elseif(扔海豚点位 == 4)then
+			移动(136,109)
+		elseif(扔海豚点位 == 5)then
+			移动(136,112)
+		end
+		local tgtItemCount = 取物品数量("偏方多面体的卵")		
+		if(tgtItemCount >1)then	--增加物品检测  有时候会卡对话 领取多个
+			local allItems=物品信息()
+			for i,v in ipairs(allItems) do
+				if v.name == "偏方多面体的卵" then
+					tgtItemCount=tgtItemCount-1
+					扔(v.pos)					
+				end
+				if tgtItemCount<=1 then
+					break
+				end
+			end			
+		end
 		已刷卵总数=已刷卵总数+1		
 		日志("获得了【偏方多面体的卵】，开奖咯！")
 		local oldPetList=全部宠物信息()
@@ -288,10 +314,19 @@ function main()
 			common.gotoFalanBankTalkNpc()
 			tradeName=nil
 			tradeBagSpace=nil
-			if common.getTgtPetCount( "依格罗斯") > 0 then waitTopic("依格罗斯仓库信息","依格罗斯") end
-			if common.getTgtPetCount( "麒麟") > 0 then waitTopic("麒麟仓库信息","麒麟") end
-			if common.getTgtPetCount( "翼龙") > 0 then waitTopic("翼龙仓库信息","翼龙") end
-			
+			if common.getTgtPetCount( "依格罗斯") > 0 then 			
+				common.gotoBankStorePetsAction({topic="依格罗斯仓库信息",petName="依格罗斯"})
+			end
+			if common.getTgtPetCount( "麒麟") > 0 then
+				waitTopic("麒麟仓库信息","麒麟")
+				common.gotoBankStorePetsAction({topic="麒麟仓库信息",petName="麒麟"})
+			end
+			if common.getTgtPetCount( "翼龙") > 0 then 
+				common.gotoBankStorePetsAction({topic="翼龙仓库信息",petName="翼龙"})
+			end
+			if common.getTgtPetCount( "罗修") > 0 then 
+				common.gotoBankStorePetsAction({topic="罗修仓库信息",petName="罗修"})
+			end			
 			goto begin
 		end
 	end
@@ -453,7 +488,7 @@ function main()
 				end	
 			else			
 				if(checkTeamLeaderTask())then
-					common.joinTeam(队长名称)
+					common.joinTeam(队长名称,10)
 				else
 					扔("托尔丘的记忆")
 					回城()
@@ -578,8 +613,7 @@ function main()
 	对话选是(42,27)
 ::map59536::		--约尔克神庙
 	回城()
-	等待空闲()
-	移动(144,108)
+	等待空闲()	
 	开奖()
 	上次迷宫楼层=1
 	当前迷宫楼层=1
