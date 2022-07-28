@@ -15,7 +15,7 @@ common=require("common")
 	-- elseif (mapName=="银行" and mapNum== 1121)then	
 		-- goto bankWait
 	-- elseif (mapName=="召唤之间" )then	--登出 bank
-		-- 移动(3,9)
+		-- 自动寻路(3,9)
 		-- 对话选是(4,9)
 		-- 回城()
 		-- common.gotoFalanBankTalkNpc()
@@ -28,7 +28,7 @@ common=require("common")
 	-- if(取当前地图编号() ~= 1121)then
 		-- common.gotoFalanBankTalkNpc()
 	-- end
-	-- 移动(10,13)
+	-- 自动寻路(10,13)
 	-- topicMsg = {name=人物("名称"),gold=1000000-人物("金币"),line=人物("几线")}
 	-- 发布消息("金币仓库信息", common.TableToStr(topicMsg))
 	-- 等待交易("","","",10000)
@@ -37,7 +37,7 @@ common=require("common")
 	-- end	
 	-- goto bankWait
 -- ::cun::
-	-- 移动(11,8)
+	-- 自动寻路(11,8)
 	-- 面向("东")
 	-- 等待服务器返回()
 	-- bankGold = 银行("金币")

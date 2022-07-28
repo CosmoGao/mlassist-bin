@@ -60,10 +60,10 @@ function main()
 	end			
 	common.supplyCastle()
 	common.checkHealth()
-	移动(130, 50,"盖雷布伦森林")		
+	自动寻路(130, 50,"盖雷布伦森林")		
 	goto begin   
 ::map59500::							--莎莲娜
-	移动(187,43)
+	自动寻路(187,43)
 	设置("移动速度",走路还原值)
 	StartWork()			
 	goto begin	

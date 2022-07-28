@@ -42,11 +42,11 @@ function main()
 	common.checkHealth()
 	common.supplyCastle()
 	common.toCastle("f2")
-	移动(0,74,"图书室")
+	自动寻路(0,74,"图书室")
 	goto library
 ::library::					--图书室
 	扔("锄头")
-	移动(27,16)
+	自动寻路(27,16)
 	对话选是(27,15)
 	goto begin
 ::island::
@@ -79,11 +79,11 @@ function leaderAction()
 	if(取当前地图名() ~= "小岛")then
 		goto begin
 	end
-	移动(66, 97)
+	自动寻路(66, 97)
 	common.makeTeam(5)
 	goto toMaze
 ::toMaze::
-	移动(64,45,"通往山顶的路100M")
+	自动寻路(64,45,"通往山顶的路100M")
 	goto crossMaze
 ::crossMaze::
 	自动穿越迷宫("半山腰")
@@ -96,20 +96,20 @@ function leaderAction()
 	if(取当前地图名() ~= "半山腰")then
 		goto begin
 	end
-	移动(80,56)
-	移动(80,57)
-	移动(80,56)
-	移动(80,57)
-	移动(80,56)
+	自动寻路(80,56)
+	自动寻路(80,57)
+	自动寻路(80,56)
+	自动寻路(80,57)
+	自动寻路(80,56)
 	离开队伍()
 	对话选是(81,56)
 ::mountainInside::
 	if(取当前地图名() ~= "圣山内部")then
 		goto begin
 	end
-	移动(16,11)
+	自动寻路(16,11)
 	common.makeTeam(5)
-	移动(19, 7,"通往地狱的道路地下1层")
+	自动寻路(19, 7,"通往地狱的道路地下1层")
 ::corssHellMaze::			--地狱
 	自动穿越迷宫("地狱入口")
 	if(取当前地图名()=="地狱入口")then
@@ -121,18 +121,18 @@ function leaderAction()
 	if(取当前地图名()~="地狱入口")then
 		goto begin
 	end
-	移动(24,26)
-	移动(25,25)
-	移动(24,26)
-	移动(25,25)
-	移动(24,26)
+	自动寻路(24,26)
+	自动寻路(25,25)
+	自动寻路(24,26)
+	自动寻路(25,25)
+	自动寻路(24,26)
 	离开队伍()
 	对话选是(24,25)
 ::mountainPeak::
 	if(取当前地图名() ~= "圣山之巅")then
 		goto begin
 	end
-	移动(23,23)
+	自动寻路(23,23)
 	对话选是(23,22)
 	等待(2000)
 	if(取当前地图名() == "法兰城")then
@@ -187,7 +187,7 @@ function teammateAction()
 	if(取当前地图名() ~= "圣山之巅")then
 		goto begin
 	end
-	移动(23,23)
+	自动寻路(23,23)
 	对话选是(23,22)
 	等待(2000)
 	if(取当前地图名() == "法兰城")then

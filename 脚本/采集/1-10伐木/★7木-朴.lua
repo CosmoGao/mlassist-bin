@@ -61,12 +61,12 @@ function main()
 	common.supplyCastle()
 	common.checkHealth()
 	common.toTeleRoom("杰诺瓦镇")	
-	移动(14, 6,"村长的家")
-	移动(1, 9,"杰诺瓦镇")
-	移动(24, 40,"莎莲娜")		
+	自动寻路(14, 6,"村长的家")
+	自动寻路(1, 9,"杰诺瓦镇")
+	自动寻路(24, 40,"莎莲娜")		
 	goto begin   
 ::map400::							--莎莲娜
-	移动(183, 459)	
+	自动寻路(183, 459)	
 	设置("移动速度",走路还原值)
 	StartWork()			
 	goto begin	

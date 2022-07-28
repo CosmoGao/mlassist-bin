@@ -3,8 +3,8 @@
 common=require("common")
 ::begin::
 	common.gotoFaLanCity("s")
-	移动(216,124,"美容院")
-	移动(15,10)
+	自动寻路(216,124,"美容院")
+	自动寻路(15,10)
 ::StartBegin::	
 	转向(0, "")
 	等待服务器返回()		--这些完了。才能和NPC说话

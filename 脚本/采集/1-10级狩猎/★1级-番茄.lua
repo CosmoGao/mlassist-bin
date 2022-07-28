@@ -53,7 +53,7 @@ function main()
 	common.outFaLan("e")			--东门
 	goto begin   
 ::map100::							--莎莲娜
-	移动(490, 196)
+	自动寻路(490, 196)
 	设置("移动速度",走路还原值)
 	--这里用的while循环  看自己 可以改为goto 形式的
 	while true do

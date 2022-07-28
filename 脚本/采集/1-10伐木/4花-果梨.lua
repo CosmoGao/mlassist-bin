@@ -55,7 +55,7 @@ function main()
 	goto begin   
 
 ::map100::							--莎莲娜
-	移动(510,130)	
+	自动寻路(510,130)	
 	设置("移动速度",走路还原值)
 	StartWork()		
 	goto begin	

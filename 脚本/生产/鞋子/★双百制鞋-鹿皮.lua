@@ -82,13 +82,13 @@ function main()
 	common.checkHealth()	
 	if(取物品叠加数量("鹿皮") < 材料数量)then				
 		回城()		
-		移动(130, 50,"盖雷布伦森林")	
-		移动(175,182)		
+		自动寻路(130, 50,"盖雷布伦森林")	
+		自动寻路(175,182)		
 		goto work
 	end	
 	叠("鹿皮", 40)	
 	common.toCastle()
-	移动(28,91)
+	自动寻路(28,91)
 	goto waitTrade
 ::work::	
 	if(取包裹空格() < 1)then goto bumo end						-- 包满回城	
@@ -123,7 +123,7 @@ function main()
 	if(取当前地图名()~= "里谢里雅堡")then
 		回城()
 		common.toCastle()
-		移动(28,91)
+		自动寻路(28,91)
 	end
 	设置("timer",0)	
 	if(tradeName ~= nil)then	

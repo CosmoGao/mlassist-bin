@@ -34,7 +34,7 @@ end
 --换矿
 function StartRefine()
 	common.gotoFaLanCity("w1")		
-	移动(106, 61,"米克尔工房")	
+	自动寻路(106, 61,"米克尔工房")	
 	common.faLanExchangeMine(矿石名)
 	回城()
 end
@@ -42,13 +42,13 @@ end
 --矿山钥匙
 function NaYaoShi()
 	common.toCastle("灵堂")
-	移动(7, 52,"地下牢房")
-	移动(31, 20)
+	自动寻路(7, 52,"地下牢房")
+	自动寻路(31, 20)
 	对话选是(2)
 	回城()
 	common.gotoFaLanCity("w1")	
-	移动(61, 63,"仓库内部")
-	移动(11, 10)
+	自动寻路(61, 63,"仓库内部")
+	自动寻路(11, 10)
 	对话选是(1)
 end
 --主流程
@@ -98,10 +98,10 @@ function main()
 	common.checkHealth()
 	if(取物品数量("矿山钥匙") < 1)then
 		common.gotoFaLanCity("s")	
-		移动(153, 241,"芙蕾雅")	
+		自动寻路(153, 241,"芙蕾雅")	
 	else
 		common.gotoFaLanCity("w1")	
-		移动(22, 87,"芙蕾雅")	
+		自动寻路(22, 87,"芙蕾雅")	
 	end
 	goto begin   
 
@@ -111,36 +111,36 @@ function main()
 			回城()
 			goto begin
 		end
-		移动(473, 316)	
+		自动寻路(473, 316)	
 		对话选是(472,316)		
 	else								--西门 
 		if(目标是否可达(351, 145)==false)then
 			回城()
 			goto begin
 		end
-		移动(351, 145,11013)	
+		自动寻路(351, 145,11013)	
 	end
 	goto begin   
 ::map11013::		--国营第24坑道
-	移动(22, 22,11014)		
+	自动寻路(22, 22,11014)		
 	goto begin	
 ::map11014::		--国营第24坑道  地下2楼	
 	if(目标是否可达(22,21))then
-		移动(22, 21)
+		自动寻路(22, 21)
 		转向(0)
 	else
-		移动(23, 13,11500)
+		自动寻路(23, 13,11500)
 	end
 	goto begin
 ::map11500::		--国营第24坑道  地下3楼
-	移动(6,3,11502)
+	自动寻路(6,3,11502)
 ::map11502::		--国营第24坑道  地下4楼
-	移动(30,20)
+	自动寻路(30,20)
 	设置("移动速度",走路还原值)
 	StartWork()		
 	goto begin		
 ::map11000::						--莎莲娜西方洞窟
-	移动(49, 66)
+	自动寻路(49, 66)
 	设置("移动速度",走路还原值)
 	StartWork()		
 	goto begin	

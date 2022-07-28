@@ -113,10 +113,10 @@ function 营地商店检测水晶(crystalName,equipsProtectValue,buyCount)
 	--买水晶
 	local 当前地图名 = 取当前地图名()
 	if(当前地图名 == "商店")then 
-		移动(14,26)
+		自动寻路(14,26)
 	elseif(当前地图名 == "圣骑士营地")then 
-		移动(92, 118,"商店")
-		移动(14,26)
+		自动寻路(92, 118,"商店")
+		自动寻路(14,26)
 	else
 		return
 	end
@@ -126,17 +126,17 @@ function 营地商店检测水晶(crystalName,equipsProtectValue,buyCount)
 	扔(7)--扔旧的
 	等待(1000)	--等待刷新
 	使用物品(crystalName)	
-	移动(0,14,"圣骑士营地")	
+	自动寻路(0,14,"圣骑士营地")	
 end
 
 function 营地存取金币(金额,存取)
 	if(金额==nil) then return end
 	local 当前地图名 = 取当前地图名()
 	if(当前地图名 == "银行")then 
-		移动(27,23)
+		自动寻路(27,23)
 	elseif(当前地图名 == "圣骑士营地")then 
-		移动(116, 105,"银行")
-		移动(27,23)
+		自动寻路(116, 105,"银行")
+		自动寻路(27,23)
 	else
 		return
 	end
@@ -178,18 +178,18 @@ function 五转碎片()
 	goto begin
 ::yingDiShangDian::
 	营地商店检测水晶()
-	移动(0,14,"圣骑士营地")	
+	自动寻路(0,14,"圣骑士营地")	
 	goto begin
 ::yingDiYinHang::
-	移动(3,23,"圣骑士营地")	
+	自动寻路(3,23,"圣骑士营地")	
 	goto begin
 ::gongFang::
-	移动( 30, 37)
+	自动寻路( 30, 37)
     等待到指定地图("圣骑士营地",87,72)     
 	goto begin
 ::quYiYuan::
-	移动( 95, 73)
-	移动( 95, 72)
+	自动寻路( 95, 73)
+	自动寻路( 95, 72)
 	goto begin 
 ::quYingDi::
 	设置("移动速度",走路加速值)
@@ -226,13 +226,13 @@ function 五转碎片()
 			离开队伍()
 		end				
 	end	
-	移动(9,14)	
+	自动寻路(9,14)	
 	等待(1000)
 	waitAddTeam()
 	goto begin   
 
 ::huiYingDi::
-	移动(551, 332,"圣骑士营地")
+	自动寻路(551, 332,"圣骑士营地")
 	goto begin
                
 ::scriptstart::	

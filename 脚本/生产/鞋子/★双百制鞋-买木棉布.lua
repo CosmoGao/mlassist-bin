@@ -79,9 +79,9 @@ function main()
 	if(取物品叠加数量('木棉布') < 木棉布数量)then
 		if(取当前地图名() ~= "流行商店")then
 			common.gotoFaLanCity()
-			移动(117, 112,"流行商店")
+			自动寻路(117, 112,"流行商店")
 		end
-		移动(8,7)
+		自动寻路(8,7)
 		转向(0)
 		等待服务器返回()		
 		对话选择(0, 0)
@@ -91,7 +91,7 @@ function main()
 	end	
 	叠("鹿皮", 40)	
 	common.toCastle()
-	移动(28,91)
+	自动寻路(28,91)
 	goto waitTrade
 ::waitTrade::
 	if(取物品叠加数量('木棉布') >= 木棉布数量)then
@@ -106,7 +106,7 @@ function main()
 	if(取当前地图名()~= "里谢里雅堡")then
 		回城()
 		common.toCastle()
-		移动(28,91)
+		自动寻路(28,91)
 	end
 	设置("timer",0)	
 	if(tradeName ~= nil)then	

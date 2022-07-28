@@ -139,20 +139,20 @@ function 半山练级(目标等级)
 		goto falanw
 	else
 		common.toCastle("f2")
-		移动(0,74,"图书室")
+		自动寻路(0,74,"图书室")
 		goto library
 	end
 	goto begin
 ::library::					--图书室
 	扔("锄头")
-	移动(27,16)
+	自动寻路(27,16)
 	设置("移动速度",走路还原值)
 	对话选是(27,15)
 	goto begin
 ::falanw::	--西门
 	common.outFaLan("w")
-	移动(396,168)
-	移动(397,168)
+	自动寻路(396,168)
+	自动寻路(397,168)
 	对话选是(398,168)
 	goto begin
 ::island::
@@ -166,7 +166,7 @@ function 半山练级(目标等级)
 		end
 		goto toMaze
 	end
-	移动(66, 97)
+	自动寻路(66, 97)
 	--组队
 ::makeTeam::
 	喊话("脚本启动等待",06,0,0)	
@@ -179,8 +179,8 @@ function 半山练级(目标等级)
 	end
 	goto island
 ::toMaze::	
-	移动(65, 46)
-	移动(64,45,"通往山顶的路100M")
+	自动寻路(65, 46)
+	自动寻路(64,45,"通往山顶的路100M")
 	goto crossMaze
 ::crossMaze::
 	自动穿越迷宫("半山腰")
@@ -197,7 +197,7 @@ function 半山练级(目标等级)
 	if(取当前地图名() ~= "半山腰")then
 		goto begin
 	end
-	移动(60, 65) 
+	自动寻路(60, 65) 
 	等待(1000)
 	开始遇敌()                 
 ::scriptstart::
@@ -274,20 +274,20 @@ function teammateAction()
 		goto falanw
 	else
 		common.toCastle("f2")
-		移动(0,74,"图书室")
+		自动寻路(0,74,"图书室")
 		goto library
 	end
 	goto begin
 ::library::					--图书室
 	扔("锄头")
-	移动(27,16)
+	自动寻路(27,16)
 	设置("移动速度",走路还原值)
 	对话选是(27,15)
 	goto begin
 ::falanw::	--西门
 	common.outFaLan("w")
-	移动(396,168)
-	移动(397,168)
+	自动寻路(396,168)
+	自动寻路(397,168)
 	对话选是(398,168)
 	goto begin
 ::island::
@@ -295,7 +295,7 @@ function teammateAction()
 		goto begin
 	end	
 	if(人物("坐标") ~= "65,97")then
-		移动(65,97)
+		自动寻路(65,97)
 		common.checkHealth(医生名称)--一个人 如果受伤 则回城		
 		goto begin
 	end

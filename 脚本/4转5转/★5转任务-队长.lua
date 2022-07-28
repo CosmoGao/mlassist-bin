@@ -132,15 +132,15 @@ function FindMaze()
 		
 		for index,u in ipairs(units) do			
 			if ((u.flags & 4096)~=0 and u.model_id > 0) then				
-				移动(u.x,u.y)
+				自动寻路(u.x,u.y)
 				等待空闲()			
 				if(取当前地图名() == 五转洞名称)then
 					return true
 				else--出去
 					local curx,cury = 取当前坐标()
 					local tx,ty=取周围空地(curx,cury,1)--取当前坐标指定距离范围内 空地
-					移动(tx,ty)
-					移动(curx,cury)		
+					自动寻路(tx,ty)
+					自动寻路(curx,cury)		
 					等待空闲()
 				end
 			end
@@ -164,7 +164,7 @@ function findHoleEntry(mazeName)
 	local findMazeList=targetEntryArr[mazeName]
 	local mazeModelID=targetModelID[mazeName]
 	for index,pos in ipairs(findMazeList) do						
-		移动(pos[1],pos[2])	
+		自动寻路(pos[1],pos[2])	
 		if(common.findAroundMazeEx(五转洞名称,mazeModelID) == true)then
 			return true
 		end
@@ -204,10 +204,10 @@ function 营地商店检测水晶(crystalName,equipsProtectValue,buyCount)
 	--买水晶
 	local 当前地图名 = 取当前地图名()
 	if(当前地图名 == "商店")then 
-		移动(14,26)
+		自动寻路(14,26)
 	elseif(当前地图名 == "圣骑士营地")then 
-		移动(92, 118,"商店")
-		移动(14,26)
+		自动寻路(92, 118,"商店")
+		自动寻路(14,26)
 	else
 		return
 	end
@@ -217,17 +217,17 @@ function 营地商店检测水晶(crystalName,equipsProtectValue,buyCount)
 	扔(7)--扔旧的
 	等待(1000)	--等待刷新
 	使用物品(crystalName)	
-	移动(0,14,"圣骑士营地")	
+	自动寻路(0,14,"圣骑士营地")	
 end
 
 function 营地存取金币(金额,存取)
 	if(金额==nil) then return end
 	local 当前地图名 = 取当前地图名()
 	if(当前地图名 == "银行")then 
-		移动(27,23)
+		自动寻路(27,23)
 	elseif(当前地图名 == "圣骑士营地")then 
-		移动(116, 105,"银行")
-		移动(27,23)
+		自动寻路(116, 105,"银行")
+		自动寻路(27,23)
 	else
 		return
 	end
@@ -243,18 +243,18 @@ function 十层去下面()
 	local mazeEnt = 取迷宫出入口()
 	for i,v in ipairs(mazeEnt) do
 		if(目标是否可达(v.x,v.y))then
-			移动(v.x,v.y)
+			自动寻路(v.x,v.y)
 		end
 	end
 	-- local u =common.findAroundMaze()
 	-- if(u~= nil)then
-		-- 移动(u.x,u.y)		
+		-- 自动寻路(u.x,u.y)		
 	-- else
 		-- local x,y=取迷宫远近坐标(false)
-		-- 移动(x,y)
+		-- 自动寻路(x,y)
 		-- if(x==0 and y==0)then
 			-- x,y=取迷宫远近坐标(true)
-			-- 移动(x,y)
+			-- 自动寻路(x,y)
 		-- end
 	-- end	
 end
@@ -273,7 +273,7 @@ function 五转任务()
 	local x,y=取当前坐标()		
 	if (当前地图名 =="艾尔莎岛" )then goto quYingDi
 	elseif(取当前地图编号() == 27315) then
-		移动(23,25)
+		自动寻路(23,25)
 		对话选是(24,24)	
 		goto begin
 	elseif (string.find(当前地图名,"隐秘之洞")~= nil )then goto 穿越迷宫
@@ -293,13 +293,13 @@ function 五转任务()
 ::outMaze::
 	curx,cury = 取当前坐标()
 	tx,ty=取周围空地(curx,cury,1)--取当前坐标指定距离范围内 空地
-	移动(tx,ty)
-	移动(curx,cury)		
+	自动寻路(tx,ty)
+	自动寻路(curx,cury)		
 	等待空闲()
 	goto begin
 ::yingDiShangDian::
 	营地商店检测水晶()
-	移动(0,14,"圣骑士营地")	
+	自动寻路(0,14,"圣骑士营地")	
 	goto begin
 ::yingDiYinHang::
 	if(人物("金币") > 950000)then
@@ -307,16 +307,16 @@ function 五转任务()
 	elseif(人物("金币") <50000)then
 		营地存取金币(-300000,"取")	--取出后 身上总30万
 	end
-	移动(3,23,"圣骑士营地")	
+	自动寻路(3,23,"圣骑士营地")	
 	goto begin
 ::kenDaoPanDuan::
 	if(目标是否可达(232,439) == false) then --营地这边岛 去黑龙
 		goto lu4
 	end
 	--矮人这边 回营地去黑一		
-	移动(307, 362,"蜥蜴洞穴")
-	移动(12, 12)
-	移动(12, 13,"肯吉罗岛")
+	自动寻路(307, 362,"蜥蜴洞穴")
+	自动寻路(12, 12)
+	自动寻路(12, 13,"肯吉罗岛")
 	等待(1000)
 	等待空闲()
 	goto lu4
@@ -332,7 +332,7 @@ function 五转任务()
 ::StartBegin::
 	喊话("脚本启动等待",06,0,0)
 	等待(1000)
-	移动(9,15)
+	自动寻路(9,15)
 	if(取当前地图名() ~= "医院")then
 		goto begin
 	end
@@ -362,15 +362,15 @@ function 五转任务()
 		goto toland
 	end
 ::lu1a::   
-	移动( 87, 72)      
+	自动寻路( 87, 72)      
 	goto lu2 
 ::lu2::
 	--等待到指定地图("工房",30,37)
 	等待到指定地图("工房")
-	移动(21,22)
-	移动(20,22)
-	移动(20,24)
-	移动(21,24)      
+	自动寻路(21,22)
+	自动寻路(20,22)
+	自动寻路(20,24)
+	自动寻路(21,24)      
 	等待(2000)
 	goto sale 
 
@@ -380,11 +380,11 @@ function 五转任务()
 	goto lu3 
 ::lu3::      
 	等待到指定地图("工房",21,24)    
-	移动( 30, 37)
+	自动寻路( 30, 37)
 	等待到指定地图("圣骑士营地",87,72)    
 ::toland::
-	移动(80, 87)
-	移动(36,87)      
+	自动寻路(80, 87)
+	自动寻路(36,87)      
 	goto lu4 
 ::lu4::
 	等待到指定地图("肯吉罗岛")	 
@@ -417,7 +417,7 @@ function 五转任务()
 		等待(3000)
 		curx,cury = 取当前坐标()
 		tgtx,tgty = 取周围空地(curx,cury,1)--取当前坐标1格范围内 空地
-		移动(tgtx,tgty)
+		自动寻路(tgtx,tgty)
 		common.makeTeam(队伍人数)
 		if(队伍("人数")==队伍人数)then
 			十层去下面()	
@@ -454,7 +454,7 @@ function 五转任务()
 	当前迷宫楼层=取当前楼层(取当前地图名())	--从地图名取楼层
 	if(当前迷宫楼层 < 上次迷宫楼层 )then	--反了
 		tx,ty=取迷宫远近坐标(false)	--取最近迷宫坐标
-		移动(tx,ty)		
+		自动寻路(tx,ty)		
 		当前迷宫楼层=取当前楼层(取当前地图名())	
 	end	
 	上次迷宫楼层=当前迷宫楼层
@@ -505,8 +505,8 @@ function 五转任务()
 			if(取当前地图名() == "隐秘之洞地下2层") then	--反了
 				local curx,cury = 取当前坐标()
 				local tx,ty=取周围空地(curx,cury,1)--取当前坐标指定距离范围内 空地
-				移动(tx,ty)
-				移动(curx,cury)			
+				自动寻路(tx,ty)
+				自动寻路(curx,cury)			
 				等待空闲() 	
 				if(取当前地图名() == "隐秘之洞地下1层") then	
 					自动迷宫(1,"",1)	
@@ -518,11 +518,11 @@ function 五转任务()
 			goto begin
 		end		
 	else
-		移动(outMazeX,outMazeY)
+		自动寻路(outMazeX,outMazeY)
 	end	
 	等待空闲() 	
 	if(取当前地图名() == "肯吉罗岛")then
-		移动(551, 332,"圣骑士营地")	
+		自动寻路(551, 332,"圣骑士营地")	
 		goto quYiYuan
 	elseif(取当前地图名() ~= "隐秘之洞地下1层" and 取当前地图名() ~= "隐秘之洞地下2层") then	
 		--不知道在哪 登出回城
@@ -533,50 +533,50 @@ function 五转任务()
 	goto begin
 ::quYiYuan::
 	if(取物品数量("洛伊夫的护身符") < 1)then
-		移动( 99, 84)
+		自动寻路( 99, 84)
 		对话选是(100,84)
 	end
 	if(取物品数量("隐秘的水晶（风）") < 1 and 取物品数量("净化的烈风碎片") < 1)then
-		移动( 99, 84)
+		自动寻路( 99, 84)
 		对话选是(100,84)
 	end
 	if(取物品数量("隐秘的水晶（水）") < 1 and 取物品数量("净化的流水碎片") < 1 )then
-		移动( 99, 84)
+		自动寻路( 99, 84)
 		对话选是(100,84)
 	end
 	if(取物品数量("隐秘的水晶（火）") < 1 and 取物品数量("净化的火焰碎片") < 1)then
-		移动( 99, 84)
+		自动寻路( 99, 84)
 		对话选是(100,84)
 	end
 	if(取物品数量("隐秘的水晶（地）") < 1 and 取物品数量("净化的大地碎片") < 1)then
-		移动( 99, 84)
+		自动寻路( 99, 84)
 		对话选是(100,84)
 	end
-	移动( 94, 72)
-	移动( 95, 72)
+	自动寻路( 94, 72)
+	自动寻路( 95, 72)
 	goto lu6 
 ::lu6::
 	等待到指定地图("医院", 0, 20)     
 	goto begin
 ::xue::
-	移动(14,20)
-	移动(18,16)
-	移动(18,15)
-	移动(17,15)
-	移动(19,15)
-	移动(18,15)     
+	自动寻路(14,20)
+	自动寻路(18,16)
+	自动寻路(18,15)
+	自动寻路(17,15)
+	自动寻路(19,15)
+	自动寻路(18,15)     
 	回复(0)			-- 转向北边恢复人宠血魔      
 	等待(15000)                   --等待X秒等候队友反应 
 	if(宠物("健康") > 0) then	
-		移动(6,7)
-		移动(8,7)
-		移动(6,7)
+		自动寻路(6,7)
+		自动寻路(8,7)
+		自动寻路(6,7)
 		转向坐标(7,6)
 		等待服务器返回()
 		对话选择(-1,6)		
 	end
-	移动(1,20)   
-    移动(0,20)      
+	自动寻路(1,20)   
+    自动寻路(0,20)      
     goto lu1 
 ::goEnd::
 	return
@@ -585,7 +585,7 @@ end
 function battleBoss()	
 	if(目标是否可达(24,19))then	--风 27313
 		if(是否战斗中()==false)then
-			移动(24,19)
+			自动寻路(24,19)
 			转向(4)
 			对话选是(4)
 			等待(5000)
@@ -602,7 +602,7 @@ function battleBoss()
 	end
 	if(目标是否可达(24,29))then		--水 27307		
 		if(是否战斗中()==false)then
-			移动(24,29)
+			自动寻路(24,29)
 			转向(0)
 			对话选是(0)
 			等待(5000)
@@ -619,7 +619,7 @@ function battleBoss()
 	end
 	if(目标是否可达(29,24))then		--27310  火
 		if(是否战斗中()==false)then
-			移动(29,24)
+			自动寻路(29,24)
 			转向(6)
 			对话选是(6)
 			等待(5000)
@@ -644,7 +644,7 @@ function battleBoss()
 			end
 		end
 		if(是否战斗中()==false)then
-			移动(19,24)
+			自动寻路(19,24)
 			转向(2)
 			对话选是(2)
 			等待(5000)
@@ -660,7 +660,7 @@ function battleBoss()
 		end
 	end
 	if(取当前地图编号() == 27315) then
-		移动(23,25)
+		自动寻路(23,25)
 		对话选是(24,24)
 	end
 	--27315  隐秘之洞 最底层   23 25，对话24 24

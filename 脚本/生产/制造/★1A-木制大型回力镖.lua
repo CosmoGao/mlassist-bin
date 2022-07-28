@@ -37,9 +37,9 @@ end
 --换矿
 function StartRefine()
 	common.gotoFaLanCity("w1")		
-	移动(106, 61,"米克尔工房")	
+	自动寻路(106, 61,"米克尔工房")	
 	common.faLanExchangeMine(矿石名)	
-	移动(26,24,"法兰城")
+	自动寻路(26,24,"法兰城")
 end
 function 采集印度轻木()
 	while true do
@@ -68,8 +68,8 @@ function main()
 	end	
 	if(取物品数量(制造物品名) >= 1)then
 		common.toCastle()
-		移动(40, 98,"法兰城")	
-		移动(150, 123)
+		自动寻路(40, 98,"法兰城")	
+		自动寻路(150, 123)
 		卖(0,制造物品名)	
 		goto begin
 	end
@@ -82,14 +82,14 @@ function main()
 		end		
 		if(取物品叠加数量('铜条')< 铜条数量)then	
 			common.outFaLan("w")	--西门
-			移动(351, 145,11013)			
+			自动寻路(351, 145,11013)			
 			采集铜矿()
 		end				
 		goto begin
 	end
 	if(取物品叠加数量('印度轻木')< 印度轻木数量)then			
 		common.outFaLan("w")	--西门
-		移动(362, 184)
+		自动寻路(362, 184)
 		采集印度轻木()
 		goto begin
 	end				

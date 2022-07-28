@@ -260,7 +260,7 @@ function common.joinTeam(leaderName,tryCount)
 	if(tryNum>tryCount)then
 		return
 	end
-	移动(orix,oriy)
+	自动寻路(orix,oriy)
 	goto begin	
 end
 
@@ -312,7 +312,7 @@ function common.findAroundMaze()
 	end	
 	return nil
 end
---查找周围迷宫，有名字则移动进入
+--查找周围迷宫，有名字则自动寻路进入
 function common.findAroundMazeEx(mazeName,modelid)
 	if(mazeName == nil) then
 		return false
@@ -322,15 +322,15 @@ function common.findAroundMazeEx(mazeName,modelid)
 		for index,u in ipairs(units) do			
 			if ((u.flags & 4096)~= 0 and u.model_id > 0) then	
 				if(modelid==nil or (modelid~=nil and u.model_id == modelid))then
-					移动(u.x,u.y)
+					自动寻路(u.x,u.y)
 					等待空闲()
 					if(取当前地图名() == mazeName)then
 						return true
 					else--出去
 						local curx,cury = 取当前坐标()
 						local tx,ty=取周围空地(curx,cury,1)--取当前坐标指定距离范围内 空地
-						移动(tx,ty)
-						移动(curx,cury)		
+						自动寻路(tx,ty)
+						自动寻路(curx,cury)		
 						等待空闲()
 					end
 				end
@@ -351,7 +351,7 @@ function common.toCastle(warpPos)
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
 	if (当前地图名=="艾尔莎岛" )then			
-		移动(140,105)				
+		自动寻路(140,105)				
 		转向(1)
 		等待服务器返回()
 		对话选择(4,0)
@@ -361,10 +361,10 @@ function common.toCastle(warpPos)
 		goto checkPos	
 	elseif (当前地图名=="法兰城" )then		
 		common.gotoFaLanCity("s1")
-		移动(153,100,"里谢里雅堡")
+		自动寻路(153,100,"里谢里雅堡")
 		goto checkPos	
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
-		移动( 3, 7)	
+		自动寻路( 3, 7)	
 		等待到指定地图("里谢里雅堡")		
 		goto checkPos
 	end	
@@ -373,33 +373,33 @@ function common.toCastle(warpPos)
 	goto dengru
 ::checkPos::
 	if(warpPos == nil) then
-		移动(27,82)	--艾岛上来传送点
+		自动寻路(27,82)	--艾岛上来传送点
 		goto goEnd
 	end
 	if(warpPos == "c") then	--clock打卡处
-		移动(58, 83)	--
+		自动寻路(58, 83)	--
 	elseif(warpPos == "召唤之间")then--召唤之间
-		移动(47,85,"召唤之间")
+		自动寻路(47,85,"召唤之间")
 	elseif(warpPos == "回廊")then--回廊
-		移动(47,85,"召唤之间")		
-		移动(27,8,"回廊")	
+		自动寻路(47,85,"召唤之间")		
+		自动寻路(27,8,"回廊")	
 	elseif(warpPos == "灵堂")then--灵堂
-		移动(47,85,"召唤之间")		
-		移动(27,8,"回廊")		
-		移动(23,19,"灵堂")
+		自动寻路(47,85,"召唤之间")		
+		自动寻路(27,8,"回廊")		
+		自动寻路(23,19,"灵堂")
 	elseif(warpPos == "f1")then--里堡1层
-		移动(41,50,"里谢里雅堡 1楼")			
+		自动寻路(41,50,"里谢里雅堡 1楼")			
 	elseif(warpPos == "f2")then--里堡1层
-		移动(41,50,"里谢里雅堡 1楼")	
-		移动(74,19,"里谢里雅堡 2楼")
+		自动寻路(41,50,"里谢里雅堡 1楼")	
+		自动寻路(74,19,"里谢里雅堡 2楼")
 	elseif(warpPos == "f3")then--谒见之间
-		移动(41,50,"里谢里雅堡 1楼")	
-		移动(74,19,"里谢里雅堡 2楼")	
-		移动(49,22,"谒见之间")	
+		自动寻路(41,50,"里谢里雅堡 1楼")	
+		自动寻路(74,19,"里谢里雅堡 2楼")	
+		自动寻路(49,22,"谒见之间")	
 	elseif(warpPos == "l")then--图书室
-		移动(41,50,"里谢里雅堡 1楼")	
-		移动(74,19,"里谢里雅堡 2楼")	
-		移动(0, 74,"图书室")
+		自动寻路(41,50,"里谢里雅堡 1楼")	
+		自动寻路(74,19,"里谢里雅堡 2楼")	
+		自动寻路(0, 74,"图书室")
 	end
 ::goEnd::
 	return
@@ -425,7 +425,7 @@ function common.supplyCastle()
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
 	if (当前地图名=="艾尔莎岛" )then			
-		移动(140,105)				
+		自动寻路(140,105)				
 		转向(1)
 		等待服务器返回()
 		对话选择(4,0)
@@ -434,7 +434,7 @@ function common.supplyCastle()
 	elseif (当前地图名=="里谢里雅堡" )then	
 		goto liBao		
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
-		移动( 3, 7)	
+		自动寻路( 3, 7)	
 		等待到指定地图("里谢里雅堡")	
 		goto liBao
 	elseif (当前地图名=="法兰城" )then	--登出 bank
@@ -446,7 +446,7 @@ function common.supplyCastle()
 	等待(2000)
 	goto begin
 ::liBao::		
-	移动(34,89)
+	自动寻路(34,89)
 	回复(1)		
 	goto goEnd
 ::goEnd::
@@ -516,7 +516,7 @@ function common.sellCastlePile(saleItem,count,maxCount)
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
 	if (当前地图名=="艾尔莎岛" )then			
-		移动(140,105)				
+		自动寻路(140,105)				
 		转向(1)
 		等待服务器返回()
 		对话选择(4,0)		
@@ -526,7 +526,7 @@ function common.sellCastlePile(saleItem,count,maxCount)
 	elseif (当前地图名=="工房" )then	
 		goto gongFang
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
-		移动( 3, 7)	
+		自动寻路( 3, 7)	
 		等待到指定地图("里谢里雅堡")	
 		goto liBao
 	end	
@@ -538,7 +538,7 @@ function common.sellCastlePile(saleItem,count,maxCount)
 		等待(2000)
 		goto begin
 	end
-	移动(31,77)		
+	自动寻路(31,77)		
 	common.sellPileDir(6,saleItem,count,maxCount)	
 	goto goEnd
 ::gongFang::	
@@ -553,8 +553,8 @@ end
 --法兰武器商人卖制造物品 1个起卖
 function common.sellFaLanPile(saleItem)
 	common.gotoFaLanCity()
-	--移动(40, 98,"法兰城")	
-	移动(150, 123)
+	--自动寻路(40, 98,"法兰城")	
+	自动寻路(150, 123)
 	卖(0,saleItem)		
 end
 
@@ -586,7 +586,7 @@ function common.sellCastle(saleItems)
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
 	if (当前地图名=="艾尔莎岛" )then			
-		移动(140,105)				
+		自动寻路(140,105)				
 		转向(1)
 		等待服务器返回()
 		对话选择(4,0)		
@@ -596,7 +596,7 @@ function common.sellCastle(saleItems)
 	elseif (当前地图名=="工房" )then	
 		goto gongFang
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
-		移动( 3, 7)	
+		自动寻路( 3, 7)	
 		等待到指定地图("里谢里雅堡")	
 		goto liBao
 	end	
@@ -608,7 +608,7 @@ function common.sellCastle(saleItems)
 		等待(2000)
 		goto begin
 	end
-	移动(31,77)		
+	自动寻路(31,77)		
 	for i,item in ipairs(saleList)do
 		if(取物品数量(item) > 0) then
 			卖(6,item)
@@ -663,27 +663,27 @@ function common.localBuyCrystal(crystalName,buyCount)
 		return false
 	end	
 ::aiDao::
-	移动(157,94)	
+	自动寻路(157,94)	
 	转向坐标(158,93,"艾夏岛")	
-	移动(150,125)	
+	自动寻路(150,125)	
 	等待到指定地图("克罗利的店", 20,23)			
-	移动(39,23)
-	移动(40,23)	
+	自动寻路(39,23)
+	自动寻路(40,23)	
 	转向(2)
 	goto buy
 ::liBao::
-	移动(17,53,"法兰城")
+	自动寻路(17,53,"法兰城")
 	goto faLan
 ::yingdi::
-	移动(92,118,"商店")
+	自动寻路(92,118,"商店")
 ::yingdiShangDian::	
-	移动(14,26)
+	自动寻路(14,26)
 	转向(2)	
 	goto buy
 
 ::faLan::
-	移动(94,78,"达美姊妹的店")	
-	移动(17,18)
+	自动寻路(94,78,"达美姊妹的店")	
+	自动寻路(17,18)
 	等待(1000)
 	转向(2)	
 	goto buy
@@ -742,8 +742,8 @@ function common.buyCrystal(crystalName,buyCount)
 		return
 	end
 	common.gotoFaLanCity("w1")
-	移动(94,78,"达美姊妹的店")	
-	移动(17,18)
+	自动寻路(94,78,"达美姊妹的店")	
+	自动寻路(17,18)
 	等待(1000)
 	转向(2)
 	等待服务器返回()	
@@ -828,13 +828,13 @@ function common.buyPopulaceEquip(equipName,buyCount)
 	common.gotoFaLanCity()
 	local sWeapon="平民剑|平民斧|平民枪|平民弓|平民回力镖|平民小刀|平民杖"
 	if(string.find(sWeapon,equipName) ~= nil)then
-		--移动(40, 98,"法兰城")	
-		移动(150, 123)
+		--自动寻路(40, 98,"法兰城")	
+		自动寻路(150, 123)
 		转向(0)
 		等待服务器返回()
 		common.buyDstItem(equipName,buyCount)	
 	else
-		移动(156, 123)
+		自动寻路(156, 123)
 		转向(0)
 		等待服务器返回()
 		common.buyDstItem(equipName,buyCount)	
@@ -857,9 +857,9 @@ function common.recallSoul()
 	if 人物("灵魂") > 0  then
 		日志("人物掉魂：登出招魂")
 		common.outCastle("n")--出城堡北门	
-		移动(154, 29,"大圣堂的入口")				
-		移动(14, 7,"礼拜堂")		
-		移动(12, 19)	
+		自动寻路(154, 29,"大圣堂的入口")				
+		自动寻路(14, 7,"礼拜堂")		
+		自动寻路(12, 19)	
 		对话选是(0)
 		if tryCount > 3 then return end
 		
@@ -889,11 +889,11 @@ function common.healPlayer(doctorName)
 	end
 	common.toCastle()
 ::liBao::
-	移动(34, 89)
+	自动寻路(34, 89)
 	等待(2000)
 	回复(1)			
 ::reTry::	
-	移动(29, 85)
+	自动寻路(29, 85)
 	if 人物("健康") == 0 then
 		离开队伍()
 		return
@@ -1037,8 +1037,8 @@ function common.healPet()
 	--宠物受伤 登出治伤
 	日志("宠物受伤：登出治伤")
 	common.gotoFaLanCity("e2")
-	移动(221,83,"医院")
-	移动(12, 18)
+	自动寻路(221,83,"医院")
+	自动寻路(12, 18)
 	local tryNum=0
 ::zhiLiao::
 	转向坐标(10,18)
@@ -1090,9 +1090,9 @@ function common.gleRecallSoul()
 		common.toGle()
 		转向(0)
 		等待(1000)
-		移动(140,214,"白之宫殿")
-		移动(47, 36, 43210)
-		移动(61, 46)
+		自动寻路(140,214,"白之宫殿")
+		自动寻路(47, 36, 43210)
+		自动寻路(61, 46)
 		对话选是(2)
 		等待(1000)		
 	end
@@ -1103,8 +1103,8 @@ function common.gleSupply()
 		return
 	end
 	if (取当前地图名()~="哥拉尔镇" )then common.toGle() end			
-	移动(165,91,"医院")
-	移动(29,26)	
+	自动寻路(165,91,"医院")
+	自动寻路(29,26)	
 	回复(30,26)	
 end
 
@@ -1113,12 +1113,12 @@ function common.gleHealPlayer(doctorName)
 	if( 人物("健康") > 0  or 宠物("健康") > 0)then
 		common.toGle()
 		日志("人物受伤")
-		移动(165,91,"医院")
-		移动(29,15)
+		自动寻路(165,91,"医院")
+		自动寻路(29,15)
 		转向(2)
 		等待服务器返回()
 		对话选择(-1,6)
-		移动(29,26)
+		自动寻路(29,26)
 		回复(30,26)	
 	end      
 end
@@ -1345,15 +1345,15 @@ function common.toTeleRoom(villageName)
 	elseif(villageName == "魔法大学")then
 		data = warpList["阿巴尼斯村"]
 		common.toTeleRoomTemplate(data)
-		移动(5, 4, 4313)
-		移动(6, 13, 4312)
-		移动(6, 13, "阿巴尼斯村")
-		移动(37, 71,"莎莲娜")
-		移动(118, 100,"魔法大学")
+		自动寻路(5, 4, 4313)
+		自动寻路(6, 13, 4312)
+		自动寻路(6, 13, "阿巴尼斯村")
+		自动寻路(37, 71,"莎莲娜")
+		自动寻路(118, 100,"魔法大学")
 	elseif(villageName == "咒术师的秘密住处")then		
 		common.toCastle("f1")
-		移动(45,20,"启程之间")	
-		移动(15, 4)	
+		自动寻路(45,20,"启程之间")	
+		自动寻路(15, 4)	
 		离开队伍()
 		转向(2)
 		dlg=等待服务器返回()
@@ -1368,19 +1368,19 @@ function common.toTeleRoom(villageName)
 	::jiecun::
 --		common.toTeleRoom("杰诺瓦镇")
 		等待到指定地图("杰诺瓦镇的传送点")
-		移动(14, 6,"村长的家")
-		移动(1, 9,"杰诺瓦镇")
-		移动(24, 40,"莎莲娜")
-		移动(196, 443,"莎莲娜海底洞窟 地下1楼")	
-		移动(14, 41,"莎莲娜海底洞窟 地下2楼")
-		移动(32, 21)
+		自动寻路(14, 6,"村长的家")
+		自动寻路(1, 9,"杰诺瓦镇")
+		自动寻路(24, 40,"莎莲娜")
+		自动寻路(196, 443,"莎莲娜海底洞窟 地下1楼")	
+		自动寻路(14, 41,"莎莲娜海底洞窟 地下2楼")
+		自动寻路(32, 21)
 		转向(5, "")
 		等待服务器返回()	
 		喊话("咒术",0,0,0)	
 		等待服务器返回()
 		对话选择("1", "", "")
 		等待到指定地图("莎莲娜海底洞窟 地下2楼",31,22)	
-		移动(38, 37,"咒术师的秘密住处")		
+		自动寻路(38, 37,"咒术师的秘密住处")		
 	else
 		日志("未知地图名称！",1)
 	end
@@ -1391,7 +1391,7 @@ function common.toTeleRoomTemplate(warpData)
 	x,y=取当前坐标()	
 	当前地图名 = 取当前地图名()
 	if (当前地图名=="艾尔莎岛" )then	
-		移动(140,105)	
+		自动寻路(140,105)	
 		转向(1)
 		等待服务器返回()	
 		对话选择(4,0)	
@@ -1409,19 +1409,19 @@ function common.toTeleRoomTemplate(warpData)
 		等待(2000)
 		goto Begin
 	end		
-	移动(41,50,"里谢里雅堡 1楼")
+	自动寻路(41,50,"里谢里雅堡 1楼")
 ::map1520::
-	移动(45,20,"启程之间")	
+	自动寻路(45,20,"启程之间")	
 ::map1522::
-	移动(25, 27) 	
+	自动寻路(25, 27) 	
 	if (是否队长()) then
-		移动(warpData[1].x,warpData[1].y)
-		移动(warpData[2].x,warpData[2].y)
-		移动(warpData[1].x,warpData[1].y)
-		移动(warpData[2].x,warpData[2].y)
-		移动(warpData[1].x,warpData[1].y)	
+		自动寻路(warpData[1].x,warpData[1].y)
+		自动寻路(warpData[2].x,warpData[2].y)
+		自动寻路(warpData[1].x,warpData[1].y)
+		自动寻路(warpData[2].x,warpData[2].y)
+		自动寻路(warpData[1].x,warpData[1].y)	
 	else
-		移动(warpData[1].x,warpData[1].y)	
+		自动寻路(warpData[1].x,warpData[1].y)	
 	end
 	
 ::warpTalk::
@@ -1542,7 +1542,7 @@ function common.gotoFaLanCity(storeName)
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
 	if (当前地图名=="艾尔莎岛" )then			
-		移动(140,105)				
+		自动寻路(140,105)				
 		转向(1)
 		等待服务器返回()
 		对话选择(4,0)		
@@ -1552,7 +1552,7 @@ function common.gotoFaLanCity(storeName)
 	elseif (当前地图名=="法兰城" )then	
 		goto faLan
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
-		移动( 3, 7)	
+		自动寻路( 3, 7)	
 		等待到指定地图("里谢里雅堡")	
 		goto liBao
 	end	
@@ -1563,8 +1563,8 @@ function common.gotoFaLanCity(storeName)
 		等待(2000)
 		goto dengru
 	end
-	移动(41,98,"法兰城")	
-	移动(153, 130)		
+	自动寻路(41,98,"法兰城")	
+	自动寻路(153, 130)		
 	if(storeName==nil or storeName=="s")then
 		return
 	end
@@ -1608,7 +1608,7 @@ function common.gotoFaLanCity(storeName)
 				minDistance=tDis
 			end
 		end 
-		移动(nearPos.x,nearPos.y)
+		自动寻路(nearPos.x,nearPos.y)
 		tryNum=0
 		while 1 do
 			 x,y=取当前坐标()
@@ -1732,7 +1732,7 @@ function common.joinMissionary()
 	等待(1000)
 	goto begin
 ::erDao::	
-	移动(140,105)
+	自动寻路(140,105)
 	等待(500)	
 	转向(1)
 	等待服务器返回()
@@ -1747,12 +1747,12 @@ function common.joinMissionary()
 		等待(2000)
 		goto begin
 	end
-	移动(41,14,"法兰城")
-	移动(153,29,"大圣堂的入口")	
-	移动(14,7,"礼拜堂")
-	移动(23, 0,"大圣堂里面")
+	自动寻路(41,14,"法兰城")
+	自动寻路(153,29,"大圣堂的入口")	
+	自动寻路(14,7,"礼拜堂")
+	自动寻路(23, 0,"大圣堂里面")
 ::naXin::
-	移动(16,10)	
+	自动寻路(16,10)	
 	等待(1000)
 	if(取物品数量("僧侣适性检查合格证") < 1 and 取当前地图名() == "大圣堂里面")then
 		对话选是(4)	
@@ -1786,12 +1786,12 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(1000)				
 		end
 		common.gotoFaLanCity("s1")
-		移动(124, 161)
+		自动寻路(124, 161)
 		转向(6)
 		等待到指定地图("竞技场的入口", 15,23)	
-		移动(15,6)
+		自动寻路(15,6)
 		等待到指定地图("竞技场", 34,67)
-		移动(15,57)			
+		自动寻路(15,57)			
 		common.learnPlayerSkill(15,56)			
 	end
 	if(skillName=="乾坤一掷")then
@@ -1802,8 +1802,8 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(1000)				
 		end
 		common.gotoFaLanCity("w2")
-		移动(102,131,"安其摩酒吧")	
-		移动(10,13)			
+		自动寻路(102,131,"安其摩酒吧")	
+		自动寻路(10,13)			
 		common.learnPlayerSkill(11, 13)			
 	end
 	if(skillName=="调教")then
@@ -1814,10 +1814,10 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(1000)				
 		end
 		common.gotoFaLanCity("e1")
-		移动(219,136,"科特利亚酒吧")
-		移动(27,20,"酒吧里面")			
-		移动(10,6,"客房")	
-		移动(10,5)			
+		自动寻路(219,136,"科特利亚酒吧")
+		自动寻路(27,20,"酒吧里面")			
+		自动寻路(10,6,"客房")	
+		自动寻路(10,5)			
 		common.learnPlayerSkill(11, 5)			
 	end
 	if(skillName=="宠物强化")then
@@ -1828,8 +1828,8 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(1000)				
 		end
 		common.outCastle("n")
-		移动(122, 36,"饲养师之家")
-		移动(13,4)				
+		自动寻路(122, 36,"饲养师之家")
+		自动寻路(13,4)				
 		common.learnPlayerSkill(14, 4)			
 	end
 	-- if(skillName=="治疗")then
@@ -1840,7 +1840,7 @@ function common.autoLearnSkill(skillName)
 			-- common.getMoneyFromBank(1000)				
 		-- end
 		-- common.gotoFaLanCity("whospital")		
-		-- 移动(10,6)				
+		-- 自动寻路(10,6)				
 		-- common.learnPlayerSkill(10, 5)			
 	-- end
 	if(skillName=="补血魔法")then
@@ -1857,15 +1857,15 @@ function common.autoLearnSkill(skillName)
 		if(取当前地图编号() == 1207)then goto map1207 end
 		if(取当前地图编号() == 1208)then goto map1208 end
 		common.outCastle("n")
-		移动(153,29,"大圣堂的入口")	
-		移动(14,7,"礼拜堂")
-		移动(23, 0,"大圣堂里面")
+		自动寻路(153,29,"大圣堂的入口")	
+		自动寻路(14,7,"礼拜堂")
+		自动寻路(23, 0,"大圣堂里面")
 ::map1207::
-		移动(13, 7)
+		自动寻路(13, 7)
 		对话选是(14,6)
 ::map1208::
 		等待到指定地图(1208)	
-		移动(14, 11)		
+		自动寻路(14, 11)		
 		common.learnPlayerSkill(14, 10)			
 	end
 	if(skillName=="强力补血魔法")then
@@ -1882,15 +1882,15 @@ function common.autoLearnSkill(skillName)
 		if(取当前地图编号() == 1207)then goto map1207 end
 		if(取当前地图编号() == 1208)then goto map1208 end
 		common.outCastle("n")
-		移动(153,29,"大圣堂的入口")	
-		移动(14,7,"礼拜堂")
-		移动(23, 0,"大圣堂里面")
+		自动寻路(153,29,"大圣堂的入口")	
+		自动寻路(14,7,"礼拜堂")
+		自动寻路(23, 0,"大圣堂里面")
 ::map1207::
-		移动(13, 7)
+		自动寻路(13, 7)
 		对话选是(14,6)
 ::map1208::
 		等待到指定地图(1208)	
-		移动(19, 13)		
+		自动寻路(19, 13)		
 		common.learnPlayerSkill(19, 12)			
 	end
 	if(skillName=="石化魔法")then
@@ -1901,7 +1901,7 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(1000)				
 		end
 		common.outCastle("w")
-		移动(120, 65)							
+		自动寻路(120, 65)							
 		common.learnPlayerSkill(120, 64)			
 	end
 	if(skillName=="抗毒" or skillName=="抗昏睡" or skillName=="抗石化" or skillName=="抗酒醉" or skillName=="抗混乱" or skillName=="抗遗忘")then		
@@ -1919,29 +1919,29 @@ function common.autoLearnSkill(skillName)
 		common.toCastle()
 		common.toTeleRoom("咒术师的秘密住处")	
 ::map15007::
-		移动(10, 0,15008)
+		自动寻路(10, 0,15008)
 ::map15008::	--进入房间
-		移动(1, 10,15010)
+		自动寻路(1, 10,15010)
 		goto map15010 
 ::map15010::
 		等待到指定地图(15010)	
 		if(skillName=="抗毒")then 
-			移动(10,8)		
+			自动寻路(10,8)		
 			common.learnPlayerSkillDir(1)	
 		elseif(skillName=="抗昏睡")then 
-			移动(10,8)		
+			自动寻路(10,8)		
 			common.learnPlayerSkillDir(3)	
 		elseif(skillName=="抗石化")then 
-			移动(10,14)		
+			自动寻路(10,14)		
 			common.learnPlayerSkillDir(1)	
 		elseif(skillName=="抗酒醉")then 
-			移动(10,14)		
+			自动寻路(10,14)		
 			common.learnPlayerSkillDir(3)	
 		elseif(skillName=="抗混乱")then 
-			移动(15,8)		
+			自动寻路(15,8)		
 			common.learnPlayerSkillDir(7)	
 		elseif(skillName=="抗遗忘")then 
-			移动(15,8)		
+			自动寻路(15,8)		
 			common.learnPlayerSkillDir(3)	
 		end		
 	end
@@ -1954,8 +1954,8 @@ function common.autoLearnSkill(skillName)
 		end		
 	::begin2499::
 		common.toCastle("f1")
-		移动(45,20,"启程之间")	
-		移动(43, 22)	
+		自动寻路(45,20,"启程之间")	
+		自动寻路(43, 22)	
 		离开队伍()
 		转向(2)
 		dlg=等待服务器返回()
@@ -1971,9 +1971,9 @@ function common.autoLearnSkill(skillName)
 		if(取当前地图名() ~= "亚留特村的传送点")then
 			goto begin2499
 		end
-		移动(8, 3,"村长的家")		
-		移动(6, 13,"亚留特村")
-		移动(48,71)
+		自动寻路(8, 3,"村长的家")		
+		自动寻路(6, 13,"亚留特村")
+		自动寻路(48,71)
 		common.learnPlayerSkillDir(4)			
 	end
 	if(skillName=="挖掘")then		
@@ -1984,8 +1984,8 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(100)				
 		end			
 		common.gotoFaLanCity()	
-		移动(200,132,"基尔的家")
-		移动(9,3)
+		自动寻路(200,132,"基尔的家")
+		自动寻路(9,3)
 		common.learnPlayerSkill(9,2)	
 	end
 	if(skillName=="挖掘")then		
@@ -1996,8 +1996,8 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(100)				
 		end			
 		common.gotoFaLanCity()	
-		移动(200,132,"基尔的家")
-		移动(9,3)
+		自动寻路(200,132,"基尔的家")
+		自动寻路(9,3)
 		common.learnPlayerSkill(9,2)	
 	end
 	if(skillName=="伐木")then		
@@ -2008,8 +2008,8 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(100)				
 		end			
 		common.outFaLan("e")
-		移动(509, 153,"山男的家")	
-		移动(10,8)		
+		自动寻路(509, 153,"山男的家")	
+		自动寻路(10,8)		
 		common.learnPlayerSkill(10,7)	
 	end
 	if(skillName=="狩猎")then		
@@ -2020,10 +2020,10 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(100)				
 		end			
 		common.outFaLan("e")
-		移动(485,199)
+		自动寻路(485,199)
 		local searchList={{485,199},{486,209},{496,208},{481,232}}		
 		for index,pos in ipairs(searchList) do						
-			移动(pos[1],pos[2])	
+			自动寻路(pos[1],pos[2])	
 			u = 查周围信息("猎人拉修",1)
 			if(u ~= nil)then
 				移动到目标附近(u.x,u.y)
@@ -2040,8 +2040,8 @@ function common.autoLearnSkill(skillName)
 			common.getMoneyFromBank(100)				
 		end			
 		common.gotoFaLanCity("w1")
-		移动(82,83,"医院")
-		移动(10,6)
+		自动寻路(82,83,"医院")
+		自动寻路(10,6)
 		common.learnPlayerSkill(10,5)			
 	end
 	if(common.findSkillData(skillName) ~=nil)then		
@@ -2056,13 +2056,13 @@ function common.outFaLan(dir)
 ::dengru::
 	if(dir=="e")then		--东
 		common.gotoFaLanCity("e1")
-		移动(281,88)
+		自动寻路(281,88)
 	elseif(dir == "s")then	--南
 		common.gotoFaLanCity("s")
-		移动(154, 241)
+		自动寻路(154, 241)
 	elseif(dir == "w")then	--西
 		common.gotoFaLanCity("w1")
-		移动(22,88)	
+		自动寻路(22,88)	
 	end
 end
 --出城堡 东南西北 e s w n
@@ -2071,7 +2071,7 @@ function common.outCastle(dir)
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
 	if (当前地图名=="艾尔莎岛" )then			
-		移动(140,105)				
+		自动寻路(140,105)				
 		转向(1)
 		等待服务器返回()
 		对话选择(4,0)
@@ -2080,7 +2080,7 @@ function common.outCastle(dir)
 	elseif (当前地图名=="里谢里雅堡" )then	
 		goto liBao	
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
-		移动( 3, 7)	
+		自动寻路( 3, 7)	
 		等待到指定地图("里谢里雅堡")	
 		goto liBao
 	end	
@@ -2088,13 +2088,13 @@ function common.outCastle(dir)
 	goto dengru
 ::liBao::
 	if(dir=="e")then
-		移动(65,53)
+		自动寻路(65,53)
 	elseif(dir == "s")then
-		移动(41,98)
+		自动寻路(41,98)
 	elseif(dir == "w")then
-		移动(17,53)
+		自动寻路(17,53)
 	elseif(dir == "n")then
-		移动(41,14)
+		自动寻路(41,14)
 	end
 
 end
@@ -2102,9 +2102,9 @@ function common.gotoFalanBankTalkNpc()
 	if(取当前地图编号() ~= 1121)then
 		common.gotoFaLanCity("e1")		
 		等待到指定地图("法兰城")	
-		移动(238,111,"银行")	
+		自动寻路(238,111,"银行")	
 	end
-	移动(11,8)
+	自动寻路(11,8)
 	面向("东")
 	等待服务器返回()
 end
@@ -2120,31 +2120,31 @@ function common.gotoBankTalkNpc()
 	elseif (当前地图名=="法兰城" )then	
 		goto faLan
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
-		移动( 3, 7)	
+		自动寻路( 3, 7)	
 		等待到指定地图("里谢里雅堡")	
 		goto star2
 	end	
 	回城()
 	goto dengru
 ::star1::
-	移动(157,94)	
+	自动寻路(157,94)	
 	转向坐标(158,93)		
 	等待到指定地图("艾夏岛")	
-	移动(114,105)	
-	移动(114,104,"银行")	
-	移动(49,30)
+	自动寻路(114,105)	
+	自动寻路(114,104,"银行")	
+	自动寻路(49,30)
 	面向("东")
 	等待服务器返回()
     goto goEnd 
 ::star2::		
-	移动(41,98,"法兰城")	
-	移动(162, 130)		
+	自动寻路(41,98,"法兰城")	
+	自动寻路(162, 130)		
     goto faLan
 ::faLan::
 	common.gotoFaLanCity("e1")		
 	等待到指定地图("法兰城")	
-	移动(238,111,"银行")	
-	移动(11,8)
+	自动寻路(238,111,"银行")	
+	自动寻路(11,8)
 	面向("东")
 	等待服务器返回()
     goto goEnd 
@@ -2205,8 +2205,8 @@ function common.buySealCard(sealCardName, buyCount, level )
 	end
 	if(level == 1)then		
 		common.gotoFaLanCity("w1")
-		移动(94,78,"达美姊妹的店")	
-		移动(17,18)
+		自动寻路(94,78,"达美姊妹的店")	
+		自动寻路(17,18)
 		等待(1000)
 		转向(2)
 		等待服务器返回()
@@ -2250,7 +2250,7 @@ function common.艾岛定居()
 ::StartBegin::		
 	common.toCastle()
 	等待到指定地图("里谢里雅堡")		
-	移动(28,88)
+	自动寻路(28,88)
 	等待服务器返回()			
 	对话选择(32,0)
 	等待服务器返回()			
@@ -2262,16 +2262,16 @@ function common.艾岛定居()
 	等待服务器返回()	
 	对话选择(4,0)
 	等待到指定地图("？")	
-	移动(19, 20)
-	移动一格(4,1)	
+	自动寻路(19, 20)
+	自动寻路一格(4,1)	
 	等待到指定地图("法兰城遗迹")		
-	移动(98, 138,"盖雷布伦森林")
-	移动(124, 168,"温迪尔平原")		
-	移动(264, 108,"艾尔莎岛")	
+	自动寻路(98, 138,"盖雷布伦森林")
+	自动寻路(124, 168,"温迪尔平原")		
+	自动寻路(264, 108,"艾尔莎岛")	
 ::dingju::
-	移动(141, 106)		
+	自动寻路(141, 106)		
 	对话选是(142,105)
-	移动(140, 105)
+	自动寻路(140, 105)
 	return
 end
 function common.去营地()	
@@ -2293,7 +2293,7 @@ function common.去营地()
 	等待(2000)
 	goto dengru
 ::star1::
-	移动(140,105)
+	自动寻路(140,105)
 	等待(500)	
 	转向(1)
 	等待服务器返回()
@@ -2306,18 +2306,18 @@ function common.去营地()
     goto star2
 ::star2::		
 	等待到指定地图("里谢里雅堡")		
-	移动(41,98)	
+	自动寻路(41,98)	
     goto begin
 ::begin::		
 	等待到指定地图("法兰城")		
-	移动(153,241)	
+	自动寻路(153,241)	
 ::fuLeiYa::
 	等待到指定地图("芙蕾雅")	
-	移动(510,282)	
-	移动(513,282,"曙光骑士团营地")	
+	自动寻路(510,282)	
+	自动寻路(513,282,"曙光骑士团营地")	
 ::shuGuang::
 	等待到指定地图("曙光骑士团营地")	
-	移动(55,47,"辛希亚探索指挥部")		
+	自动寻路(55,47,"辛希亚探索指挥部")		
 ::zhiHuiBu::
 	等待空闲()
 	local mapIndex = 取当前地图编号()
@@ -2333,19 +2333,19 @@ function common.去营地()
 	goto zhiHuiBu	
 ::judgeTgt::
 	if(目标是否可达(95,9) == false) then --第一个
-		移动(7,4)		
+		自动寻路(7,4)		
 	else
-		移动(95,9)			
+		自动寻路(95,9)			
 	end
 	等待(1000)
 	goto zhiHuiBu		
 ::daoYingDi::
-	移动(7,22)  	
+	自动寻路(7,22)  	
 	转向(0)		-- 转向北	
 	等待(2000)
 	goto zhiHuiBu
 ::dao::
-	移动(96,86)
+	自动寻路(96,86)
 	喊话("营地到了，等待猪的出现",2,3,5)
 	等待(1000)
     return
@@ -2367,7 +2367,7 @@ function common.faLanExchangeMine(mineName)
 		}
 	local data = mineList[mineName]
 	if(data~=nil)then
-		移动(data[1].x,data[1].y)
+		自动寻路(data[1].x,data[1].y)
 		压矿(data[2].x,data[2].y,mineName)
 		叠(mineName.."条", 20)	
 	end
@@ -2383,12 +2383,12 @@ function common.卵4步骤1(step)
 	等待空闲()
 	if(取物品数量("琥珀之卵") < 1)then 
 		回城() 
-		移动(201,96,"神殿　伽蓝")
-		移动(95,80,"神殿　前廊")
-		移动(44,41,59531)
-		移动(34,34,59535)
-		移动(48,60,"约尔克神庙")
-		移动(39,22)
+		自动寻路(201,96,"神殿　伽蓝")
+		自动寻路(95,80,"神殿　前廊")
+		自动寻路(44,41,59531)
+		自动寻路(34,34,59535)
+		自动寻路(48,60,"约尔克神庙")
+		自动寻路(39,22)
 		while true do 
 			if(取物品数量("琥珀之卵") < 1)then 
 				if(游戏时间() == "黄昏" or 游戏时间() == "夜晚")then
@@ -2410,11 +2410,11 @@ function common.卵4步骤1(step)
 			return step
 		end
 	end
-	移动(157,93)
+	自动寻路(157,93)
 	转向(2)	
 	等待到指定地图("艾夏岛")	
-	移动(102, 115,"冒险者旅馆")	
-	移动(30, 21)	
+	自动寻路(102, 115,"冒险者旅馆")	
+	自动寻路(30, 21)	
 	转向(0)
 	喊话("朵拉",2,3,5)
 	等待服务器返回()
@@ -2511,16 +2511,16 @@ function common.卵4步骤2(step,队长名称,队伍人数,队员列表)
 		end
 	end
 	设置("遇敌全跑",1)
-	移动(130, 50, "盖雷布伦森林")	
-	移动(246, 76, "路路耶博士的家")	
+	自动寻路(130, 50, "盖雷布伦森林")	
+	自动寻路(246, 76, "路路耶博士的家")	
 	等待(2000)
-	移动(3,10,"？？？")
+	自动寻路(3,10,"？？？")
 	设置("遇敌全跑",0)		
 	if(人物("名称",false) == 队长名称)then	
 		if(队伍("人数") < 队伍人数)then	--数量不足 等待
 			common.makeTeam(队伍人数,队员列表)
 		end
-		移动(132, 62)
+		自动寻路(132, 62)
 		goto shua
 	else
 		goto teamTalk	
@@ -2555,7 +2555,7 @@ function common.卵4步骤2(step,队长名称,队伍人数,队员列表)
 	while true do
 		等待空闲()	
 		if(取当前地图名() == "？？？") then
-			移动(122, 69,"海底墓场外苑第1地带")
+			自动寻路(122, 69,"海底墓场外苑第1地带")
 			日志("开始找守墓员")				
 		elseif(string.find(取当前地图名(),"海底墓场外苑")~=nil)then
 			outMazeX,outMazeY=取当前坐标()
@@ -2565,7 +2565,7 @@ function common.卵4步骤2(step,队长名称,队伍人数,队员列表)
 				break				
 			end  	
 		elseif(取当前地图名() == "路路耶博士的家") then
-			移动(3,10,"？？？")
+			自动寻路(3,10,"？？？")
 		else
 			日志("地图信息错误"..取当前地图名())
 			return step
@@ -2579,7 +2579,7 @@ function common.卵4步骤2(step,队长名称,队伍人数,队员列表)
 	end
 	if(outMapName ~=nil and 取当前地图名()==outMapName)then
 		if(outMazeX ~= nil and outMazeY ~= nil)then
-			移动(outMazeX,outMazeY)
+			自动寻路(outMazeX,outMazeY)
 		end
 	end
 	while true do
@@ -2601,11 +2601,11 @@ function common.卵4步骤2(step,队长名称,队伍人数,队员列表)
 			common.makeTeam(队伍人数,队员列表)
 			等待(5000)	
 		end
-		移动(131,61)
-		移动(132,61)
-		移动(131,61)
-		移动(132,61)
-		移动(131,61)
+		自动寻路(131,61)
+		自动寻路(132,61)
+		自动寻路(131,61)
+		自动寻路(132,61)
+		自动寻路(131,61)
 		if(是否目标附近(131,60))then			
 			对话选是(131,60)			
 		end
@@ -2630,8 +2630,8 @@ function common.卵4步骤3(step)
 			return step
 		end
 	end
-	移动(201,96,"神殿　伽蓝")	
-	移动(91, 138)		
+	自动寻路(201,96,"神殿　伽蓝")	
+	自动寻路(91, 138)		
 	while true do 
 		npc=查周围信息("荷特普",1)
 		if(npc ~= nil) then
@@ -2659,7 +2659,7 @@ function common.卵4打障碍物()
 	
 ::begin::
 	for i,pos in ipairs(tmpPos) do
-		移动(pos.x,pos.y)
+		自动寻路(pos.x,pos.y)
 		转向坐标(pos.npcx,pos.npcy)
 		等待(2000)
 		等待空闲()
@@ -2675,11 +2675,11 @@ end
 function common.卵4步骤4(step,队长名称,队伍人数,队员列表)	
 	等待空闲()			
 	if(取物品数量("逆十字") < 1)then
-		移动(157,93)
+		自动寻路(157,93)
 		转向(2)	
 		等待到指定地图("艾夏岛")	
-		移动(102, 115,"冒险者旅馆")	
-		移动(56, 32)	
+		自动寻路(102, 115,"冒险者旅馆")	
+		自动寻路(56, 32)	
 		对话选是(0)
 		if(取物品数量("逆十字") < 1)then
 			日志("没有获得【逆十字】，请检查任务进度是否有误")
@@ -2698,16 +2698,16 @@ function common.卵4步骤4(step,队长名称,队伍人数,队员列表)
 		end
 	end
 	设置("遇敌全跑",1)
-	移动(165, 153)
+	自动寻路(165, 153)
 	对话选否(4)
 	等待到指定地图("梅布尔隘地")
-	移动(211, 117)
+	自动寻路(211, 117)
 	对话选是(212,116)
 	等待到指定地图("？？？")
 	设置("遇敌全跑",0)
 	--不知道坐标 原地等吧
 ::meiBuEr::
-	移动(211, 117)
+	自动寻路(211, 117)
 	对话选是(212,116)
 	等待到指定地图("？？？")
 ::map59714::
@@ -2717,14 +2717,14 @@ function common.卵4步骤4(step,队长名称,队伍人数,队员列表)
 			common.makeTeam(队伍人数,队员列表)
 			等待(5000)	
 		end
-		移动(135,197)
+		自动寻路(135,197)
 		方向穿墙(2,8)
-		移动(156, 197,59714)		
+		自动寻路(156, 197,59714)		
 		common.卵4打障碍物()		
-		移动(163, 107)
+		自动寻路(163, 107)
 		方向穿墙(4,8)
-		移动(242,117, 59716)
-		移动(221, 188)
+		自动寻路(242,117, 59716)
+		自动寻路(221, 188)
 		对话选否(222,188)
 		等待(1000)
 		回城()
@@ -2777,8 +2777,8 @@ function common.卵4步骤5(step)
 		end
 	end
 	设置("遇敌全跑",1)
-	移动(130, 50, "盖雷布伦森林")	
-	移动(244, 74)	
+	自动寻路(130, 50, "盖雷布伦森林")	
+	自动寻路(244, 74)	
 	对话选是(245,73)
 	if(取物品数量("转职保证书") > 0)then
 		日志("恭喜你！获得了【转职保证书】")
@@ -3058,7 +3058,7 @@ common.waitTradeGoldAction=function(args)
 	elseif (mapName=="银行" and mapNum== 1121)then	
 		goto bankWait
 	elseif (mapName=="召唤之间" )then	--登出 bank
-		移动(3,9)
+		自动寻路(3,9)
 		对话选是(4,9)
 		回城()
 		common.gotoFalanBankTalkNpc()
@@ -3071,7 +3071,7 @@ common.waitTradeGoldAction=function(args)
 	if(取当前地图编号() ~= 1121)then
 		common.gotoFalanBankTalkNpc()
 	end
-	移动(args.x,args.y)
+	自动寻路(args.x,args.y)
 	topicMsg = {name=人物("名称",false),gold=1000000-人物("金币"),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))
 	等待交易("","","",10000)
@@ -3080,7 +3080,7 @@ common.waitTradeGoldAction=function(args)
 	end	
 	goto bankWait
 ::cun::
-	移动(11,8)
+	自动寻路(11,8)
 	面向("东")
 	等待服务器返回()
 	bankGold = 银行("金币")
@@ -3111,7 +3111,7 @@ common.waitTradeItemsAction=function(args)
 	elseif (mapName=="银行" and mapNum== 1121)then	
 		goto bankWait
 	elseif (mapName=="召唤之间" )then	--登出 bank
-		移动(3,9)
+		自动寻路(3,9)
 		对话选是(4,9)
 		回城()
 		common.gotoFalanBankTalkNpc()
@@ -3125,7 +3125,7 @@ common.waitTradeItemsAction=function(args)
 		common.gotoFalanBankTalkNpc()
 	end
 	
-	移动(args.x,args.y)	
+	自动寻路(args.x,args.y)	
 	topicMsg = {name=人物("名称",false),bagcount=取包裹空格(),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))	
 	if(银行("金币") >= 1000000)then
@@ -3147,7 +3147,7 @@ common.waitTradeItemsAction=function(args)
 	end
 	goto bankWait
 ::cun::
-	移动(11,8)
+	自动寻路(11,8)
 	面向("东")
 	等待服务器返回()
 	bankGold = 银行("金币")
@@ -3188,7 +3188,7 @@ common.waitTradePetsAction=function(args)
 	elseif (mapName=="银行" and mapNum== 1121)then	
 		goto bankWait
 	elseif (mapName=="召唤之间" )then	--登出 bank
-		移动(3,9)
+		自动寻路(3,9)
 		对话选是(4,9)
 		回城()
 		common.gotoFalanBankTalkNpc()
@@ -3202,14 +3202,14 @@ common.waitTradePetsAction=function(args)
 		common.gotoFalanBankTalkNpc()
 	end
 	if(common.getTableSize(全部宠物信息()) == 5)then
-		移动(11,8)
+		自动寻路(11,8)
 		面向("东")
 		等待服务器返回()
 		if(银行("宠物数") == 5)then	--默认20
 			return
 		end
 	end		
-	移动(args.x,args.y)
+	自动寻路(args.x,args.y)
 	topicMsg = {name=人物("名称",false),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))
 	开关(4,1)		--打开交易
@@ -3244,7 +3244,7 @@ common.waitTradePetsAction=function(args)
 	end
 	goto bankWait
 ::cun::
-	移动(11,8)
+	自动寻路(11,8)
 	面向("东")
 	等待服务器返回()
 	bankGold = 银行("金币")
@@ -3303,7 +3303,7 @@ common.waitProvideTradeItemsAction=function(args)
 	elseif (mapName=="银行" and mapNum== 1121)then	
 		goto bankWait
 	elseif (mapName=="召唤之间" )then	--登出 bank
-		移动(3,9)
+		自动寻路(3,9)
 		对话选是(4,9)
 		回城()
 		common.gotoFalanBankTalkNpc()
@@ -3316,7 +3316,7 @@ common.waitProvideTradeItemsAction=function(args)
 	if(取当前地图编号() ~= 1121)then
 		common.gotoFalanBankTalkNpc()
 	end
-	移动(args.x,args.y)	
+	自动寻路(args.x,args.y)	
 	topicMsg = {name=人物("名称",false),bagcount=取包裹空格(),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))	
 	topic,msg=已接收订阅消息(args.publish)	
@@ -3346,7 +3346,7 @@ common.waitProvideTradeItemsAction=function(args)
 	end
 	goto bankWait
 ::从银行取::
-	移动(11,8)
+	自动寻路(11,8)
 	转向(2)
 	等待服务器返回()
 	银行("全取",args.itemName)
@@ -3687,8 +3687,8 @@ function common.gleCheckSaelCard(cardName,cardCount)
 	mapName = 取当前地图名()
 	mapNum = 取当前地图编号()
 	if(mapName == "哥拉尔镇")then 
-		移动(146, 117,"魔法店")		
-		移动(18, 12)	
+		自动寻路(146, 117,"魔法店")		
+		自动寻路(18, 12)	
 		转向(2, "")
 		等待服务器返回()
 		return common.buyDstItem(cardName,cardCount)			
@@ -3732,7 +3732,7 @@ function common.gleSellItems(saleItems)
 	等待空闲()
 	local 当前地图名 = 取当前地图名()
 	if (当前地图名=="艾尔莎岛" )then			
-		移动(140,105)				
+		自动寻路(140,105)				
 		转向(1)
 		等待服务器返回()
 		对话选择(4,0)		
@@ -3742,11 +3742,11 @@ function common.gleSellItems(saleItems)
 	elseif (当前地图名=="工房" )then	
 		goto gongFang
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
-		移动( 3, 7)	
+		自动寻路( 3, 7)	
 		等待到指定地图("里谢里雅堡")	
 		goto liBao	
 	elseif (当前地图名=="哥拉尔镇" )then	--登出 bank
-		移动(146, 117,"魔法店")			
+		自动寻路(146, 117,"魔法店")			
 		goto 哥拉尔魔法店
 	end	
 	回城()
@@ -3757,7 +3757,7 @@ function common.gleSellItems(saleItems)
 		等待(2000)
 		goto begin
 	end
-	移动(31,77)		
+	自动寻路(31,77)		
 	for i,item in ipairs(saleList)do
 		if(取物品数量(item) > 0) then
 			卖(6,item)
@@ -3784,7 +3784,7 @@ function common.gleSellItems(saleItems)
 	end
 	goto goEnd
 ::哥拉尔魔法店::
-	移动(18, 12)	
+	自动寻路(18, 12)	
 	for i,item in ipairs(saleList)do
 		if(取物品数量(item) > 0) then
 			卖(2,item)

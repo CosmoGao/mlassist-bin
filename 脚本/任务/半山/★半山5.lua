@@ -35,7 +35,7 @@ common=require("common")
 	common.checkHealth()
 	common.supplyCastle()	
 	common.toCastle("f2")
-	移动(0,74,"图书室")
+	自动寻路(0,74,"图书室")
 	goto library
 ::library::					--图书室
 	if(取物品数量("阿斯提亚锥形水晶") > 0)then
@@ -43,21 +43,21 @@ common=require("common")
 		等待(2000)
 		goto island
 	end
-	移动(27,16)
+	自动寻路(27,16)
 	对话选是(27,15)
 	goto begin
 ::island::
 	if(取当前地图名() ~= "小岛")then
 		goto begin
 	end
-	移动(64,45,"通往山顶的路100M")
+	自动寻路(64,45,"通往山顶的路100M")
 	goto crossMaze
 ::crossMaze::
 	自动穿越迷宫("圣鸟之巢")
 	if(取当前地图名()=="圣鸟之巢")then
 		goto birdnest
 	elseif(取当前地图名()=="半山腰")then
-		移动(78,52)
+		自动寻路(78,52)
 	end
 	等待(1000)
 	goto crossMaze
@@ -65,13 +65,13 @@ common=require("common")
 	if(取当前地图名() ~= "圣鸟之巢")then
 		goto begin
 	end
-	移动(14,12)
+	自动寻路(14,12)
 	对话选是(14,11)
 ::mountainPeak::
 	if(取当前地图名() ~= "圣山之巅")then
 		goto begin
 	end
-	移动(23,23)
+	自动寻路(23,23)
 	对话选是(23,22)
 	if(取当前地图名() == "法兰城")then
 		日志("任务结束，可以去半山练级了",1)

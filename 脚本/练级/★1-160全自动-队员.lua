@@ -93,10 +93,10 @@ function 营地商店检测水晶(crystalName,equipsProtectValue,buyCount)
 	离开队伍()
 	local 当前地图名 = 取当前地图名()
 	if(当前地图名 == "商店")then 
-		移动(14,26)
+		自动寻路(14,26)
 	elseif(当前地图名 == "圣骑士营地")then 
-		移动(92, 118,"商店")
-		移动(14,26)
+		自动寻路(92, 118,"商店")
+		自动寻路(14,26)
 	else
 		return
 	end
@@ -106,7 +106,7 @@ function 营地商店检测水晶(crystalName,equipsProtectValue,buyCount)
 	扔(7)--扔旧的
 	等待(1000)	--等待刷新
 	使用物品(crystalName)	
-	移动(0,14,"圣骑士营地")	
+	自动寻路(0,14,"圣骑士营地")	
 end
 
 
@@ -114,10 +114,10 @@ function 营地存取金币(金额,存取)
 	if(金额==nil) then return end
 	local 当前地图名 = 取当前地图名()
 	if(当前地图名 == "银行")then 
-		移动(27,23)
+		自动寻路(27,23)
 	elseif(当前地图名 == "圣骑士营地")then 
-		移动(116, 105,"银行")
-		移动(27,23)
+		自动寻路(116, 105,"银行")
+		自动寻路(27,23)
 	else
 		return
 	end
@@ -159,7 +159,7 @@ function waitTopic()
 	if(取当前地图名()~= "银行" and 取当前地图编号() ~= 1121)then
 		common.gotoFaLanCity("e1")		
 		等待到指定地图("法兰城")	
-		移动(238,111,"银行")	
+		自动寻路(238,111,"银行")	
 	end
 	设置("timer",0)
 	topic,msg=等待订阅消息()
@@ -263,18 +263,18 @@ function 布拉基姆高地练级(目标等级,练级地名称)
 		回城()
 		等待(1000)		
 	end
-	移动(144,105)
-	移动(157,93)
+	自动寻路(144,105)
+	自动寻路(157,93)
 	转向(2)	
 	等待到指定地图("艾夏岛")		
 	goto aiXiaDao	
 ::aiXiaDao::					--去医院
-	移动(112, 81)	
+	自动寻路(112, 81)	
 	goto erYiYuan
 ::erYiYuan::	
 	等待到指定地图("医院")	
 	设置("移动速度",走路还原值)
-	移动(35, 47)
+	自动寻路(35, 47)
 	renew(1)        			-- 恢复人宠        
 ::checkAddTeam::
 	--医院里检测掉魂
@@ -377,13 +377,13 @@ function 洞窟练级(目标等级)
 	等待(1000)
 	goto begin
 ::aiXiaDao::					--去医院
-	移动(112, 81)	
+	自动寻路(112, 81)	
 	goto erYiYuan
 ::erDao::
-	移动(158, 94)	
+	自动寻路(158, 94)	
 	转向(0)
 	等待到指定地图("艾夏岛")
-	移动(112, 81)	
+	自动寻路(112, 81)	
 ::erYiYuan::
 	等待到指定地图("医院")	
 	leaderSetLv=getLeaderSetLv()	
@@ -393,7 +393,7 @@ function 洞窟练级(目标等级)
 	if(取队伍人数() > 1)then
 		goto yudi
 	end	
-	移动(28, 46) 
+	自动寻路(28, 46) 
 	common.changeLineFollowLeader(队长名称)	
 	common.joinTeam(队长名称,10)	
 	goto begin
@@ -406,7 +406,7 @@ function 洞窟练级(目标等级)
 			离开队伍()
 		end				
 	end	
-	移动(230,165) 	  
+	自动寻路(230,165) 	  
 	common.joinTeam(队长名称)
 	goto begin
 ::yudi::	
@@ -457,18 +457,18 @@ function 雪塔练级(目标等级)
 	goto begin
 ::aiDao::
 	设置("移动速度",走路加速值)
-	移动(165,153)
+	自动寻路(165,153)
 	等待(1000)	
 	对话选是(4)	
 ::liXiaDao::
 	等待到指定地图("利夏岛")	
-	移动(90,99,"国民会馆")
+	自动寻路(90,99,"国民会馆")
 ::国民会馆::	
-	移动(110,43)	
+	自动寻路(110,43)	
 	卖(110,42, 卖店物品列表)		
-	移动(109,51)
+	自动寻路(109,51)
 	回复(108,52)	
-	移动(109,50)
+	自动寻路(109,50)
 ::checkAddTeam::
 	common.changeLineFollowLeader(队长名称)
 	--医院里检测掉魂
@@ -479,7 +479,7 @@ function 雪塔练级(目标等级)
 			离开队伍()
 		end				
 	end		
-	移动(113,50)
+	自动寻路(113,50)
 	等待(2000)
 	common.joinTeam(队长名称)
 	goto begin  	
@@ -525,7 +525,7 @@ function 回廊练级(目标等级)
 	if(leaderSetLv ~= nil and leaderSetLv ~= 目标等级) then
 		return	
 	elseif (当前地图名=="艾尔莎岛" )then	
-		移动(140,105)				
+		自动寻路(140,105)				
 		转向(1)
 		等待服务器返回()
 		对话选择(4,0)
@@ -543,7 +543,7 @@ function 回廊练级(目标等级)
 	common.checkHealth(医生名称)
 	common.toCastle()
 	common.sellCastle(卖店物品列表)	
-	移动(52, 72)	
+	自动寻路(52, 72)	
 	对话选是(2)	
 ::addTeam::
 	if(取当前地图名() ~= "过去与现在的回廊")then
@@ -556,7 +556,7 @@ function 回廊练级(目标等级)
 			离开队伍()
 		end				
 	end	
-	移动(10, 20)
+	自动寻路(10, 20)
 	common.changeLineFollowLeader(队长名称)
 	common.joinTeam(队长名称)
 	goto begin
@@ -614,7 +614,7 @@ function 营地任务()
 		对话坐标选是(14,14)
 	elseif(取物品数量("怪物碎片") < 1 and 取物品数量("信") < 1 and 取队伍人数() < 2 )then		
 		common.toCastle()
-		移动(41,83)		
+		自动寻路(41,83)		
 		common.joinTeam(队长名称)
 		if(取队伍人数() > 1)then
 			if(common.judgeTeamLeader(队长名称)==true) then
@@ -627,14 +627,14 @@ function 营地任务()
 		--回城()
 		等待(2000)
 		common.gotoFaLanCity()	
-		移动(153,241,"芙蕾雅")
-		移动(513,282,"曙光骑士团营地")
-		移动(52,68,"曙光营地指挥部")
+		自动寻路(153,241,"芙蕾雅")
+		自动寻路(513,282,"曙光骑士团营地")
+		自动寻路(52,68,"曙光营地指挥部")
 		if(目标是否可达(69,70))then
-			移动(69,70)
+			自动寻路(69,70)
 		end	
 		if(目标是否可达(95,7))then
-			移动(95,6)
+			自动寻路(95,6)
 			对话选是(95,7)
 		end			
 	elseif(取物品数量("信") > 0)then
@@ -718,13 +718,13 @@ function 营地练级(目标等级,练级地名称)
 	goto begin
 ::yingDiShangDian::
 	营地商店检测水晶()
-	移动(0,14,"圣骑士营地")	
+	自动寻路(0,14,"圣骑士营地")	
 	goto begin
 ::yingDiYinHang::
-	移动(3,23,"圣骑士营地")	
+	自动寻路(3,23,"圣骑士营地")	
 	goto begin
 ::gongFang::
-	移动( 30, 37)
+	自动寻路( 30, 37)
     等待到指定地图("圣骑士营地",87,72)     
 	goto begin
 ::quYiYuan::
@@ -738,8 +738,8 @@ function 营地练级(目标等级,练级地名称)
 		营地存取金币(-身上最少金币数*2,"取")	--取出后 身上总30万
 		goto begin
 	end	
-	移动( 95, 73)
-	移动( 95, 72)
+	自动寻路( 95, 73)
+	自动寻路( 95, 72)
 	goto begin 
 ::quYingDi::
 	设置("移动速度",走路加速值)
@@ -775,14 +775,14 @@ function 营地练级(目标等级,练级地名称)
 			离开队伍()
 		end				
 	end	
-	移动(9,14)	
+	自动寻路(9,14)	
 	等待(1000)
 	common.changeLineFollowLeader(队长名称)
 	common.joinTeam(队长名称)
 	goto begin   
 
 ::huiYingDi::
-	移动(551, 332,"圣骑士营地")
+	自动寻路(551, 332,"圣骑士营地")
 	goto begin
                
 ::scriptstart::
@@ -845,15 +845,15 @@ function 拿酒瓶()
 	if(取物品数量("矮人徽章")>0 or 取物品数量("巴萨的破酒瓶")>0)then
 		return true
 	end		
-	移动(116,56,"酒吧")
+	自动寻路(116,56,"酒吧")
 ::tryNa::
-	移动(14, 7) 
+	自动寻路(14, 7) 
 	对话选是(0)
 	tryCount= tryCount+1
 	if(tryCount > 3 and 取物品数量("巴萨的破酒瓶")< 1)then
 		goto tryNa
 	end
-	移动(0,23,"圣骑士营地")
+	自动寻路(0,23,"圣骑士营地")
 	return true
 end
 --蝎子 石头人 和蜥蜴 公用一个吧
@@ -910,14 +910,14 @@ function 矮人练级(目标等级,练级地名称)
 	等待(1000)
 	goto begin
 ::gongFang::
-	移动( 30, 37)
+	自动寻路( 30, 37)
     等待到指定地图("圣骑士营地",87,72)     
 	goto begin
 ::jiuPing::
 	拿酒瓶()	
 ::quYiYuan::
-	移动( 95, 73)
-	移动( 95, 72)
+	自动寻路( 95, 73)
+	自动寻路( 95, 72)
 	goto begin 
 ::quYingDi::
 	设置("移动速度",走路加速值)
@@ -953,7 +953,7 @@ function 矮人练级(目标等级,练级地名称)
 			离开队伍()
 		end				
 	end	
-	移动(9,14)	
+	自动寻路(9,14)	
 	等待(1000)
 	common.changeLineFollowLeader(队长名称)
 	common.joinTeam(队长名称)
@@ -1039,7 +1039,7 @@ function 旧日练级(目标等级)
 	goto begin
 ::yingDiShangDian::
 	营地商店检测水晶()
-	移动(0,14,"圣骑士营地")	
+	自动寻路(0,14,"圣骑士营地")	
 	goto begin
 ::yingDiYinHang::
 	if(人物("金币") > 950000)then
@@ -1047,7 +1047,7 @@ function 旧日练级(目标等级)
 	elseif(人物("金币") <50000)then
 		营地存取金币(-300000,"取")	--取出后 身上总30万
 	end
-	移动(3,23,"圣骑士营地")	
+	自动寻路(3,23,"圣骑士营地")	
 	goto begin
 
 ::quYingDi::
@@ -1061,13 +1061,13 @@ function 旧日练级(目标等级)
 	goto begin
 ::quMiGong::	
 	if(取物品数量("战斗号角") < 1)then
-		移动(116,69,"总部1楼")
-		移动(86,50)
+		自动寻路(116,69,"总部1楼")
+		自动寻路(86,50)
 		对话选是(2)
-		移动(4,47,"圣骑士营地")		
+		自动寻路(4,47,"圣骑士营地")		
 	end	
-	移动(116,81)
-	移动(119,81)
+	自动寻路(116,81)
+	自动寻路(119,81)
 	转向(2)
 	等待服务器返回()
 	对话选择("1", "", "")	
@@ -1078,7 +1078,7 @@ function 旧日练级(目标等级)
 	if(取当前地图名() ~= "旧日之地" ) then		
 		goto begin
 	end
-	移动(45,47)	
+	自动寻路(45,47)	
 	转向(0, "")
 	等待服务器返回()
 	对话选择("1", "", "")	
@@ -1202,20 +1202,20 @@ function 半山练级(目标等级)
 		goto falanw
 	else
 		common.toCastle("f2")
-		移动(0,74,"图书室")
+		自动寻路(0,74,"图书室")
 		goto library
 	end
 	goto begin
 ::library::					--图书室
 	扔("锄头")
-	移动(27,16)
+	自动寻路(27,16)
 	设置("移动速度",走路还原值)
 	对话选是(27,15)
 	goto begin
 ::falanw::	--西门
 	common.outFaLan("w")
-	移动(396,168)
-	移动(397,168)
+	自动寻路(396,168)
+	自动寻路(397,168)
 	对话选是(398,168)
 	goto begin
 ::island::
@@ -1223,7 +1223,7 @@ function 半山练级(目标等级)
 		goto begin
 	end	
 	if(人物("坐标") ~= "65,97")then
-		移动(65,97)
+		自动寻路(65,97)
 		common.checkHealth(医生名称)--一个人 如果受伤 则回城		
 		goto begin
 	end

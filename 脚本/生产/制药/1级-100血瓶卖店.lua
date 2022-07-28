@@ -66,12 +66,12 @@ function main()
 		goto begin
 	end
 	if(取物品叠加数量('苹果薄荷')< 苹果薄荷数量)then					
-		移动(500,85)
+		自动寻路(500,85)
 		采集苹果薄荷()
 		goto begin
 	end
 	if(取物品叠加数量('柠檬草')< 柠檬草数量)then					
-		移动(515,100)
+		自动寻路(515,100)
 		采集柠檬草()
 		goto begin
 	end

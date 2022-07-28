@@ -19,8 +19,8 @@ function buy800boomerang(count)
 	end
 	common.gotoFaLanCity("e2")	
 ::lvGuan::	
-	移动(238,64,"冒险者旅馆")
-	移动(37,37,"冒险者旅馆")
+	自动寻路(238,64,"冒险者旅馆")
+	自动寻路(37,37,"冒险者旅馆")
 	findNum=0
 	while findNum < 10 do
 		找到npc=查周围信息("约翰·荷里",1)

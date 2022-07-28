@@ -80,7 +80,7 @@ function main()
 	common.outFaLan("w")	--西门
 	goto begin   
 ::map100::							--莎莲娜
-	移动(451, 163)
+	自动寻路(451, 163)
 	设置("移动速度",走路还原值)
 	StartWork()		
 	goto begin	

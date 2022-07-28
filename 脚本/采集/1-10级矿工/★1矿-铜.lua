@@ -36,7 +36,7 @@ end
 --换矿
 function StartRefine()
 	common.gotoFaLanCity("w1")		
-	移动(106, 61,"米克尔工房")	
+	自动寻路(106, 61,"米克尔工房")	
 	common.faLanExchangeMine(矿石名)
 	回城()
 end
@@ -72,13 +72,13 @@ function main()
 	common.supplyCastle()
 	common.checkHealth()
 	common.gotoFaLanCity("w1")	
-	移动(22, 87,"芙蕾雅")	
+	自动寻路(22, 87,"芙蕾雅")	
 	goto begin   
 
 ::map100::							--芙蕾雅
-	移动(351, 145)	
+	自动寻路(351, 145)	
 ::map11013::						--国营第24坑道
-	--移动(49, 66)					--直接挖
+	--自动寻路(49, 66)					--直接挖
 	设置("移动速度",走路还原值)
 	StartWork()		
 	goto begin	

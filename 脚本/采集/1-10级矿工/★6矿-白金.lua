@@ -34,7 +34,7 @@ end
 --换矿
 function StartRefine()
 	common.gotoFaLanCity("w1")		
-	移动(106, 61,"米克尔工房")	
+	自动寻路(106, 61,"米克尔工房")	
 	common.faLanExchangeMine(矿石名)
 	回城()
 end
@@ -67,14 +67,14 @@ function main()
 	common.supplyCastle()
 	common.checkHealth()
 	common.gotoFaLanCity("s")	
-	移动(153, 241,"芙蕾雅")	
+	自动寻路(153, 241,"芙蕾雅")	
 	goto begin   
 
 ::map100::							--莎莲娜
-	移动(473, 316)	
+	自动寻路(473, 316)	
 	对话选是(472,316)	
 ::map11000::						--莎莲娜西方洞窟
-	移动(9, 71)
+	自动寻路(9, 71)
 	设置("移动速度",走路还原值)
 	StartWork()		
 	goto begin	

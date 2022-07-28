@@ -12,14 +12,14 @@ common=require("common")
 function main()
 	等待空闲()
 	if(取当前地图名() == "召唤之间")then
-		移动(3,9)
+		自动寻路(3,9)
 		对话选是(4,9)
 	end
 	common.艾岛定居()
 	设置("遇敌全跑", 0)
 --大树交易
 ::爱心救助::
-	移动(136,106)
+	自动寻路(136,106)
 	转向(0)
 	人物动作("换片")
 	交易("￠夏梦￡雨￠","","",10000)	
@@ -34,8 +34,8 @@ function main()
 	common.autoLearnSkill("气功弹")
 	common.autoLearnSkill("石化魔法")
 	common.gotoFaLanCity("s")
-	移动(216,124,"美容院")
-	移动(15,10)
+	自动寻路(216,124,"美容院")
+	自动寻路(15,10)
 ::StartBegin::	
 	转向(0, "")
 	等待服务器返回()		--这些完了。才能和NPC说话

@@ -57,10 +57,10 @@ function waitToNextBoss(name,x,y,nexty)
 end
 function leaderLastTalk()
 	if(目标是否可达(15,5))then	--出去
-		移动(14,5)
-		移动(16,5)
-		移动(14,5)
-		移动(16,5)
+		自动寻路(14,5)
+		自动寻路(16,5)
+		自动寻路(14,5)
+		自动寻路(16,5)
 		对话选是(15,4)
 		if(取当前地图名() == "里谢里雅堡")then	
 			common.statisticsTime(脚本运行前时间,脚本运行前金币)	
@@ -215,7 +215,7 @@ function main()
 	common.supplyCastle()
 	common.sellCastle()		--默认卖	
 	common.toCastle()
-	移动(30,81)
+	自动寻路(30,81)
 	对话选是(30,79)
 	goto begin
         
@@ -227,7 +227,7 @@ function main()
 		--没有打过boss的 回城重新进入
 		if(队伍("人数") < 队伍人数)then	--数量不足 等待
 			if(目标是否可达(16,122))then
-				移动(16,122)
+				自动寻路(16,122)
 				common.makeTeam(队伍人数)
 			else	--中途队友掉线 回城
 				日志("中途队友掉线，回城",1)
@@ -258,7 +258,7 @@ function main()
 			end		
 		else
 			if(目标是否可达(15,5))then	--出去				
-				移动(15,5)				
+				自动寻路(15,5)				
 				对话选是(15,4)
 				goto begin
 			else
@@ -283,7 +283,7 @@ function teammateAction()
 		if(取队伍人数() < 2 and 取当前地图名() == "追忆之路")then	
 			if(目标是否可达(15,5))then	--出去		
 				if(是否目标附近(15, 4) == false)then
-					移动(15,5)		
+					自动寻路(15,5)		
 				end
 				对话选是(15, 4)
 			else

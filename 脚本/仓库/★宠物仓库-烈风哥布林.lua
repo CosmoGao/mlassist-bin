@@ -16,7 +16,7 @@ common=require("common")
 	-- elseif (mapName=="银行" and mapNum== 1121)then	
 		-- goto bankWait
 	-- elseif (mapName=="召唤之间" )then	--登出 bank
-		-- 移动(3,9)
+		-- 自动寻路(3,9)
 		-- 对话选是(4,9)
 		-- 回城()
 		-- common.gotoFalanBankTalkNpc()
@@ -30,7 +30,7 @@ common=require("common")
 		-- common.gotoFalanBankTalkNpc()
 	-- end
 	-- if(common.getTableSize(全部宠物信息()) == 5)then
-		-- 移动(11,8)
+		-- 自动寻路(11,8)
 		-- 面向("东")
 		-- 等待服务器返回()
 		-- if(银行("宠物数") == 5)then	--默认20
@@ -39,7 +39,7 @@ common=require("common")
 	-- end	
 
 	-- if(取当前地图名() ~= "银行")then goto dengru end
-	-- 移动(10,12)
+	-- 自动寻路(10,12)
 	-- topicMsg = {name=人物("名称"),pets=5-common.getTableSize(全部宠物信息()),line=人物("几线")}
 	-- 发布消息("烈风哥布林仓库信息", common.TableToStr(topicMsg))
 	-- if(银行("金币") >= 1000000)then
@@ -60,7 +60,7 @@ common=require("common")
 	-- end
 	-- goto bankWait
 -- ::cun::
-	-- 移动(11,8)
+	-- 自动寻路(11,8)
 	-- 面向("东")
 	-- 等待服务器返回()
 	-- bankGold = 银行("金币")

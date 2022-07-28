@@ -16,7 +16,7 @@ function FindMaze()
 		
 		for index,u in ipairs(units) do			
 			if ((u.flags & 4096)~=0 and u.model_id > 0) then				
-				移动(u.x,u.y)
+				自动寻路(u.x,u.y)
 				等待空闲()
 				if(取当前地图名() == "奇怪的坑道地下1楼")then
 					return true
@@ -36,8 +36,8 @@ function 检查当前位置()
 		if(mapData.width == 18 and mapData.height == 22) then	--最底层
 			if(目标是否可达(10,15) == true ) then --在里面
 				if(取物品数量("红色三菱镜") > 0)then			
-					移动(10,16)
-					移动(10,15)
+					自动寻路(10,16)
+					自动寻路(10,15)
 					等待(2000)
 					等待空闲()
 				else	--出错
@@ -47,7 +47,7 @@ function 检查当前位置()
 				goto checkLocation
 			end
 			if(目标是否可达(8,5) == true) then 
-				移动(8,5)
+				自动寻路(8,5)
 				设置("无一级逃跑",0)	--和迪太对战
 				local tryNum=0
 				while tryNum<3 do
@@ -56,7 +56,7 @@ function 检查当前位置()
 					等待战斗结束()					
 					mapData = 取当前地图数据()
 					if(mapData ~= nil and mapData.width ~= 18 and mapData.height ~= 22) then
-						移动(4,5)
+						自动寻路(4,5)
 						转向(2)
 						等待(1000)
 						等待空闲()	
@@ -70,7 +70,7 @@ function 检查当前位置()
 			end
 --			bottomMap=查周围信息("迪次郎")
 --			if(bottomMap~=nil)then	--是最底层
---				移动(10,15)
+--				自动寻路(10,15)
 --			else
 --				goto crossMaze
 --			end		
@@ -89,7 +89,7 @@ function findHoleEntry()
                            {373,390},{361,420},{360,434},{374,433}}
 
 	for index,pos in ipairs(findMazeList) do						
-		移动(pos[1],pos[2])	
+		自动寻路(pos[1],pos[2])	
 		if(FindMaze() == true)then
 			return true
 		end
@@ -124,7 +124,7 @@ function FindNpc()
 		转向坐标(目标所在坐标["x"],目标所在坐标["y"])	
 		喊话("记录坐标: "..目标所在坐标["名称"].." "..目标所在坐标["x"]..","..目标所在坐标["y"],2,3,5)
 --		if(取物品数量("红色三菱镜") > 0)then				--物品得到后 包裹不会立马有 循环去拿下
---			移动(nextX,nextY)
+--			自动寻路(nextX,nextY)
 --			return true
 --		end
 		goto  穿越迷宫	
@@ -144,7 +144,7 @@ function FindNpc()
 		end				
 	end
 	if(取物品数量("红色三菱镜") > 0)then
-		移动(目标所在坐标["nextX"],目标所在坐标["nextY"])
+		自动寻路(目标所在坐标["nextX"],目标所在坐标["nextY"])
 		return true		
 	end
 	--还没刷新出来 重新到找人环节
@@ -180,16 +180,16 @@ function main()
 	goto HomePos
 ::start::		
 	等待到指定地图("艾尔莎岛", 1)    
-	移动(140,105)    
+	自动寻路(140,105)    
 	转向(1)		-- 转向北
 	等待服务器返回()	
 	对话选择(4, 0)
 	等待到指定地图("里谢里雅堡")		
 	common.checkHealth()	
 	common.supplyCastle()    
-	移动(41, 50,"里谢里雅堡 1楼")	
-	移动(45, 20,"启程之间")
-	移动(15, 4)    		
+	自动寻路(41, 50,"里谢里雅堡 1楼")	
+	自动寻路(45, 20,"启程之间")
+	自动寻路(15, 4)    		
 	转向(2)
 	等待服务器返回()	
 	对话选择(4, 0)
@@ -204,17 +204,17 @@ function main()
         
 ::jnwcf::
 	等待到指定地图("杰诺瓦镇的传送点", 1)	 
-	移动(14, 6)	
+	自动寻路(14, 6)	
 	等待到指定地图("村长的家", 1)	 
-	移动(1, 9)	
+	自动寻路(1, 9)	
 ::outJnw::
 	等待到指定地图("杰诺瓦镇")
-	移动(71, 18)
+	自动寻路(71, 18)
 	
 ::shaLianNa::
 	等待到指定地图("莎莲娜") 
 	if(取物品数量("塔比欧的细胞") == 0 and 取物品数量("月之锄头") == 0)then
-		移动(281, 371)
+		自动寻路(281, 371)
 		设置("无一级逃跑",0)
 		转向(0)
 		等待(1000)
@@ -222,7 +222,7 @@ function main()
 		设置("无一级逃跑",1)
 	end
 	if(取物品数量("塔比欧的细胞") > 0 and 取物品数量("月之锄头") == 0)then
-		移动(314,432)
+		自动寻路(314,432)
 		对话坐标选是(313, 432)
 		等待空闲()
 	end
@@ -259,9 +259,9 @@ function main()
 
 ::map15531::
 	if(目标是否可达(50,32))then
-		移动(50,32)
+		自动寻路(50,32)
 	else
-		移动(46,32)
+		自动寻路(46,32)
 		对话选是(2)
 	end
 ::深渊::

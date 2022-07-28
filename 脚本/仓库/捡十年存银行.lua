@@ -6,7 +6,7 @@ common=require("common")
 ::begin::
 	mapName=取当前地图名()
 	if(mapName == "追忆之路")then
-		移动(12,119)		
+		自动寻路(12,119)		
 	end
 	
 ::checkBag::

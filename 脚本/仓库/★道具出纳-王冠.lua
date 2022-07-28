@@ -18,7 +18,7 @@ function waitTradeItemsAction(args)
 	elseif (mapName=="银行" and mapNum== 1121)then	
 		goto bankWait
 	elseif (mapName=="召唤之间" )then	--登出 bank
-		移动(3,9)
+		自动寻路(3,9)
 		对话选是(4,9)
 		回城()
 		common.gotoFalanBankTalkNpc()
@@ -32,7 +32,7 @@ function waitTradeItemsAction(args)
 		common.gotoFalanBankTalkNpc()
 	end
 
-	移动(args.x,args.y)	
+	自动寻路(args.x,args.y)	
 	topicMsg = {name=人物("名称"),bagcount=取包裹空格(),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))	
 	topic,msg=等待订阅消息(10000)
@@ -50,7 +50,7 @@ function waitTradeItemsAction(args)
 	end
 	goto bankWait
 ::cun::
-	移动(11,8)
+	自动寻路(11,8)
 	面向("东")
 	等待服务器返回()
 	bankGold = 银行("金币")
