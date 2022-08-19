@@ -75,7 +75,90 @@ function 等待队伍人数达标(练级点,tmpMapName)				--等待队友
 	喊话("人数达标，自动前往【"..练级点.."】，请不要离开队伍,谢谢！",2,3,5)
 	return 
 end
-
+--检测驯兽技能等级 
+function checkTamerSkillLevel()
+	if(是否是驯兽 == false)then
+		return false
+	end
+	local nowSkillLv = common.playerSkillLv("调教")
+	if(nowSkillLv == 0 or nowSkillLv>=8)then	--3转以后 先屏蔽
+		return false
+	end
+	--4转 5转 不转 这里没有自动调用4转5转任务
+	local rankLv = 人物("职称等级")
+	if(nowSkillLv >= (4 + rankLv*2))then
+		--去提升等价
+		执行脚本("./脚本/★转正/★提升阶级-驯兽.lua")	
+		等待(2000)
+		if(rankLv == 人物("职称等级"))then	
+			-- 【一 二 三转任务】 三转先放一下 这个需要队伍联动
+			if(rankLv == 0)then		--1转树精
+				回城()
+				执行脚本("./脚本/★转正/★晋级-树精一转单人版不等待.lua")	
+			elseif(rankLv == 1)then --2转神兽
+				回城()
+				执行脚本("./脚本/★转正/★晋级-神兽二转.lua")	
+			else -- 3 4 5先不做
+				return false
+			end
+			执行脚本("./脚本/★转正/★提升阶级-驯兽.lua")
+		end		
+		--不管成功与否 继续回去练级 当然 下次战斗判断 会重复进入此步
+		return true
+	end
+	return false
+end
+--检查忍者职业技能  暂时不扩展，可以用表 把职业技能 和提升阶级脚本关联起来
+function checkNinjaSkillLevel()
+	local nowSkillLv = common.playerSkillLv("暗杀")
+	if(nowSkillLv == 0 or nowSkillLv>=8)then	--3转以后 先屏蔽
+		return false
+	end
+	--4转 5转 不转 这里没有自动调用4转5转任务
+	local rankLv = 人物("职称等级")
+	if(nowSkillLv >= (4 + rankLv*2))then
+		--去提升等价
+		执行脚本("./脚本/★转正/★提升阶级-忍者.lua")	
+		等待(2000)
+		if(rankLv == 人物("职称等级"))then	
+			-- 【一 二 三转任务】 三转先放一下 这个需要队伍联动
+			if(rankLv == 0)then		--1转树精
+				回城()
+				执行脚本("./脚本/★转正/★晋级-树精一转单人版不等待.lua")	
+			elseif(rankLv == 1)then --2转神兽
+				回城()
+				执行脚本("./脚本/★转正/★晋级-神兽二转.lua")	
+			else -- 3 4 5先不做
+				return false
+			end
+			执行脚本("./脚本/★转正/★提升阶级-忍者.lua")
+		end		
+		--不管成功与否 继续回去练级 当然 下次战斗判断 会重复进入此步
+		return true
+	end
+	return false
+end
+function checkMainSkillLevel()
+	local profession=人物("职业")
+	if(profession == "驯兽师")then
+		return checkTamerSkillLevel()
+	elseif(profession == "忍者")then
+		return checkNinjaSkillLevel()
+	end	
+	return false
+end
+--检查魅力 没有完美调教术的 才检查
+function checkCharisma()
+	if(是否有完美调教)then return false end
+	--if(人物("魅力") < 60 and 宠物("忠诚") < 60)then
+	if(人物信息().value_charisma  < 60 and 宠物("忠诚") < 60)then
+		if(人物("金币") > 200000)then	--40w 金币 去买魅力
+			执行脚本("./脚本/其他/★花钱买魅力.lua")
+			return true
+		end
+	end
+	return false
+end
 function 半山练级(目标等级)
 	日志("半山练级",1)
 	设置个人简介("玩家称号",目标等级)
@@ -110,8 +193,8 @@ function 半山练级(目标等级)
 	等待空闲()
 	if(人物("金币") < 多少金币去拿钱) then
 		日志("人物金币不够，去银行取钱，当前金币【"..人物("金币").."】")
-		common.getMoneyFromBank(身上最少金币)
-	end
+		common.getMoneyFromBank(多少金币去拿钱)
+	end	
 	local 当前地图名 = 取当前地图名()	
 	if(当前地图名 =="艾尔莎岛" )then goto toIsland
 	elseif(当前地图名 ==  "里谢里雅堡")then goto toIsland 
@@ -236,6 +319,11 @@ function teammateAction()
 ::begin::
 	停止遇敌()	
 	等待空闲()
+	if(checkMainSkillLevel())then		--检测调教技能
+		设置("遇敌全跑",0)				--防止哪个脚本卡了这个 不行的话 重新读取配置	
+		goto begin						--提升阶级后，重新begin
+	end 
+	if(checkCharisma())then goto begin end	--检查魅力
 	if(人物("金币") < 多少金币去拿钱) then
 		日志("人物金币不够，去银行取钱，当前金币【"..人物("金币").."】")
 		common.getMoneyFromBank(多少金币去拿钱)
@@ -248,6 +336,7 @@ function teammateAction()
 			离开队伍()
 		end				
 	end	
+
 	当前地图名 = 取当前地图名()		
 	if(当前地图名 =="艾尔莎岛" )then goto toIsland
 	elseif(当前地图名 ==  "里谢里雅堡")then goto toIsland 

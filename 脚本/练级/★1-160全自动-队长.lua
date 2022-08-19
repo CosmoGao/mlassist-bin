@@ -632,6 +632,16 @@ function 雪塔练级(目标等级,目标地图)
 	练级前宠经验=宠物("经验")
 	练级前金币=人物("金币")
 	水晶名称="地水的水晶（5：5）"
+	local tgtMapName="雪拉威森塔４９层"
+	if(目标地图=="t49")then
+		tgtMapName="雪拉威森塔４９层"
+	elseif(目标地图=="t55")then	
+		tgtMapName="雪拉威森塔５５层"
+	elseif(目标地图=="t60")then		
+		tgtMapName="雪拉威森塔６０层"
+	elseif(目标地图=="t65")then	
+		tgtMapName="雪拉威森塔６５层"
+	end
 ::begin::	
 	等待空闲()	
 	common.checkHealth(医生名称)
@@ -728,6 +738,7 @@ function 雪塔练级(目标等级,目标地图)
 		遇敌总次数=遇敌总次数+1
 		等待战斗结束()
 	end		
+	if(取当前地图名() ~= tgtMapName)then goto ting end
 	等待(1000)	
 	goto yudi  
 ::ting::	
@@ -832,6 +843,8 @@ function 营地任务()
 	goto begin	
 
 ::naZhengMing::
+	common.checkHealth(医生名称)
+	common.supplyCastle()
 	common.toCastle()	--默认城堡卖石附近
 	自动寻路(41,84)
 	while (队伍("人数") < 队伍人数) do --等待组队完成
@@ -858,6 +871,8 @@ function 营地任务()
 ::battleBoss::		
 	if(队伍("人数") < 队伍人数) then --等待组队完成
 		日志("队伍人数:"..队伍("人数").." 小于预设人数:"..队伍人数,1)
+		common.checkHealth(医生名称)
+		common.supplyCastle()
 		common.toCastle()	--默认城堡卖石附近
 		自动寻路(41,84)
 		needCampMission=是否需要做营地任务()		
@@ -1044,6 +1059,7 @@ function 营地练级(目标等级)
 	if(宠物("血") < 宠补血值)then goto  ting end
 	if(宠物("魔") < 宠补魔值)then goto  ting end
 	if(取当前等级()	>= 目标等级) then goto  ting end
+	if(取当前地图名()~="肯吉罗岛")then goto  ting end
 	if 是否战斗中() then
 		遇敌总次数=遇敌总次数+1
 		等待战斗结束()
@@ -1062,6 +1078,7 @@ function 营地练级(目标等级)
 	等待空闲() 	
 	喊话("共遇敌次数"..遇敌总次数,2,3,5)
 	common.statistics(练级前时间,练级前经验,练级前宠经验,练级前金币)	--统计脚本效率
+	if(取当前地图名()~="肯吉罗岛")then goto  begin end
 	自动寻路(551, 332,"圣骑士营地")	
 	goto quYiYuan
 ::quYiYuan::
@@ -1192,6 +1209,7 @@ function 蝎子练级(目标等级)
 	if(宠物("血") < 宠补血值)then goto  ting end
 	if(宠物("魔") < 宠补魔值)then goto  ting end
 	if(取当前等级()	>= 目标等级) then goto  ting end
+	if(取当前地图名()~="肯吉罗岛")then goto  ting end
 	if 是否战斗中() then
 		遇敌总次数=遇敌总次数+1
 		等待战斗结束()
@@ -1219,6 +1237,7 @@ function 蝎子练级(目标等级)
 		等待(2000)
 		goto begin
 	end
+	if(取当前地图名()~="肯吉罗岛")then goto  begin end
 	自动寻路(231, 434)		
 	等待到指定地图("矮人城镇", 110, 191)
 ::salebegin::			--卖和回补
@@ -1292,7 +1311,7 @@ function 沙滩练级(目标等级)
 ::quYingDi::
 	设置("移动速度",走路加速值)
 	common.checkHealth(医生名称)
-	common.checkCrystal("风地的水晶（5：5）")
+	common.checkCrystal(水晶名称)
 	common.去营地()
 	设置("移动速度",走路还原值)
 	goto begin
@@ -1345,6 +1364,7 @@ function 沙滩练级(目标等级)
 	if(宠物("血") < 宠补血值)then goto  ting end
 	if(宠物("魔") < 宠补魔值)then goto  ting end
 	if(取当前等级()	>= 目标等级) then goto  ting end
+	if(取当前地图名()~="肯吉罗岛")then goto  ting end
 	if 是否战斗中() then
 		遇敌总次数=遇敌总次数+1
 		等待战斗结束()
@@ -1367,6 +1387,7 @@ function 沙滩练级(目标等级)
 	等待空闲() 	
 	喊话("共遇敌次数"..遇敌总次数,2,3,5)
 	common.statistics(练级前时间,练级前经验,练级前宠经验,练级前金币)	--统计脚本效率
+	if(取当前地图名()~="肯吉罗岛")then goto  begin end
 	自动寻路(551, 332,"圣骑士营地")	
 	goto quYiYuan
 ::quYiYuan::
@@ -1548,6 +1569,7 @@ function 石头练级(目标等级)
 	if(宠物("血") < 宠补血值)then goto  ting end
 	if(宠物("魔") < 宠补魔值)then goto  ting end
 	if(取当前等级()	>= 目标等级) then goto  ting end
+	if(取当前地图名()~="矮人城镇")then goto  begin end
 	if 是否战斗中() then
 		遇敌总次数=遇敌总次数+1
 		等待战斗结束()
@@ -1575,6 +1597,7 @@ function 石头练级(目标等级)
 		等待(2000)
 		goto begin
 	end
+	if(取当前地图名()~="矮人城镇")then goto  begin end
 	自动寻路(90, 125) 
 	自动寻路(92, 125)	
 	等待(2000)
@@ -2792,8 +2815,8 @@ function main()
 			黑一练级(115)
 		elseif(avgLevel<135)then	--龙顶 或 旧日
 			旧日练级(135)
-		elseif(avgLevel < 160)then	--龙顶	刷钱 然后声望 然后继续练级	
-			龙顶练级(160)
+		-- elseif(avgLevel < 160)then	--龙顶	刷钱 然后声望 然后继续练级	
+			-- 龙顶练级(160)
 		elseif(avgLevel<160)then	--半山
 			半山练级(160)
 		end

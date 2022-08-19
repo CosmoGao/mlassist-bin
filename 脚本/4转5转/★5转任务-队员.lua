@@ -55,7 +55,7 @@ end
 	
 function 五转碎片()
 	common.changeLineFollowLeader(队长名称)	
-	checkElement()
+	checkElementBoss()
 	清除系统消息()	
 	--买5斧()  	
 ::begin::
@@ -96,6 +96,7 @@ function 五转碎片()
 	goto begin
 ::quYiYuan::
 	换水晶()
+	checkElementBoss()
 	自动寻路( 95, 73)
 	自动寻路( 95, 72)
 	goto begin 
@@ -134,7 +135,7 @@ function 五转碎片()
 		卖(21,23,卖店物品列表)	
 	end
 	if(当前地图名 == "医院" ) then
-		checkElement()
+		checkElementBoss()
 	end
 	--队伍人数检测
 	if(取队伍人数() < 2 and 当前地图名 ~= "隐秘之洞 地下10层" and 当前地图名 ~= "隐秘之洞 最底层")then
@@ -204,6 +205,16 @@ function 换水晶()
 	end
 	tryCount = tryCount+1
 	goto begin
+end
+function checkElementBoss()
+	local elementList={"地","水","火","风"}
+	local titleData=""
+	for i,tmpEle in ipairs(elementList) do
+		if(取物品数量("隐秘的水晶（"..tmpEle.."）") > 0) then
+			titleData=titleData..tmpEle.."打"		
+		end
+	end
+	设置个人简介("玩家称号",titleData)	
 end
 function crossBarrier()
 	if(当前地图名 == "隐秘之洞 地下10层")then		

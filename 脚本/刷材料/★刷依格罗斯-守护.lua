@@ -161,6 +161,7 @@ function waitTopic(tgtTopic,tgtPetName)
 end
 
 function 开奖()
+	设置个人简介("玩家称号","0")	
 	if(取物品数量("偏方多面体的卵") > 0)then
 		if(扔海豚点位 == 1)then
 			自动寻路(144,108)

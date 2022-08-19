@@ -14,7 +14,9 @@ function 哥拉尔到法兰(dj)
 	if (当前地图名=="铁达尼号" )then	
 		goto  tdn  
 	elseif (当前地图名=="哥拉尔镇" )then	
-		goto  star1 
+		goto  star1 	
+	elseif (当前地图名=="往哥拉尔栈桥" )then	
+		goto  ty 
 	end	
 	goto  begin
 ::star1::	

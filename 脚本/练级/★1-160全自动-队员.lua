@@ -613,6 +613,8 @@ function 营地任务()
 		扔("魔石")
 		对话坐标选是(14,14)
 	elseif(取物品数量("怪物碎片") < 1 and 取物品数量("信") < 1 and 取队伍人数() < 2 )then		
+		common.checkHealth(医生名称)
+		common.supplyCastle()
 		common.toCastle()
 		自动寻路(41,83)		
 		common.joinTeam(队长名称)
@@ -1408,8 +1410,8 @@ function main()
 				营地练级(115,"黑一")
 			elseif(avgLevel == 135)then		--龙顶 或 旧日 
 				旧日练级(135)
-			elseif(avgLevel == 160)then		--龙顶		
-				营地练级(160,"龙顶")
+			-- elseif(avgLevel == 160)then		--龙顶		
+				-- 营地练级(160,"龙顶")
 			elseif(avgLevel == 160)then		--半山		
 				半山练级(160)
 			elseif(avgLevel >= 160)then	

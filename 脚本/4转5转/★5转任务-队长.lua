@@ -45,12 +45,15 @@ local 十层等待时间=5000		--毫秒
 local 上次迷宫楼层=1
 local 当前迷宫楼层=1
 
+
 日志(type(是否交任务))
 if 是否交任务 then 
 	日志("是否交任务:1")
 else
 	日志("是否交任务:0")
 end
+日志("队伍人数:"..队伍人数)
+日志("当前队伍人数："..队伍("人数") )
 --先检查自己的碎片 如果没满20  就先刷某一个，全满继续下一个
 --自己检查完,都满足后，检查队友的
 --地水火风
@@ -78,7 +81,45 @@ function getTeammateElementName(name)
 	end
 	return nil
 end
-
+--检查队友boss
+function CheckTeammateElementBoss(name)
+	local card = 取好友名片(name)
+	if( card == nil)then
+		return nil		
+	end	
+	local elementList={"地","水","火","风"}
+	for i,tmpEle in ipairs(elementList) do
+		--日志(card.title)
+		if(string.find(card.title,tmpEle.."打") ~= nil) then
+			return tmpEle
+		end
+	end
+	return nil
+end
+--通过队伍获取
+function CheckTeammateElementCustomBoss(teamPlayer)
+	if teamPlayer==nil then return nil end
+	local elementList={"地","水","火","风"}
+	for i,tmpEle in ipairs(elementList) do
+		--日志(teamPlayer.nick_name)
+		if(string.find(teamPlayer.nick_name,tmpEle.."打") ~= nil) then
+			return tmpEle
+		end
+	end
+	return nil
+end
+--检查队友需要打的boss
+function checkTeammateNeedElementBoss()
+	local teamPlayers = 队伍信息()
+	for index,teamPlayer in ipairs(teamPlayers) do
+		--日志(teamPlayer.name)
+		local tmpEle = CheckTeammateElementCustomBoss(teamPlayer)
+		if(tmpEle ~= nil)then
+			return tmpEle
+		end
+	end	
+	return nil
+end--检查队友缺少的碎片
 function checkTeammateNeedElement()
 	local teamPlayers = 队伍信息()
 	for index,teamPlayer in ipairs(teamPlayers) do
@@ -245,7 +286,7 @@ function 十层去下面()
 		if(目标是否可达(v.x,v.y))then
 			自动寻路(v.x,v.y)
 		end
-	end
+	end	
 	-- local u =common.findAroundMaze()
 	-- if(u~= nil)then
 		-- 自动寻路(u.x,u.y)		
@@ -266,6 +307,9 @@ function 五转任务()
 	local outMazeX=nil	--刷碎片时 记录迷宫坐标
 	local outMazeY=nil	
 	local 水晶名称="水火的水晶（5：5）"
+	local curx=0
+	local cury=0
+	
 	设置("自动吃深蓝",0)
 ::begin::
 	等待空闲()
@@ -276,7 +320,9 @@ function 五转任务()
 		自动寻路(23,25)
 		对话选是(24,24)	
 		goto begin
-	elseif (string.find(当前地图名,"隐秘之洞")~= nil )then goto 穿越迷宫
+	elseif (string.find(当前地图名,"隐秘之洞")~= nil )then 
+		设置("自动吃深蓝",1)
+		goto 穿越迷宫
 	elseif(当前地图名 ==  "里谢里雅堡")then goto quYingDi 
 	elseif(当前地图名 ==  "法兰城")then goto quYingDi 
 	elseif(当前地图名 == "医院")then goto StartBegin
@@ -284,7 +330,9 @@ function 五转任务()
 	elseif(当前地图名 ==  "商店")then goto yingDiShangDian
 	elseif(当前地图名 ==  "银行")then goto yingDiYinHang
 	elseif(当前地图名 ==  "工房")then goto lu2
-	elseif(当前地图名 ==  "隐秘之洞地下1层")then goto 穿越迷宫	
+	elseif(当前地图名 ==  "隐秘之洞地下1层")then 
+		设置("自动吃深蓝",1)
+		goto 穿越迷宫
 	elseif(当前地图名 ==  "未来之塔入口第1层")then goto outMaze	
 	elseif(当前地图名 ==  "肯吉罗岛")then goto kenDaoPanDuan
 	else 回城()	end
@@ -389,7 +437,15 @@ function 五转任务()
 ::lu4::
 	等待到指定地图("肯吉罗岛")	 
 	if(指定洞 == 0 or 指定洞 == nil or 指定洞 == "无")then
-		checkBagChip()
+		if(是否交任务) then	--一起提交 则用背包判断
+			checkBagChip()
+		else  	--带队 但不提交 则用队友的判断
+			当前刷碎片属性=checkTeammateNeedElementBoss()
+			if(当前刷碎片属性==nil)then
+				日志("队友碎片属性为空，已完成5转任务，脚本退出",1)
+				return
+			end
+		end
 	else
 		当前刷碎片属性 = 指定洞
 	end
@@ -409,18 +465,20 @@ function 五转任务()
 		goto begin	
 	end
 	if(当前地图名 == "隐秘之洞 地下10层")then	
-		等待(十层等待时间)
-		if 当前刷碎片属性==nil then --归位 
-			checkBagChip()
+		if(十层判断坐标结界切换()==false)then
+			goto 穿越迷宫
 		end
-		使用物品("隐秘的水晶（"..当前刷碎片属性.."）")
-		等待(3000)
-		curx,cury = 取当前坐标()
-		tgtx,tgty = 取周围空地(curx,cury,1)--取当前坐标1格范围内 空地
-		自动寻路(tgtx,tgty)
-		common.makeTeam(队伍人数)
+		common.makeTeam(队伍人数)	--默认100秒
 		if(队伍("人数")==队伍人数)then
 			十层去下面()	
+			等待空闲()
+			if(取当前地图名() == "隐秘之洞 地下9层")then	--反了 
+				tx,ty=取迷宫远近坐标(false)	--取最近迷宫坐标
+				自动寻路(tx,ty)		
+			elseif(取当前地图名() == "隐秘之洞 地下10层")then--在调用一次 防止地图缓存看到的坐标不对
+				十层去下面()	
+				等待空闲()
+			end
 		else
 			goto 穿越迷宫
 		end
@@ -492,6 +550,7 @@ function 五转任务()
 	清除系统消息()	
 	goto lu4 
 ::ting::
+	设置("自动吃深蓝",0)
 	停止遇敌()      
 	等待空闲() 	
 	喊话("共遇敌次数"..遇敌总次数,2,3,5)
@@ -583,87 +642,129 @@ function 五转任务()
 end
 
 function battleBoss()	
-	if(目标是否可达(24,19))then	--风 27313
-		if(是否战斗中()==false)then
+	if(取当前地图编号() == 27313)then					--风		
+		if(是否战斗中()==false)then	
 			自动寻路(24,19)
 			转向(4)
 			对话选是(4)
 			等待(5000)
 			等待战斗结束()
-		end
-		if(取当前地图编号() == 27314)then
-			if(是否交任务) then
-				对话选是(4)
-			else
-				回城()
-				等待(3000)		
-			end
+		else
+			等待战斗结束()
+		end	
+	end
+	if(取当前地图编号()  == 27314)then	--风	
+		if(是否交任务) then
+			自动寻路(24,19)
+			对话选是(4)
+		else
+			回城()
+			等待(3000)		
 		end
 	end
-	if(目标是否可达(24,29))then		--水 27307		
-		if(是否战斗中()==false)then
+	if(取当前地图编号()  == 27307)then					--水		
+		if(是否战斗中()==false)then	
 			自动寻路(24,29)
 			转向(0)
 			对话选是(0)
 			等待(5000)
 			等待战斗结束()
-		end
-		if(取当前地图编号() == 27308)then
-			if(是否交任务) then
-				对话选是(0)
-			else
-				回城()
-				等待(3000)				
-			end
+		else
+			等待战斗结束()
+		end	
+	end
+	if(取当前地图编号()  == 27308)then	--风	
+		if(是否交任务) then
+			自动寻路(24,29)
+			对话选是(0)
+		else
+			回城()
+			等待(3000)		
 		end
 	end
-	if(目标是否可达(29,24))then		--27310  火
+	if(取当前地图编号()  == 27310)then		--27310  火
 		if(是否战斗中()==false)then
 			自动寻路(29,24)
 			转向(6)
 			对话选是(6)
 			等待(5000)
 			等待战斗结束()
-		end
-		if(取当前地图编号() == 27311)then
-			if(是否交任务) then
-				对话选是(6)
-			else
-				回城()
-				等待(3000)				
-			end
-		end
+		else
+			等待战斗结束()
+		end	
 	end
-	if(目标是否可达(19,24))then		--27304  地
-		if(取当前地图编号() == 27305)then
-			if(是否交任务) then
-				对话选是(2)
-			else
-				回城()
-				等待(3000)			
-			end
-		end
+	if(取当前地图编号()  == 27311)then		--火
+		if(是否交任务) then
+			自动寻路(29,24)
+			对话选是(6)
+		else
+			回城()
+			等待(3000)				
+		end		
+	end
+	if(取当前地图编号()  == 27304)then		--27304  地		
 		if(是否战斗中()==false)then
 			自动寻路(19,24)
 			转向(2)
 			对话选是(2)
 			等待(5000)
 			等待战斗结束()
-		end
-		if(取当前地图编号() == 27305)then
-			if(是否交任务) then
-				对话选是(2)
-			else
-				回城()
-				等待(3000)			
-			end
-		end
+		else
+			等待战斗结束()
+		end	
+	end
+	if(取当前地图编号()  == 27305)then		--地
+		if(是否交任务) then
+			自动寻路(19,24)
+			对话选是(2)
+		else
+			回城()
+			等待(3000)			
+		end		
 	end
 	if(取当前地图编号() == 27315) then
 		自动寻路(23,25)
 		对话选是(24,24)
 	end
 	--27315  隐秘之洞 最底层   23 25，对话24 24
+end
+function 十层判断坐标结界切换()
+	if(取当前地图名() ~= "隐秘之洞 地下10层")then	
+		return false
+	end
+	等待(十层等待时间)	
+	local curx=0
+	local cury=0
+	local 十层进入坐标x,十层进入坐标y=取当前坐标()		
+	local tryCount=0
+::begin::		
+	if 当前刷碎片属性==nil then --归位 
+		使用物品("隐秘的水晶（地）")
+		等待(3000)
+		使用物品("隐秘的水晶（水）")
+		等待(3000)
+		使用物品("隐秘的水晶（火）")
+		等待(3000)
+		使用物品("隐秘的水晶（风）")
+		等待(3000)
+	else
+		--10层切换 卡主时  队伍不解散 判断会出问题
+		使用物品("隐秘的水晶（"..当前刷碎片属性.."）")
+		等待(3000)
+	end	
+	curx,cury = 取当前坐标()
+	if(curx ~= 十层进入坐标x and cury ~= 十层进入坐标y) then				
+		tgtx,tgty = 取周围空地(curx,cury,1)--取当前坐标1格范围内 空地
+		自动寻路(tgtx,tgty)
+		return true
+	elseif(取当前地图名() ~= "隐秘之洞 地下10层")then	
+		return false	
+	elseif(tryCount >= 10)then
+		return false
+	end
+	tryCount=tryCount+1
+	等待(1000)				--10次10秒 加使用物品等待 够了
+	goto begin
 end
 五转任务()  	
 

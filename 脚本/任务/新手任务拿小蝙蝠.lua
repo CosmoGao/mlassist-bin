@@ -46,6 +46,12 @@ local 领小蝙蝠还是使魔=用户下拉框("领小蝙蝠还是使魔",{"小�
 	else
 		自动寻路(47,78)
 		对话选是(4)
+		local oldPetList=全部宠物信息()
+		if(common.getTableSize(oldPetList) >= 1)then
+			petInfo=宠物信息(0)			
+			日志("领取使魔成功，档次:"..petInfo.grade,1)			
+			return
+		end
 	end
 	goto begin
 ::map1531::			--回廊	

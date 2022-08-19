@@ -21,6 +21,13 @@ local topicList={"金币仓库信息"}
 
 function waitTopic()
 设置("timer",0)
+local topic=""
+local msg=""
+local recvTbl=nil
+local tradex=nil
+local tradey=nil
+local units=nil
+local goldNum=0
 ::begin::
 	topic,msg=等待订阅消息()
 	日志(topic.." Msg:"..msg,1)

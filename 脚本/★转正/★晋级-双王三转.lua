@@ -230,6 +230,7 @@ end
 		goto begin
 	end
 	if(取物品数量("野草莓") < 1)then	
+		if(取包裹空格() < 1)then 扔("魔石") end
 		自动寻路(13,10)		
 		对话选是(2)	
 	else

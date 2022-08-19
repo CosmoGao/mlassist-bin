@@ -189,7 +189,7 @@ function common.makeTeam(teamCount,teammateList,timeout)
 	local waitNum=timeout/1000
 	local tryNum=0
 ::begin::
-	while tryNum<=waitNum  do			
+	while tryNum<=waitNum  do		
 		if(队伍("人数") >= teamCount) then	--数量不足 等待
 			--日志("队伍人数达标")
 			break
@@ -261,6 +261,7 @@ function common.joinTeam(leaderName,tryCount)
 		return
 	end
 	自动寻路(orix,oriy)
+	tryNum=tryNum+1
 	goto begin	
 end
 
@@ -1713,6 +1714,7 @@ function common.learnPetSkillDir(d,skillIndex,petIndex,petSkillIndex)
 		对话选择(0,petSkillIndex)
 		 return true
 	end   
+	对话选择(-1,0)
 	return false
 end
 --就职传教
@@ -1793,8 +1795,7 @@ function common.autoLearnSkill(skillName)
 		等待到指定地图("竞技场", 34,67)
 		自动寻路(15,57)			
 		common.learnPlayerSkill(15,56)			
-	end
-	if(skillName=="乾坤一掷")then
+	elseif(skillName=="乾坤一掷")then
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -1805,8 +1806,7 @@ function common.autoLearnSkill(skillName)
 		自动寻路(102,131,"安其摩酒吧")	
 		自动寻路(10,13)			
 		common.learnPlayerSkill(11, 13)			
-	end
-	if(skillName=="调教")then
+	elseif(skillName=="调教")then
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -1819,8 +1819,7 @@ function common.autoLearnSkill(skillName)
 		自动寻路(10,6,"客房")	
 		自动寻路(10,5)			
 		common.learnPlayerSkill(11, 5)			
-	end
-	if(skillName=="宠物强化")then
+	elseif(skillName=="宠物强化")then
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -1831,19 +1830,7 @@ function common.autoLearnSkill(skillName)
 		自动寻路(122, 36,"饲养师之家")
 		自动寻路(13,4)				
 		common.learnPlayerSkill(14, 4)			
-	end
-	-- if(skillName=="治疗")then
-		-- if(取队伍人数()>1)then
-			-- 离开队伍()
-		-- end
-		-- if(人物("金币") < 100)then
-			-- common.getMoneyFromBank(1000)				
-		-- end
-		-- common.gotoFaLanCity("whospital")		
-		-- 自动寻路(10,6)				
-		-- common.learnPlayerSkill(10, 5)			
-	-- end
-	if(skillName=="补血魔法")then
+	elseif(skillName=="补血魔法")then
 		if(人物("职业") ~= "传教士")then
 			日志("非传教职业！")
 			return
@@ -1867,8 +1854,7 @@ function common.autoLearnSkill(skillName)
 		等待到指定地图(1208)	
 		自动寻路(14, 11)		
 		common.learnPlayerSkill(14, 10)			
-	end
-	if(skillName=="强力补血魔法")then
+	elseif(skillName=="强力补血魔法")then
 		if(人物("职业") ~= "传教士")then
 			日志("非传教职业！")
 			return
@@ -1892,8 +1878,7 @@ function common.autoLearnSkill(skillName)
 		等待到指定地图(1208)	
 		自动寻路(19, 13)		
 		common.learnPlayerSkill(19, 12)			
-	end
-	if(skillName=="石化魔法")then
+	elseif(skillName=="石化魔法")then
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -1903,8 +1888,7 @@ function common.autoLearnSkill(skillName)
 		common.outCastle("w")
 		自动寻路(120, 65)							
 		common.learnPlayerSkill(120, 64)			
-	end
-	if(skillName=="抗毒" or skillName=="抗昏睡" or skillName=="抗石化" or skillName=="抗酒醉" or skillName=="抗混乱" or skillName=="抗遗忘")then		
+	elseif(skillName=="抗毒" or skillName=="抗昏睡" or skillName=="抗石化" or skillName=="抗酒醉" or skillName=="抗混乱" or skillName=="抗遗忘")then		
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -1944,8 +1928,7 @@ function common.autoLearnSkill(skillName)
 			自动寻路(15,8)		
 			common.learnPlayerSkillDir(3)	
 		end		
-	end
-	if(skillName=="气绝回复")then		
+	elseif(skillName=="气绝回复")then		
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -1975,8 +1958,7 @@ function common.autoLearnSkill(skillName)
 		自动寻路(6, 13,"亚留特村")
 		自动寻路(48,71)
 		common.learnPlayerSkillDir(4)			
-	end
-	if(skillName=="挖掘")then		
+	elseif(skillName=="挖掘")then		
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -1987,8 +1969,7 @@ function common.autoLearnSkill(skillName)
 		自动寻路(200,132,"基尔的家")
 		自动寻路(9,3)
 		common.learnPlayerSkill(9,2)	
-	end
-	if(skillName=="挖掘")then		
+	elseif(skillName=="挖掘")then		
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -1999,8 +1980,7 @@ function common.autoLearnSkill(skillName)
 		自动寻路(200,132,"基尔的家")
 		自动寻路(9,3)
 		common.learnPlayerSkill(9,2)	
-	end
-	if(skillName=="伐木")then		
+	elseif(skillName=="伐木")then		
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -2011,8 +1991,7 @@ function common.autoLearnSkill(skillName)
 		自动寻路(509, 153,"山男的家")	
 		自动寻路(10,8)		
 		common.learnPlayerSkill(10,7)	
-	end
-	if(skillName=="狩猎")then		
+	elseif(skillName=="狩猎")then		
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -2031,8 +2010,7 @@ function common.autoLearnSkill(skillName)
 				break
 			end
 		end		
-	end
-	if(skillName=="治疗")then		
+	elseif(skillName=="治疗")then		
 		if(取队伍人数()>1)then
 			离开队伍()
 		end
@@ -2043,6 +2021,39 @@ function common.autoLearnSkill(skillName)
 		自动寻路(82,83,"医院")
 		自动寻路(10,6)
 		common.learnPlayerSkill(10,5)			
+	elseif(skillName=="风刃魔法" or skillName=="火焰魔法"or skillName=="冰冻魔法"or skillName=="陨石魔法")then				
+		等待空闲()			
+		common.outFaLan("w")
+		自动寻路(298, 148)
+		while true do 
+			npc=查周围信息("神木",1)
+			if(npc ~= nil) then
+				移动到目标附近(npc.x,npc.y)
+				转向坐标(npc.x,npc.y)
+				日志("魔术",1)
+				对话选择(1,0)	
+				等待(2000)
+				if(取当前地图名() ~= "芙蕾雅")then			
+					break
+				end
+			else
+				日志("当前时间是【"..游戏时间().."】，】，等待黄昏或夜晚【荷特普】出现")
+				等待(30000)
+			end		
+		end	
+		if(skillName == "风刃魔法")then
+			自动寻路(21,13)
+			common.learnPlayerSkill(21,14)	
+		elseif(skillName=="冰冻魔法")then
+			自动寻路(21,9)
+			common.learnPlayerSkill(21,8)	
+		elseif(skillName=="陨石魔法")then
+			自动寻路(21,9)
+			common.learnPlayerSkill(22,9)
+		elseif(skillName=="火焰魔法")then
+			自动寻路(21,16)
+			common.learnPlayerSkill(22,17)	
+		end
 	end
 	if(common.findSkillData(skillName) ~=nil)then		
 		喊话("已经完成技能【"..skillName.."】的学习",1,2,5)
@@ -2190,6 +2201,7 @@ function common.buySealCard(sealCardName, buyCount, level )
 	if (level <= 1 or level > 4) then
 		level = 1
 	end
+	if(取物品叠加数量(sealCardName) >= buyCount)then return end
 	if(取队伍人数()>1)then
 		离开队伍()
 	end 
@@ -3048,6 +3060,9 @@ end
 common.waitTradeGoldAction=function(args)
 	local mapName=""
 	local mapNum=0
+	local bankGold=0
+	local cGold=0
+	local topicMsg=nil
 ::begin::
 	等待空闲()
 	mapName = 取当前地图名()
@@ -3092,7 +3107,11 @@ common.waitTradeGoldAction=function(args)
 	end
 	银行("存钱",cGold)
 	等待(2000)
-	if(人物("金币")>=1000000)then	
+	if(银行("金币") == 1000000 and 人物("金币") > 1)then	--看看是不是大客户
+		银行("存钱",1)
+	end	
+	等待(2000)
+	if(人物("金币")>=1000000)then		--如果金币满了 就退出
 		return	--登出 切换仓库
 	end
 	goto bankWait	
@@ -3344,6 +3363,7 @@ common.waitProvideTradeItemsAction=function(args)
 	if(取物品数量(args.itemName) < 1)then
 		goto 从银行取
 	end
+	等待(4000)
 	goto bankWait
 ::从银行取::
 	自动寻路(11,8)
@@ -3376,6 +3396,7 @@ common.gotoBankRecvTradeItemsAction=function(args)
 		tradeBagSpace=recvTbl.bagcount
 		tradePlayerLine=recvTbl.line
 	else
+		等待(5000)
 		goto begin
 	end	
 	--日志(tradeName.." "..tradeBagSpace .." " ..tradePlayerLine)
@@ -3423,6 +3444,103 @@ common.gotoBankRecvTradeItemsAction=function(args)
 				--回城()
 				return
 			end		
+		end
+	end
+	goto begin
+end
+--去银行领取金币
+--这里金币代指人物拥有的金币 而不是去领取的金币数
+--needGold理想需要的金币  minGold没有达到理想金币，但有最小金币，尝试n次后返回
+--args.topic  args.publish args.needGold  args.minGold 
+common.gotoBankRecvTradeGoldAction=function(args)
+	local tryCount=0
+	local topicList={args.topic}
+	订阅消息(topicList)
+	local topic=""
+	local msg=""
+	local recvTbl=nil
+	local topicMsg={}
+	local tradeGold=0
+	local tradeName=""
+	local tradeBagSpace=0
+	local tradePlayerLine=0
+	local tradey=0
+	local tradex=0
+	local units=nil
+	local oldGold=人物("金币")
+	local minGoldTryCount=0
+	if(oldGold >= args.needGold )then
+		return
+	end
+	local calcNeedGold=args.needGold-oldGold
+::begin::
+	等待空闲()	
+	topic,msg=已接收订阅消息(args.topic)	
+	--日志(topic.." Msg:"..msg)
+	if(topic == args.topic)then
+		recvTbl = common.StrToTable(msg)		
+		tradeName=recvTbl.name
+		tradeGold=recvTbl.gold
+		tradePlayerLine=recvTbl.line
+	else
+		等待(5000)
+		goto begin
+	end	
+	--日志(tradeName.." "..tradeBagSpace .." " ..tradePlayerLine)
+	if(tradePlayerLine ~= nil and tradePlayerLine ~= 0 and tradePlayerLine ~= 人物("几线"))then
+		切换登录信息("","",tradePlayerLine,"")
+		登出服务器()
+		等待(3000)			
+		goto begin
+	end	
+	if(tradeName ~= nil and tradeBagSpace ~= nil)then	
+		if(取当前地图编号() ~= 1121)then			
+			common.gotoFalanBankTalkNpc()		
+		end	
+		tryCount=0
+		while tryCount < 3 do
+			tryCount=tryCount+1
+			topicMsg = {name=人物("名称",false),bagcount=取包裹空格(),line=人物("几线"),needGold=calcNeedGold}
+			发布消息(args.publish, common.TableToStr(topicMsg))
+			tradex=nil
+			tradey=nil
+			units = 取周围信息()
+			if(units ~= nil)then
+				for i,u in pairs(units) do
+					if(u.unit_name==tradeName)then
+						tradex=u.x
+						tradey=u.y
+						break
+					end
+				end
+			else
+				goto begin
+			end
+			if(tradex ~=nil and tradey ~= nil)then
+				移动到目标附近(tradex,tradey)
+			else
+				goto begin
+			end
+			转向坐标(tradex,tradey)		
+			--日志(tradeList)		
+			交易(tradeName,"","",10000)
+			if( 人物("金币") >= args.needGold  )then
+				tradeName=nil
+				tradeBagSpace=nil
+				tradePlayerLine=nil	
+				--回城()
+				return
+			elseif(人物("金币") >= args.minGold )then
+				minGoldTryCount =minGoldTryCount+1
+				if(minGoldTryCount >= 10)then
+					日志("已领取最少金币，继续之前任务")
+					tradeName=nil
+					tradeBagSpace=nil
+					tradePlayerLine=nil	
+					--回城()
+					return
+				end
+			end			
 		end
 	end
 	goto begin
@@ -3797,5 +3915,82 @@ function common.gleSellItems(saleItems)
 	end  
 ::goEnd::
 	return
+end
+function common.gleGotoBankTalkNpc()
+	
+::begin::	
+	等待空闲()
+	local 当前地图名 = 取当前地图名()
+	if (当前地图名=="哥拉尔镇" )then	--登出 bank
+		自动寻路(167,66,"银行")	
+		goto bank		
+	end	
+	回城()
+	等待(2000)
+	goto begin
+::bank::
+	自动寻路(25,10)
+	转向(2)
+	等待(2000)		
+end
+--检查人物金币 不足去拿 
+--minGold人物最少金币 少于此值去银行拿钱
+--maxGold人物最多金币 大于此值去银行存钱
+--bagGold人物身上取钱和存钱保留的钱数 取钱后身上有这么多钱 存钱后身上有这么多钱
+--值设定时候不要给错，满足minGold < bagGold < maxGold
+function common.gleCheckGold(minGold,maxGold,bagGold)
+	if(minGold==nil or maxGold ==nil or bagGold == nil)then return end
+	local oldGold=人物("金币")
+	if(oldGold < minGold)then
+		日志("人物现有金币【"..oldGold.."】小于设定的最少值【"..minGold.."】,去银行取钱",1)
+		common.gleGotoBankTalkNpc()
+		银行("取钱",-bagGold)
+		等待(1000)
+		local nowGold=人物("金币")
+		if(nowGold ~= oldGold)then
+			日志("取钱成功，现有金币："..nowGold)
+		end
+	elseif(oldGold > maxGold)then
+		日志("人物现有金币【"..oldGold.."】大于设定的最大值【"..maxGold.."】,去银行存钱",1)
+		common.gleGotoBankTalkNpc()
+		银行("存钱",-bagGold)
+		等待(1000)
+		local nowGold=人物("金币")
+		if(nowGold == oldGold)then	--银行满了 存少点
+			日志("银行金币满了，尝试存部分金币")
+			local bankGold = 银行("金币")
+			if(bagGold > 1000000)then	
+				银行("存钱",10000000-bankGold)
+			else
+				银行("存钱",1000000-bankGold)
+			end
+			等待(1000)
+			nowGold=人物("金币")
+			if(nowGold ~= oldGold)then	
+				日志("存钱成功，现有金币："..nowGold)
+			end
+		else
+			日志("存钱成功，现有金币："..nowGold)
+		end
+	end
+end
+function common.等待黄昏或夜晚()
+	local mapName=取当前地图名()
+	local mapNum=取当前地图编号()
+	if(游戏时间() == "夜晚" or 游戏时间() == "黄昏")then		
+		return true
+	else
+		while true do 
+			if(游戏时间() ~= "夜晚" and 游戏时间() ~= "黄昏")then		
+				日志("当前时间是【"..游戏时间().."】，等待黄昏或夜晚")
+				等待(30000)		
+			elseif(取当前地图编号() ~= mapNum)then
+				return false
+			else						
+				return true
+			end		
+		end		
+	end
+	return false
 end
 return common

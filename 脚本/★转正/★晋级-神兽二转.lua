@@ -155,6 +155,13 @@ common=require("common")
 	自动寻路(26,26)
 	转向(0)
 	等待(2000)
+	if(是否战斗中())then 
+		等待战斗结束() 
+		if(取当前地图编号()==16511 and 人物("血")<=1)then
+			日志("没有打过boos，重来")
+			回城()
+		end
+	end
 	等待空闲()
 	goto begin
 ::missionFini::

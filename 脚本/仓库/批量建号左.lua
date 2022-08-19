@@ -1,5 +1,7 @@
 设置脚本简介("辅助登录界面填写账号信息，点击统计道具,自动运行此脚本！此脚本会辅助程序进行账号信息获取，包括身上物品、宠物、金币、银行物品、宠物、金币！")
---设置("timer",100)
+
+
+设置("timer",10)
 
 起始数=0
 数字尾号=1
@@ -25,7 +27,7 @@ function 登录游戏id(游戏id)
 		登出服务器()	
 	end
 	左右角色=0
-	数字尾号 = tonumber(string.sub(游戏id,-3))
+	数字尾号 = tonumber(string.sub(游戏id,-4))
 	日志("Gid:"..游戏id.." 数字尾号:"..数字尾号)
 	name="落￠仓库左"..(数字尾号+起始数)		
 	if(数字尾号==0)then
@@ -103,7 +105,7 @@ function main()
 	
 ::切换游戏id::
 	for k,v in pairs(游戏id列表) do  
-		if(v ~= "account0001" and v ~= "account0002")then
+		if(v ~= "wzqcangku993" and v ~= "wzqcangku994"and v ~= "wzqcangku995"and v ~= "wzqcangku996"and v ~= "wzqcangku997"and v ~= "wzqcangku998"and v ~= "wzqcangku999")then
 			登录游戏id(v)
 		end
 	end  
