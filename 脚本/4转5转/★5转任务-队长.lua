@@ -44,7 +44,7 @@ local 指定洞=用户下拉框("当前任务洞:地 水 火 风",{"无","地","
 local 十层等待时间=5000		--毫秒
 local 上次迷宫楼层=1
 local 当前迷宫楼层=1
-
+local 是否领取深蓝9号=用户复选框("是否领取深蓝9号","1")
 
 日志(type(是否交任务))
 if 是否交任务 then 
@@ -350,6 +350,9 @@ function 五转任务()
 	自动寻路(0,14,"圣骑士营地")	
 	goto begin
 ::yingDiYinHang::
+	if(取当前地图编号() == 1121)then
+		goto map1121
+	end
 	if(人物("金币") > 950000)then
 		营地存取金币(-300000)		--留30万
 	elseif(人物("金币") <50000)then
@@ -368,12 +371,20 @@ function 五转任务()
 	等待(1000)
 	等待空闲()
 	goto lu4
-
+::map1121::
+	if(取物品数量("香水：深蓝九号") < 4 and 是否领取深蓝9号)then
+		common.gotoBankRecvTradeItemsAction({topic="深蓝9号发放员",publish="领取深蓝9号",itemName="香水：深蓝九号",itemCount=4,itemPileCount=3})
+	end
+	回城()
+	goto begin
 ::quYingDi::
 	设置("移动速度",走路加速值)
 	common.checkHealth()
 	common.checkCrystal(水晶名称)
 	common.supplyCastle()
+	if(取物品数量("香水：深蓝九号") < 4 and 是否领取深蓝9号)then
+		common.gotoBankRecvTradeItemsAction({topic="深蓝9号发放员",publish="领取深蓝9号",itemName="香水：深蓝九号",itemCount=4,itemPileCount=3})
+	end
 	common.去营地()
 	设置("移动速度",走路还原值)
 	goto begin
@@ -391,7 +402,16 @@ function 五转任务()
 		goto begin
 	end
 	当前刷碎片属性=nil --归位 
-	checkBagChip()
+	
+	if(是否交任务) then	--一起提交 则用背包判断
+		checkBagChip()
+	else  	--带队 但不提交 则用队友的判断
+		当前刷碎片属性=checkTeammateNeedElementBoss()
+		if(当前刷碎片属性==nil)then
+			日志("队友碎片属性为空，已完成5转任务，脚本退出",1)
+			return
+		end
+	end	
 	if(当前刷碎片属性 == nil)then
 		if(是否自动5转)then
 			日志("碎片刷满了，开始自动5转",1)

@@ -1795,6 +1795,20 @@ function common.autoLearnSkill(skillName)
 		等待到指定地图("竞技场", 34,67)
 		自动寻路(15,57)			
 		common.learnPlayerSkill(15,56)			
+	elseif(skillName=="圣盾")then
+		if(取队伍人数()>1)then
+			离开队伍()
+		end
+		if(人物("金币") < 100)then
+			common.getMoneyFromBank(1000)				
+		end	
+		common.toTeleRoom("伊尔村")
+		等待到指定地图("伊尔村的传送点")	
+		自动寻路(12, 17,"村长的家")
+		自动寻路(6, 13,"伊尔村")	
+		自动寻路(32, 65,"旧金山酒吧")	
+		自动寻路(22, 16)
+		common.learnPlayerSkill(23, 16)		
 	elseif(skillName=="乾坤一掷")then
 		if(取队伍人数()>1)then
 			离开队伍()
@@ -2275,7 +2289,7 @@ function common.艾岛定居()
 	对话选择(4,0)
 	等待到指定地图("？")	
 	自动寻路(19, 20)
-	自动寻路一格(4,1)	
+	移动一格(4,1)	
 	等待到指定地图("法兰城遗迹")		
 	自动寻路(98, 138,"盖雷布伦森林")
 	自动寻路(124, 168,"温迪尔平原")		

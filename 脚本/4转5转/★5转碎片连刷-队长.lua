@@ -6,11 +6,11 @@ common=require("common")
 清除系统消息()
     	
 
-补血值=取脚本界面数据("人补血")
-补魔值=取脚本界面数据("人补魔")
-宠补血值=取脚本界面数据("宠补血")
-宠补魔值=取脚本界面数据("宠补魔")
-队伍人数=取脚本界面数据("队伍人数")
+local 补血值=取脚本界面数据("人补血")
+local 补魔值=取脚本界面数据("人补魔")
+local 宠补血值=取脚本界面数据("宠补血")
+local 宠补魔值=取脚本界面数据("宠补魔")
+local 队伍人数=取脚本界面数据("队伍人数")
 if(补血值==nil or 补血值==0)then
 	补血值=用户输入框("多少血以下补血", "430")
 end
@@ -26,18 +26,19 @@ end
 if(队伍人数==nil or 队伍人数==0)then
 	队伍人数 = 用户输入框("练级队伍人数，不足则固定点等待！",5)
 end
-走路加速值=125	--脚本走路中可以设定移动速度  到达目的地后，再还原值即可
-走路还原值=100	--防止掉线 还原速度
-卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
+local 走路加速值=125	--脚本走路中可以设定移动速度  到达目的地后，再还原值即可
+local 走路还原值=100	--防止掉线 还原速度
+local 卖店物品列表="魔石|卡片？|锹型虫的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
 
-遇敌总次数=0
-练级前经验=0
-练级前时间=os.time() 
-五转洞名称="隐秘之洞地下1层"
-当前刷碎片属性=nil		--地水火风
-默认刷碎片属性="风"		--地水火风
-刷碎片数量=用户输入框("刷碎片数量","20")
-是否卖石=false	
+local 遇敌总次数=0
+local 练级前经验=0
+local 练级前时间=os.time() 
+local 五转洞名称="隐秘之洞地下1层"
+local 当前刷碎片属性=nil		--地水火风
+local 默认刷碎片属性="风"		--地水火风
+local 刷碎片数量=用户输入框("刷碎片数量","20")
+local 是否卖石 = false	
+local 队长是否刷碎片=用户复选框("队长是否刷碎片","0")
 --先检查自己的碎片 如果没满20  就先刷某一个，全满继续下一个
 --自己检查完,都满足后，检查队友的
 --地水火风
@@ -52,7 +53,7 @@ function checkElement()
 end
 
 --获取队友需刷的碎片名称
-function getTeammateElementName(name)
+function getTeammateElementNameFromCard(name)
 	local card = 取好友名片(name)
 	if( card == nil)then
 		return nil		
@@ -65,11 +66,22 @@ function getTeammateElementName(name)
 	end
 	return nil
 end
+function getTeammateElementName(teamPlayer)		
+	if teamPlayer==nil then return nil end
+	local elementList={"地","水","火","风"}
+	for i,tmpEle in ipairs(elementList) do
+		--日志(teamPlayer.nick_name)
+		if(string.find(teamPlayer.nick_name,tmpEle.."缺") ~= nil) then
+			return tmpEle
+		end
+	end
+	return nil
+end
 
 function checkTeammateNeedElement()
 	local teamPlayers = 队伍信息()
 	for index,teamPlayer in ipairs(teamPlayers) do
-		local tmpEle = getTeammateElementName(teamPlayer.name)
+		local tmpEle = getTeammateElementName(teamPlayer)
 		if(tmpEle ~= nil)then
 			return tmpEle
 		end
@@ -78,7 +90,10 @@ function checkTeammateNeedElement()
 end
 
 function checkChangeMap()
-	local selfEle = checkElement()		
+	local selfEle = nil
+	if(队长是否刷碎片)then
+		checkElement()		
+	end
 	if(selfEle ~= nil) then
 		当前刷碎片属性=selfEle
 		日志("当前队长缺少【"..当前刷碎片属性.."】碎片，去刷【"..当前刷碎片属性.."】洞",1)
@@ -88,7 +103,7 @@ function checkChangeMap()
 		--检查队友
 		local teamPlayers = 队伍信息()
 		for index,teamPlayer in ipairs(teamPlayers) do
-			local tmpEle = getTeammateElementName(teamPlayer.name)
+			local tmpEle = getTeammateElementName(teamPlayer)
 			if(tmpEle ~= nil)then
 				当前刷碎片属性=tmpEle
 				日志("当前队长碎片已满，队友【"..teamPlayer.name.."】缺少【"..当前刷碎片属性.."】碎片，去刷【"..当前刷碎片属性.."】洞",1)
