@@ -5,7 +5,12 @@ import sys
 import os
 from cga_wait_api import *
 from cgaapi import *
+from collections import namedtuple
 
+CGPoint = namedtuple("CGPoint","x,y")
+
+    
+    
 def 转向(nDir):  
     mappos=cga.GetMapCoordinate()
     x=mappos.x
@@ -133,6 +138,38 @@ def 等待空闲(timeout):
             return True
         time.sleep(1)
     return False
+    
+def 取所有迷宫入口():
+    gateList=[]
+    cells=cga.GetMapCollisionTable(True)
+    objCells=cga.GetMapObjectTable(True)
+    if cells.x_size ==0 and cells.y_size == 0:
+        return gateList
+    for y in range(cells.y_size):
+        for x in range(cells.x_size):
+            if x < objCells.x_size and y < objCells.y_size:
+                celObj = objCells.cell[x+y*objCells.x_size]
+                #日志("%d"%(celObj))
+                if celObj & 0xff:
+                    #日志("%d"%(celObj))
+                    if celObj & 0xff == 3:   #蓝色 迷宫传送点
+                        日志("x:%d y:%d %d"%(x,y,celObj))
+                        #gateList.append({x:x,y:y}) 
+                        #gateList.append({"x":x,"y":y})  
+                        gateList.append(CGPoint(x=x,y=y))
+                        #gateList.append((x,y))  
+                        
+                    else:       
+                        pass                            #绿色 切换坐标点 传送门
+            
+    
+    return gateList
+#寻路时候，判断目标坐标点是否能到达
+#返回True False
+def 目标是否可达(tx,ty):
+    return True
+
+    
 #def 开始遇敌():
     
 
