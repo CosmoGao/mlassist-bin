@@ -7,7 +7,8 @@ import math
 from cga_wait_api import *
 from cgaapi import *
 from common import *
-
+import copy
+from functools import singledispatch,singledispatchmethod 
 
     
 #喜闻乐见的开图环节到了
@@ -16,6 +17,141 @@ from common import *
 #2、获取当前地图数据，如果有2个以上迷宫出入口，并且两个迷宫出入口，都可以寻路过去，就算开图成功（不判断出入口哪个是下一层，默认）
 #3、
 
+class TRect:
+    def __init__(self,x=0,y=0,width=0,height=0):
+        self._x=x
+        self._y=y
+        self._width=width
+        self._height=height
+   
+    def contains(self, pos):
+        if pos.x >= self.x and pos.x <= (self.x + self._width) and pos.y >= self.y and pos.y <= (self.y + self._height):
+            return True
+        return False
+    def x(self):
+        return self._x
+    def y(self):
+        return self._y
+    def width(self):
+        return self._width
+    def height(self):
+        return self._height
+        
+    
+
+class TSearchRect:
+    def __init__(self, centerPos, rect):
+        self._rect = rect
+        self._centerPos = centerPos
+    def rect():
+        return self._rect
+    def centerPos():
+        return self._centerPos
+        
+
+
+#合并中心点 posList需要合并的点集合  nDis合并范围，默认值10
+def MergePoint(posList, nDis= 10):
+	if len(posList) < 1):
+		return []	
+	alreadyPosList=[] #已经合并过的坐标集合
+	tmpPosList = copy.deepcopy(posList)
+	searchRectPosList=[]    #以10为半径的所有矩形的中心点的集合
+	#依次取坐标
+	while len(tmpPosList) > 0:
+		centrePos = tmpPosList.pop(0)		
+		if centrePos in alreadyPosList:
+			continue
+		'''if (g_pGameCtrl->GetExitGame() || g_pGameFun->m_bStop)
+		{
+			qDebug() << "已停止搜索 MergePoint";
+			return searchRectPosList;
+		}'''
+		leftPos = CGPoint(centrePos.x-10,centrePos.y - 10)
+		rightPos = CGPoint(centrePos.x+10,centrePos.y + 10)
+		TRect tmpRect(leftPos, rightPos);
+		alreadyPosList.push_back(centrePos)
+
+		TSearchRectPtr tSearchPtr(new TSearchRect)
+		tSearchPtr->_rect = tmpRect
+		tSearchPtr->_centrePos = centrePos
+		tSearchPtr->_rectPosList.append(centrePos)		
+		searchRectPosList.append(tSearchPtr)
+
+		auto lastPosList = tmpPosList;
+		for (QPoint tmpRectPos : lastPosList)
+		{
+			if (alreadyPosList.contains(tmpRectPos))
+				continue;
+			if (tmpRectPos == QPoint(52, 8))
+				qDebug() << "52,8";
+			if (tmpRect.contains(tmpRectPos))
+			{
+				tmpPosList.removeOne(tmpRectPos);
+				alreadyPosList.push_back(tmpRectPos);
+				tSearchPtr->_rectPosList.append(tmpRectPos);
+				if (tmpRectPos == QPoint(52, 8))
+				{
+					qDebug() << "52,8" << tSearchPtr->_centrePos.x() << tSearchPtr->_centrePos.y() << tSearchPtr->_rect.topLeft() << tSearchPtr->_rect.bottomRight();
+				}
+				//				tSearchPtr->_cvRectPosList.push_back(cv::Point(tmpRectPos.x(), tmpRectPos.y()));
+			}
+		}
+	}
+	return searchRectPosList;
+
+
+#从CGPoint集合中是否包含指定点
+#返回 True False
+def IsContainCGPoint(points,point):
+    for tPos in points:	
+        if tPos.x == point.x and tPos.y ==point.y:		
+            return True
+    return False
+            
+
+#判断坐标点是否可行走
+def IsMoveAble(mapCell,gamePos,foundedPoints,nextPoints,tRect):
+    if gamePos.x > tRect.x and gamePos.x < tRect.width and gamePos.y > tRect.y and gamePos.y < tRect.height:
+        if mapCell.cell[gamePos.x+gamePos.y*mapCell.x_size] == 0:
+            if not IsContainCGPoint(foundedPoints,gamePos):
+                foundedPoints.append(gamePos)                
+                nextPoints.append(gamePos)               
+    
+
+
+#地图数据 中心点 已搜过点 地图大小 范围
+def FindByNextPoints(mapCell,tmpCenter,foundedPoints,tRect):
+    nextPoints=[]
+    #四个方向遍历点
+    IsMoveAble(mapCell,CGPoint(x=tmpCenter.x+1,y=tmpCenter.y),foundedPoints,nextPoints,tRect)
+    IsMoveAble(mapCell,CGPoint(x=tmpCenter.x,y=tmpCenter.y+1),foundedPoints,nextPoints,tRect)
+    IsMoveAble(mapCell,CGPoint(x=tmpCenter.x-1,y=tmpCenter.y),foundedPoints,nextPoints,tRect)
+    IsMoveAble(mapCell,CGPoint(x=tmpCenter.x,y=tmpCenter.y-1),foundedPoints,nextPoints,tRect)
+    for tmpPos in nextPoints:
+        FindByNextPoints(mapCell,tmpPos,foundedPoints,tRect)
+
+#获取坐标限定范围内可移动点
+def GetMovablePointsEx(start,tRange):
+    foundedPoints=[]
+    mapInfo=cga.GetMapCollisionTable(True)
+    minx=start.x - tRange
+    miny=start.y - tRange
+    maxx=start.x + tRange
+    maxy=start.y + tRange
+    if minx < mapInfo.x_bottom:
+        minx = mapInfo.x_bottom
+    if miny < mapInfo.y_bottom:
+        miny = mapInfo.y_bottom
+    if maxx > mapInfo.x_size:
+        minx = mapInfo.x_size
+    if maxy < mapInfo.y_size:
+        maxy = mapInfo.y_size
+    tRect=CGRect(x=minx,y=miny,width=maxx,height=maxy)
+    FindByNextPoints(mapInfo, start, foundedPoints, tRect)
+    return foundedPoints
+    
+    
 
 def 取地图可移动点集合(start):
     foundedPoints=[]
@@ -23,37 +159,39 @@ def 取地图可移动点集合(start):
     if tMap.x_size >= 300 or tMap.y_size >=300:
         日志("地图大于300，不进行探索")
         return 
+    tRect=CGRect(x=tMap.x_bottom,y=tMap.y_bottom,width=tMap.x_size,height=tMap.y_size)
+    日志("范围：%d %d %d %d"%(tRect.x,tRect.y,tRect.width,tRect.height))
+    FindByNextPoints(tMap, start, foundedPoints,tRect);
+    return foundedPoints
 #-- 
 
-# #搜索迷宫
-# def SearchAroundMapOpen(allMoveAblePosList,type):
-    # if cga.GetMapIndex()[0]==0:
-        # 日志("当前是固定地图，不进行地图全开！")
-        # return False
-    # curPox=取当前坐标()
-	# #获取当前所有可行走区域坐标
-	# auto moveAblePosList = GetMovablePoints(curPos);
-	# if (moveAblePosList.size() < 1)
-		# return false;
-	# auto moveAbleRangePosList = GetMovablePointsEx(curPos, 13);
-	# auto clipMoveAblePosList = GetMovablePointsEx(curPos, 12);
-	# QList<QPoint> newMoveAblePosList = moveAbleRangePosList;
-	# //这是筛出的4方向边界点
-	# for (int i = 0; i < clipMoveAblePosList.size(); ++i)
-	# {
-		# newMoveAblePosList.removeOne(clipMoveAblePosList[i]);
-	# }
-	# //增加判断，当前过滤的边界点，是否有以前探索的，有的话就移除那个方向的点
-	# QList<QPoint> filterMoveAblePosList = newMoveAblePosList;
-	# for (auto tPos : newMoveAblePosList)
-	# {
-		# qDebug() << tPos;
-		# //AutoMoveTo(tPos.x(),tPos.y());
-		# if (allMoveAblePosList.contains(tPos))
-			# filterMoveAblePosList.removeOne(tPos);
-	# }
+# #搜索迷宫 
+#allMoveAblePosList经过的点
+#searchType 搜索类型 物品 npc 
+def SearchAroundMapOpen(allMoveAblePosList,searchType):
+    if cga.GetMapIndex()[0]==0:
+        日志("当前是固定地图，不进行地图全开！")
+        return False
+    curPox=取当前坐标()
+	#获取当前所有可行走区域坐标
+    moveAblePosList = 取地图可移动点集合(curPos)
+    if (moveAblePosList.size() < 1):
+        return false;
+    #筛选搜索点,分别取13和12范围内可行走点，相减即为最外层可走点
+    moveAbleRangePosList = GetMovablePointsEx(curPos, 13)
+    clipMoveAblePosList = GetMovablePointsEx(curPos, 12)
+    newMoveAblePosList = copy.deepcopy(moveAbleRangePosList)    
+	#这是筛出的4方向边界点    
+    for i in clipMoveAblePosList:
+        newMoveAblePosList.remove(i)	
+	# 增加判断，当前过滤的边界点，是否有以前探索的，有的话就移除那个方向的点
+    filterMoveAblePosList = copy.deepcopy(newMoveAblePosList)
+    for tPos in newMoveAblePosList:
+        if tPos in allMoveAblePosList:
+            filterMoveAblePosList.remove(tPos)
+	
 	# //合并各自方向边界点
-	# auto tSearchList = MergePoint(filterMoveAblePosList);
+	tSearchList = MergePoint(filterMoveAblePosList)
 	# if (tSearchList.size() > 0)
 	# {
 
@@ -150,7 +288,7 @@ def AutoWalkMaze(isFarGate=True):
     
     #3、没有两个出入口，开始搜索迷宫
     allMoveAblePosList=[]
-    #SearchAroundMapOpen(allMoveAblePosList, 2);
+    SearchAroundMapOpen(allMoveAblePosList, 2);
     inPos=CGPoint(x=0,y=0)
     if len(gateList) >= 1:
         inPos = gateList[0]	
@@ -169,6 +307,7 @@ def 计算两点距离(x,y,tx,ty):
         return 0
     return math.sqrt(math.pow(math.fabs(x-tx),2) + math.pow(math.fabs(y-ty),2))
 
+'''
 gateList=取所有迷宫入口()
 日志("大小%d"%(len(gateList)))
 curPox=取当前坐标()
@@ -184,4 +323,28 @@ for tPos in gateList:
     日志("x:%d y:%d"%(tPos.x,tPos.y))
     tDistance = 计算两点距离(curPox.x,curPox.y,tPos.x,tPos.y)
     日志("当前坐标：x:%d y:%d 目标坐标:x:%d y:%d 距离：%d"%(curPox.x,curPox.y,tPos.x,tPos.y,tDistance))
-#AutoWalkMaze()
+ableMovePos=取地图可移动点集合(curPox)
+日志("可移动点集合")
+for tPos in ableMovePos:
+    日志("x:%d y:%d"%(tPos.x,tPos.y))
+'''
+AutoWalkMaze()
+
+
+'''
+moveAbleRangePosList = [CGPoint(x=1,y=1),CGPoint(x=1,y=2),CGPoint(x=1,y=3)]
+clipMoveAblePosList = [CGPoint(x=1,y=1),CGPoint(x=1,y=2)]
+newMoveAblePosList = moveAbleRangePosList
+for i in newMoveAblePosList:
+     日志("筛选前点-：%d %d" %(i.x,i.y))
+for i in clipMoveAblePosList:
+    日志("筛选前点：%d %d" %(i.x,i.y))
+    newMoveAblePosList.remove(i)
+for i in newMoveAblePosList:
+    日志("筛选后点：%d %d" %(i.x,i.y))
+    
+for i in clipMoveAblePosList:
+     日志("判断点：%d %d" %(i.x,i.y))
+     if moveAbleRangePosList.find(i) >= 0:
+        日志("点在集合中")
+'''

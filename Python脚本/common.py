@@ -7,7 +7,9 @@ from cga_wait_api import *
 from cgaapi import *
 from collections import namedtuple
 
+#封装元组，便于访问
 CGPoint = namedtuple("CGPoint","x,y")
+CGRect = namedtuple("CGRect","x,y,width,height")
 
     
     
