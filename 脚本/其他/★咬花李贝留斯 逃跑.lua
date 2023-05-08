@@ -26,6 +26,8 @@ function main()
 	elseif(playerinfo.level > 152)then	
 		titleUp = 150 
 	end
+	读取配置("./配置/咬花.save")
+	宠物("改状态","待命")
 ::begin::
 	等待空闲()	
 	mapName=取当前地图名()

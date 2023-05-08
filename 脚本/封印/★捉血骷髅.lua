@@ -327,6 +327,8 @@ function main()
 	if(宠物("血") < 宠补血)then goto  ting end
 	if(宠物("魔") < 宠补魔)then goto  ting end
 	if(取物品叠加数量(封印卡名称) < 1)then goto  ting end	
+	if(取物品叠加数量(封印卡名称) < 1)then goto  ting end	
+	if(取当前地图编号() ~= 14017) then goto begin end
 	if (人物("宠物数量") >= 5 )then	
 		日志("宠物数量满了，回城存储！")
 		goto ting	
@@ -353,7 +355,7 @@ function main()
 	if( 人物("灵魂") > 0 )then
 		goto  backbu 
 	end
-	goto scriptLoop
+	goto map14017
 ::backbu::	
 	回城()     
 	goto begin 

@@ -9,6 +9,11 @@ if(队长名称==nil or 队长名称=="")then
 end
 local 队伍人数=取脚本界面数据("队伍人数")
 local isTeamLeader=false
+while true do
+	if(人物("名称",false) ~= "0")then
+		break
+	end
+end
 if(人物("名称",false) == 队长名称)then
 	isTeamLeader=true
 	日志("当前是队长:"..人物("名称",false),1)
