@@ -733,7 +733,7 @@ function 雪塔练级(目标等级,目标地图)
 	if(宠物("血") < 宠补血值) then goto  ting end
 	if(宠物("魔") < 宠补魔值) then goto  ting end
 	if(取当前等级()	>= 目标等级) then goto  ting end
-	if(队伍("人数") < 3) then goto ting end	--只判断3个 掉线的先不管
+	if(队伍("人数") < 队伍人数) then goto ting end	--只判断3个 掉线的先不管
 	if 是否战斗中() then
 		遇敌总次数=遇敌总次数+1
 		等待战斗结束()

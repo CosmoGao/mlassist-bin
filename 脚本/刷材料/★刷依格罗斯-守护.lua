@@ -49,7 +49,7 @@ local 已刷宠物数量={
 	["罗修"]={count=0,msg="恭喜,您刷到了个性宠物【罗修】,档次 ",grade=预置扔罗修档次},
 	}		--希特拉 泰坦巨人 萨普地雷 托罗帝鸟 岩地跑者
 	
-
+local 领取十年戒指=用户下拉框("是否领取十年戒指？",{"不领取","十年攻戒","十年魔戒"})   --默认领取十年攻戒
 
 local 当前任务编号=3
 
@@ -305,6 +305,17 @@ function main()
 	if(人物("金币") < 5000)then 
 		日志("没有魔币了，脚本退出",1)
 		return
+	end	
+	if(取物品数量("十周年纪念戒指") < 1)then	
+		if(领取十年戒指 == "不领取") then
+		
+		elseif(领取十年戒指=="十年攻戒")then
+			common.gotoBankRecvTradeItemsAction({topic="十年攻戒发放员",publish="领取十年攻戒",itemName="十周年纪念戒指",itemCount=1,itemPileCount=1})
+			使用物品("十周年纪念戒指")
+		elseif(领取十年戒指=="十年魔戒")then
+			common.gotoBankRecvTradeItemsAction({topic="十年魔戒发放员",publish="领取十年魔戒",itemName="十周年纪念戒指",itemCount=1,itemPileCount=1})
+			使用物品("十周年纪念戒指")
+		end
 	end
 	if(取当前地图名() == "法兰城")then 回城() end
 	if (人物("宠物数量") >= 5 )then	
@@ -429,6 +440,10 @@ function main()
 	end
 	goto begin
 ::map59984::		--？？？
+	if(目标是否可达(81, 138))then--一击必中前对话	
+		自动寻路(81, 138)	
+		对话选是(2)	
+	end
 	if(目标是否可达(161,58))then	
 		自动寻路(161, 58)	
 		对话选是(2)	
@@ -612,6 +627,19 @@ function main()
 	--丢魔石
 	对话选是(42,28)
 	对话选是(42,27)
+	if(取包裹空格()<1)then
+		自动寻路(30,27)	--	if(string.find(最新系统消息(),"无法放置")~=nil)then
+		--自动寻路(35,30)	
+		丢("魔石")
+		丢("魔术机丙的卡片")
+		丢("福尔菲斯的卡片")
+		丢("鲁帕斯的卡片")
+		丢("维尔斯的卡片")
+		丢("板龙的卡片")
+		丢("魔术机丁的卡片")
+		丢("罗亨的卡片")
+		goto map59993		--可能会卡主一会会 等地面物品消失才会继续 没加移动到其他地方
+	end
 ::map59536::		--约尔克神庙
 	回城()
 	等待空闲()	
