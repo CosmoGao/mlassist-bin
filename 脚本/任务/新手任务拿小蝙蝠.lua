@@ -40,7 +40,7 @@ local 领小蝙蝠还是使魔=用户下拉框("领小蝙蝠还是使魔",{"小�
 		local oldPetList=全部宠物信息()
 		if(common.getTableSize(oldPetList) >= 1)then
 			petInfo=宠物信息(0)			
-			日志("领取小蝙蝠成功，档次:"..petInfo.grade,1)			
+			日志(人物("名称",false)..":".."领取小蝙蝠成功，档次:"..petInfo.grade,1)			
 			return
 		end
 	else
@@ -49,7 +49,7 @@ local 领小蝙蝠还是使魔=用户下拉框("领小蝙蝠还是使魔",{"小�
 		local oldPetList=全部宠物信息()
 		if(common.getTableSize(oldPetList) >= 1)then
 			petInfo=宠物信息(0)			
-			日志("领取使魔成功，档次:"..petInfo.grade,1)			
+			日志(人物("名称",false)..":".."领取使魔成功，档次:"..petInfo.grade,1)			
 			return
 		end
 	end

@@ -12,36 +12,37 @@ from AutoMove import *
 CGPoint = namedtuple("CGPoint","x,y")
 CGRect = namedtuple("CGRect","x,y,width,height")
 
+#全局变量
+g_stop=False
     
-    
-def 转向(nDir):  
+def TurnAbout(nDir):  
     mappos=cga.GetMapCoordinate()
     x=mappos.x
     y=mappos.y
     if(nDir==0):
-        x = x;
-        y = y - 2;
+        x = x
+        y = y - 2
     elif(nDir==1):
-        x = x + 2;
-        y = y - 2;  
+        x = x + 2
+        y = y - 2
     elif(nDir==2):
-        x = x + 2;
-        y = y;  
+        x = x + 2
+        y = y
     elif(nDir==3):
-        x = x + 2;
-        y = y + 2;
+        x = x + 2
+        y = y + 2
     elif(nDir==4):
-        x = x;
-        y = y + 2;
+        x = x
+        y = y + 2
     elif(nDir==5):
-        x = x - 2;
-        y = y + 2;
+        x = x - 2
+        y = y + 2
     elif(nDir==6):
-        x = x - 2;
-        y = y;
+        x = x - 2
+        y = y
     elif(nDir==7):
-       	x = x - 2;
-        y = y - 2;	
+       	x = x - 2
+        y = y - 2
     cga.TurnTo(x, y)
     
 #转换预定放行到CGA方向
@@ -63,16 +64,6 @@ def TransDirectionToCga(nDir):
     elif nDir== 7: 
         return 5	
     return nDir
-#把CGA原始API包装成中文，除了个别包装的函数，其他参数不变
-对话选择 = cga.ClickNPCDialog
-取当前地图名 = cga.GetMapName
-取当前坐标 = cga.GetMapCoordinate
-自动寻路 = cga.AutoMoveTo
-转向坐标 = cga.TurnTo
-喊话 = cga.SayWords
-取所有技能信息 = cga.GetSkillsInfo
-穿墙=cga.ForceMoveTo
-切图=cga.ForceMoveTo
 
 def 取当前地图编号():          #包装下 原生是返回4个值  这里只拿地图编号
     return cga.GetMapIndex()[2]
@@ -114,7 +105,7 @@ def 等待到指定地图(name,x,y):
         time.sleep(1)
     return False
     
-def 工作(name,itemName="",timeout=6500):
+def Work(name,itemName="",timeout=6500):
     skills = cga.GetSkillsInfo()
     index=-1
     for skill in skills:
@@ -126,23 +117,26 @@ def 工作(name,itemName="",timeout=6500):
         return False
     cga.StartWork(index,0)
     
-def 是否空闲():
+def IsInNormalState():
     if cga.GetWorldStatus() == 9 and cga.GetGameStatus() == 3:
         return True 
     else: 
         return False
-    
-def 等待空闲(timeout):
+
+def WaitInNormalState(timeout=10):
     if timeout == 0:
         timeout = 600    
     timeoutNum = timeout #10分钟 600秒 每次Sleep 1秒
     for i in range(timeoutNum):
+        if g_stop:
+            return False
         if 是否空闲():
             return True
         time.sleep(1)
     return False
-    
-def 取所有迷宫入口():
+
+#取迷宫所有出入口
+def GetMazeEntranceList():
     gateList=[]
     cells=cga.GetMapCollisionTable(True)
     objCells=cga.GetMapObjectTable(True)
@@ -167,10 +161,8 @@ def 取所有迷宫入口():
             
     
     return gateList
-#寻路时候，判断目标坐标点是否能到达
-#返回True False
-def 目标是否可达(tx,ty):
-    return True
+
+
 
     
 #def 开始遇敌():
@@ -178,6 +170,111 @@ def 目标是否可达(tx,ty):
 
 
 #def 取包裹空格():
-    
 
-    
+#取当前地图可传送坐标点
+def GetMapEntranceList():
+    gateList=[]
+    cells=cga.GetMapCollisionTable(True)
+    objCells=cga.GetMapObjectTable(True)
+    if cells.x_size ==0 and cells.y_size == 0:
+        return gateList
+    for y in range(cells.y_size):
+        for x in range(cells.x_size):            
+            celObj = objCells.cell[x+y*objCells.x_size]
+            #日志("%d"%(celObj))
+            if celObj & 0xff:
+                #日志("%d"%(celObj))           
+                日志("x:%d y:%d %d"%(x,y,celObj))
+                #gateList.append({x:x,y:y}) 
+                #gateList.append({"x":x,"y":y})  
+                gateList.append(CGPoint(x=x,y=y))
+                #gateList.append((x,y))  
+    return gateList
+
+#原坐标到目标坐标是否可达
+def IsReachableTargetEx(sx,sy,tx,ty):
+    findPath = CalculatePath(sx, sy, tx, ty)
+    if len(findPath) < 1:       #后期这里可以加离线寻路
+        return False
+    return True
+
+
+#寻路时候，判断目标坐标点是否能到达
+#返回True False
+def IsReachableTarget(tx,ty):
+    curPos = cga.GetMapCoordinate()
+    return IsReachableTargetEx(curPos.x,curPos.y,tx,ty)
+
+def judgePosIsWalkAble(x,y,cells,warpPosList,judgeReachTgt):
+    bAble=False
+    if cells.cell[x + y * cells.x_size] == 0 and CGPoint(x,y) not in warpPosList:
+        bAble = True
+    if bAble and judgeReachTgt:
+        return IsReachableTarget(x, y)
+    return bAble
+
+#获取指定坐标周围指定范围空位，judgeReachTgt是否判断坐标点可到达，防止坐标人过不去
+def GetRandomSpace(x,y,distance=1,judgeReachTgt=False):
+    nTempX=nTempY=0
+    warpPosList = GetMapEntranceList()  #传送点
+    cells=cga.GetMapCollisionTable(True)
+    if x > cells.x_size or y > cells.y_size:
+        return CGPoint(x=0,y=0)
+   
+    while True:
+        nTempX=x-distance
+        nTempY=y
+        if judgePosIsWalkAble(nTempX, nTempY):
+            break
+        nTempX = x + distance
+        nTempY = y
+        if (judgePosIsWalkAble(nTempX, nTempY)):
+            break
+        nTempX = x
+        nTempY = y - distance
+        if (judgePosIsWalkAble(nTempX, nTempY)):
+            break
+        nTempX = x
+        nTempY = y + distance
+        if (judgePosIsWalkAble(nTempX, nTempY)):
+            break
+        nTempX = x + distance
+        nTempY = y + distance
+        if (judgePosIsWalkAble(nTempX, nTempY)):
+            break
+        nTempX = x - distance
+        nTempY = y + distance
+        if (judgePosIsWalkAble(nTempX, nTempY)):
+            break
+        nTempX = x + distance
+        nTempY = y - distance
+        if (judgePosIsWalkAble(nTempX, nTempY)):
+            break
+        nTempX = x - distance
+        nTempY = y - distance
+        if (judgePosIsWalkAble(nTempX, nTempY)):
+            break
+        break
+    return CGPoint(nTempX, nTempY)
+
+
+
+
+
+
+#把CGA原始API包装成中文，除了个别包装的函数，其他参数不变
+对话选择 = cga.ClickNPCDialog
+取当前地图名 = cga.GetMapName
+取当前坐标 = cga.GetMapCoordinate
+自动寻路 = cga.AutoMoveTo
+转向坐标 = cga.TurnTo
+喊话 = cga.SayWords
+取所有技能信息 = cga.GetSkillsInfo
+穿墙=cga.ForceMoveTo
+切图=cga.ForceMoveTo
+是否空闲 = IsInNormalState
+等待空闲 = WaitInNormalState
+工作 = Work
+转向 = TurnAbout
+取周围空地 = GetRandomSpace
+取迷宫出入口 = GetMazeEntranceList

@@ -12,34 +12,53 @@ from functools import singledispatch,singledispatchmethod
 from enum import Enum
 from AStar import *
 #是否移动中
-IS_MOVE_ING=False  
+g_is_moveing=False  
 
 #本次寻路循环次数
-NavigatorLoopCount=0 
+g_navigatorLoopCount=0 
  
 #自动寻路 
 #返回0 正常完成 1退出中断  2地图变更中断 3地图下载失败
 def AutoMoveTo(x,y,timeout=100):
-    if IS_MOVE_ING:
+    if g_is_moveing:
         return 0
-    NavigatorLoopCount=0
+    g_navigatorLoopCount=0
     
     #如果是组队状态 并且不是队长 则退出
     return AutoMoveInternal(x, y, timeout)
 
-#寻路内部代码    
+#寻路内部代码   返回0 正常完成 1退出中断  2地图变更中断 3地图下载失败 
 def AutoMoveInternal(x, y, timeout=100, isLoop=True):
     logging.info("目标坐标点:x:%d,y:%d" % (x,y))
-    if NavigatorLoopCount>=20:
+    if g_navigatorLoopCount>=20:
         return 0
     curPos = cga.GetMapCoordinate()
+    if curPos.x == x and curPos.y == y :
+        warpPosList = GetMapEntranceList()
+        if CGPoint(x=x,y=y) in warpPosList:
+            logging.info("AutoMoveTo 坐标一样 目标为传送点，重新进入！")
+            tmpPos = GetRandomSpace(x, y, 1)
+            cga.WalkTo(tmpPos.x, tmpPos.y)
+            time.sleep(2)
+            cga.WalkTo(x, y)
+        logging.info("AutoMoveTo 坐标一样 返回！")
+        return 1
+    g_is_moveing=True
+    WaitInNormalState()
+
+    isOffLineMap = False
+    curPos = cga.GetMapCoordinate()
     findPath = CalculatePath(curPos.x,curPos.y,x,y)
-    if len(findPath) > 0 :
-        for tPos in findPath:
-            logging.info("x:%d,y:%d" %(tPos.x,tPos.y))
-            cga.AutoMoveTo(tPos.x,tPos.y)
+    tRet=0
+    if len(findPath) > 0 :      
+        tRet=AutoNavigator(findPath,isOffLineMap, isLoop)
     else:
-        logging.info("路径为空")
+        logging.info("路径为空")    #可以增加离线地图寻路
+    g_is_moveing=False
+    return tRet
+#寻路判断逻辑
+def AutoNavigator(path,isSyncMap=False,isLoop=True):
+    g_navigatorLoopCount=g_navigatorLoopCount+1
 
 #通过A*算法，查找当前点到目标点的路径
 def CalculatePath(curX, curY, targetX, targetY):
