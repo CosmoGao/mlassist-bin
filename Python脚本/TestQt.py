@@ -1,7 +1,6 @@
 from PySide2.QtWidgets import QApplication, QMainWindow, QPushButton,  QPlainTextEdit,QLabel,QLineEdit,QMessageBox
 from PySide2.QtCore import (QThread, Signal, Slot)
 from multiprocessing import Process
-import CGAPython
 from common import *
 import time             #时间库 用来打印时间 计时等等
 import sys              #python代码和python解释器打交道的库
@@ -9,6 +8,7 @@ import os               #使用操作系统功能的函数库
 import logging          #日志库，嫌弃python自带print功能单一，可以用这个打印
 from threading import Thread
 import asyncio
+from AutoMove import *
 
 class MyThread(QThread):
     #signal_tuple = Signal(tuple)
@@ -57,7 +57,8 @@ def GetPosFunc():
 def MoveThreadFunc(x,y):
     logging.info("执行线程函数")
     #cga.WalkTo(x,y)
-    AutoMoveInternal(x,y)
+    #AutoMoveInternal(x,y)
+    AutoMoveTo(x,y)
     #QApplication.processEvents()
     #cga.AutoMoveTo(x,y)        #c++封装的pyd 算是一个单独模块，线程调用它时候，发现会一直阻塞在这    用for循环测试是
     # for n in range(20):
@@ -115,18 +116,18 @@ button1.move(380,120)
 button1.clicked.connect(GetPosFunc)
 window.show()
 
-LOG_FORMAT = "%(asctime)s %(message)s"
-#配置日志打印格式，这个就是logging包的语法了，设置格式
-logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
-cga=CGAPython.CGA()
+# LOG_FORMAT = "%(asctime)s %(message)s"
+# #配置日志打印格式，这个就是logging包的语法了，设置格式
+# logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
+# cga=CGAPython.CGA()
 
 #连接游戏窗口，sys.argv[1]是固定格式，是启动当前脚本传递过来的参数
 #argv第一个程序路径 第二个参数是游戏端口
-if(cga.Connect(int(sys.argv[1]))==False):  #判断连接本机电脑上的，指定端口的游戏窗口是否成功      
-    print('无法连接到本地服务端口，可能未附加到游戏或者游戏已经闪退！')      #系统自带的打印日志
-    sys.exit()  
+# if(cga.Connect(int(sys.argv[1]))==False):  #判断连接本机电脑上的，指定端口的游戏窗口是否成功      
+#     print('无法连接到本地服务端口，可能未附加到游戏或者游戏已经闪退！')      #系统自带的打印日志
+#     sys.exit()  
 # #单独用工具测试可以用把上面屏蔽了，用下面，4403是游戏端口，可以通过魔改信息界面看端口                                            #连接失败 退出当前python脚本，成功就继续下面代码
-# if(cga.Connect(4403)==False):       #argv第一个程序路径 第二个参数是游戏端口
+# if(cga.Connect(4405)==False):       #argv第一个程序路径 第二个参数是游戏端口
 #    print('无法连接到本地服务端口，可能未附加到游戏或者游戏已经闪退！')
 #    sys.exit()
 

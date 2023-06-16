@@ -3,10 +3,12 @@ import CGAPython
 import time
 import sys
 import os
+import math
 from cga_wait_api import *
-from cgaapi import *
+from cgaapi import cga
 from collections import namedtuple
-from AutoMove import *
+
+#from AutoMove import *
 
 #封装元组，便于访问
 CGPoint = namedtuple("CGPoint","x,y")
@@ -15,6 +17,13 @@ CGRect = namedtuple("CGRect","x,y,width,height")
 #全局变量
 g_stop=False
     
+#是否移动中
+g_is_moveing=False  
+
+#本次寻路循环次数
+g_navigatorLoopCount=0 
+g_mazeWaitTime=5            #5秒
+
 def TurnAbout(nDir):  
     mappos=cga.GetMapCoordinate()
     x=mappos.x
@@ -41,7 +50,7 @@ def TurnAbout(nDir):
         x = x - 2
         y = y
     elif(nDir==7):
-       	x = x - 2
+        x = x - 2
         y = y - 2
     cga.TurnTo(x, y)
     
@@ -65,7 +74,7 @@ def TransDirectionToCga(nDir):
         return 5	
     return nDir
 
-def 取当前地图编号():          #包装下 原生是返回4个值  这里只拿地图编号
+def GetMapIndex():          #包装下 原生是返回4个值  这里只拿地图编号
     return cga.GetMapIndex()[2]
 
 
@@ -100,7 +109,7 @@ def 等待到指定地图(name,x,y):
     for i in range(timeout):
         curMapName = 取当前地图名()
         curPoint = 取当前坐标()
-        if curMapName == sName and curPoint.x == x and curPoint.y == y:
+        if curMapName == name and curPoint.x == x and curPoint.y == y:
             return True		
         time.sleep(1)
     return False
@@ -118,6 +127,7 @@ def Work(name,itemName="",timeout=6500):
     cga.StartWork(index,0)
     
 def IsInNormalState():
+    #logging.info("%d %d"%(cga.GetWorldStatus(),cga.GetGameStatus()))
     if cga.GetWorldStatus() == 9 and cga.GetGameStatus() == 3:
         return True 
     else: 
@@ -130,7 +140,7 @@ def WaitInNormalState(timeout=10):
     for i in range(timeoutNum):
         if g_stop:
             return False
-        if 是否空闲():
+        if IsInNormalState():
             return True
         time.sleep(1)
     return False
@@ -142,15 +152,17 @@ def GetMazeEntranceList():
     objCells=cga.GetMapObjectTable(True)
     if cells.x_size ==0 and cells.y_size == 0:
         return gateList
+    cellData = cells.cell
+    ObjData = objCells.cell
     for y in range(cells.y_size):
         for x in range(cells.x_size):
             if x < objCells.x_size and y < objCells.y_size:
-                celObj = objCells.cell[x+y*objCells.x_size]
+                celObj = ObjData[x+y*objCells.x_size]
                 #日志("%d"%(celObj))
                 if celObj & 0xff:
                     #日志("%d"%(celObj))
                     if celObj & 0xff == 3:   #蓝色 迷宫传送点
-                        日志("x:%d y:%d %d"%(x,y,celObj))
+                        #日志("x:%d y:%d %d"%(x,y,celObj))
                         #gateList.append({x:x,y:y}) 
                         #gateList.append({"x":x,"y":y})  
                         gateList.append(CGPoint(x=x,y=y))
@@ -178,13 +190,14 @@ def GetMapEntranceList():
     objCells=cga.GetMapObjectTable(True)
     if cells.x_size ==0 and cells.y_size == 0:
         return gateList
+    ObjData = objCells.cell
     for y in range(cells.y_size):
         for x in range(cells.x_size):            
-            celObj = objCells.cell[x+y*objCells.x_size]
+            celObj = ObjData[x+y*objCells.x_size]
             #日志("%d"%(celObj))
             if celObj & 0xff:
                 #日志("%d"%(celObj))           
-                日志("x:%d y:%d %d"%(x,y,celObj))
+                #日志("x:%d y:%d %d"%(x,y,celObj))
                 #gateList.append({x:x,y:y}) 
                 #gateList.append({"x":x,"y":y})  
                 gateList.append(CGPoint(x=x,y=y))
@@ -256,9 +269,18 @@ def GetRandomSpace(x,y,distance=1,judgeReachTgt=False):
             break
         break
     return CGPoint(nTempX, nTempY)
-
-
-
+def IsInRandomMap():
+    #index1  0固定地图 否则随机地图  index2 当前线路 index3地图编号 filemap地图文件名
+    if cga.GetMapIndex()[0] == 0:
+        return False
+    return True
+def GetDistance(x,y):
+    curPos = cga.GetMapCoordinate()
+    if curPos.x == x and curPos.y == y:
+        return 0
+    return math.sqrt(math.pow(abs(curPos.x-x),2) + math.pow(abs(curPos.y-y),2))
+def GetDistanceEx(sx,sy,tx,ty):
+    return math.sqrt(math.pow(abs(sx-tx),2) + math.pow(abs(sy-ty),2))
 
 
 
@@ -278,3 +300,4 @@ def GetRandomSpace(x,y,distance=1,judgeReachTgt=False):
 转向 = TurnAbout
 取周围空地 = GetRandomSpace
 取迷宫出入口 = GetMazeEntranceList
+取当前地图编号 = GetMapIndex
