@@ -4,6 +4,8 @@ from multiprocessing import Process
 from common import *
 import time             #时间库 用来打印时间 计时等等
 import sys              #python代码和python解释器打交道的库
+sys.path.append('./common/') 
+
 import os               #使用操作系统功能的函数库
 import logging          #日志库，嫌弃python自带print功能单一，可以用这个打印
 from threading import Thread

@@ -43,16 +43,17 @@ class TSearchRect:
     def __init__(self, centerPos, rect):
         self._rect = rect
         self._centerPos = centerPos
-    def rect():
+        self._rectPosList = []
+    def rect(self):
         return self._rect
-    def centerPos():
+    def centerPos(self):
         return self._centerPos
         
 
 
 #合并中心点 posList需要合并的点集合  nDis合并范围，默认值10
 def MergePoint(posList, nDis= 10):
-	if len(posList) < 1):
+	if len(posList) < 1:
 		return []	
 	alreadyPosList=[] #已经合并过的坐标集合
 	tmpPosList = copy.deepcopy(posList)
@@ -69,36 +70,34 @@ def MergePoint(posList, nDis= 10):
 		}'''
 		leftPos = CGPoint(centrePos.x-10,centrePos.y - 10)
 		rightPos = CGPoint(centrePos.x+10,centrePos.y + 10)
-		TRect tmpRect(leftPos, rightPos);
+		tmpRect=TRect(leftPos, rightPos)
 		alreadyPosList.push_back(centrePos)
 
-		TSearchRectPtr tSearchPtr(new TSearchRect)
-		tSearchPtr->_rect = tmpRect
-		tSearchPtr->_centrePos = centrePos
-		tSearchPtr->_rectPosList.append(centrePos)		
+		tSearchPtr=TSearchRect(centrePos,TSearchRect)
+		tSearchPtr._rect = tmpRect
+		tSearchPtr._centrePos = centrePos
+		tSearchPtr._rectPosList.append(centrePos)		
 		searchRectPosList.append(tSearchPtr)
 
-		auto lastPosList = tmpPosList;
-		for (QPoint tmpRectPos : lastPosList)
-		{
-			if (alreadyPosList.contains(tmpRectPos))
-				continue;
-			if (tmpRectPos == QPoint(52, 8))
-				qDebug() << "52,8";
-			if (tmpRect.contains(tmpRectPos))
-			{
-				tmpPosList.removeOne(tmpRectPos);
-				alreadyPosList.push_back(tmpRectPos);
-				tSearchPtr->_rectPosList.append(tmpRectPos);
-				if (tmpRectPos == QPoint(52, 8))
-				{
-					qDebug() << "52,8" << tSearchPtr->_centrePos.x() << tSearchPtr->_centrePos.y() << tSearchPtr->_rect.topLeft() << tSearchPtr->_rect.bottomRight();
-				}
-				//				tSearchPtr->_cvRectPosList.push_back(cv::Point(tmpRectPos.x(), tmpRectPos.y()));
-			}
-		}
-	}
-	return searchRectPosList;
+		lastPosList = tmpPosList
+		for tmpRectPos in lastPosList:		
+			if tmpRectPos in alreadyPosList:
+				continue
+			if (tmpRectPos == CGPoint(52, 8)):
+				pass#qDebug() << "52,8";
+			if (tmpRect.contains(tmpRectPos)):
+				tmpPosList.removeOne(tmpRectPos)
+				alreadyPosList.push_back(tmpRectPos)
+				tSearchPtr._rectPosList.append(tmpRectPos)
+				if (tmpRectPos == CGPoint(52, 8)):
+                    pass
+                    #qDebug() << "52,8" << tSearchPtr->_centrePos.x() << tSearchPtr->_centrePos.y() << tSearchPtr->_rect.topLeft() << tSearchPtr->_rect.bottomRight();
+				
+				#	tSearchPtr->_cvRectPosList.push_back(cv::Point(tmpRectPos.x(), tmpRectPos.y()));
+			
+		
+	
+	return searchRectPosList
 
 
 #从CGPoint集合中是否包含指定点
