@@ -68,11 +68,11 @@ class AsyncWaitNotify:
             self._async_wait_queue.task_done()
             if self in self._global_wait_list:
                 self._global_wait_list.remove(self)
-            return True,msg
+            return msg
         except Exception as error:      
             if self in self._global_wait_list:
                 self._global_wait_list.remove(self)  
-            return False,None  
+            return None  
 
 @singleton
 class CGAPI(CGAPython.CGA):   
@@ -170,12 +170,30 @@ class CGAPI(CGAPython.CGA):
       
    #游戏喊话
    def chat(self,log,v1,v2,v3):     
-      self.SayWords(log,v1,v2,v3)
+      self.SayWords(str(log),v1,v2,v3)
 
    #日志+喊话
    def chat_log(self,log,v1=2,v2=3,v3=5):      
       self.log(log) 
       self.chat(log,v1,v2,v3)
+
+   #获取人物职业
+   def GetCharacterProfession(self):
+      pass
+
+   #获取人物信息
+   def GetCharacterData(self,sType):
+      playerinfo = self.GetPlayerInfo()
+      match(sType):
+         case("职业"):return self.GetCharacterProfession()
+         case("名称"):return playerinfo.name
+         case("name"):return playerinfo.name
+         case("血"):return playerinfo.hp
+         case("hp"):return playerinfo.hp
+         case("魔"):return playerinfo.mp
+         case("mp"):return playerinfo.hp
+         case("等级"):return playerinfo.level
+         case("level"):return playerinfo.level
 
    #人物转向
    def TurnAbout(self,nDir):  
@@ -207,6 +225,9 @@ class CGAPI(CGAPython.CGA):
          x = x - 2
          y = y - 2
       self.TurnTo(x, y)
+
+   def TurnAboutEx(self,x,y):
+      self.TurnTo(x,y)
 
    #转换预定放行到self方向
    def TransDirectionToCGA(self,nDir):
@@ -402,35 +423,35 @@ class CGAPI(CGAPython.CGA):
       while True:
          nTempX=x-distance
          nTempY=y
-         if self.judgePosIsWalkAble(nTempX, nTempY):
+         if self.judgePosIsWalkAble(nTempX, nTempY,cells,warpPosList,judgeReachTgt):
                break
          nTempX = x + distance
          nTempY = y
-         if (self.judgePosIsWalkAble(nTempX, nTempY)):
+         if (self.judgePosIsWalkAble(nTempX, nTempY,cells,warpPosList,judgeReachTgt)):
                break
          nTempX = x
          nTempY = y - distance
-         if (self.judgePosIsWalkAble(nTempX, nTempY)):
+         if (self.judgePosIsWalkAble(nTempX, nTempY,cells,warpPosList,judgeReachTgt)):
                break
          nTempX = x
          nTempY = y + distance
-         if (self.judgePosIsWalkAble(nTempX, nTempY)):
+         if (self.judgePosIsWalkAble(nTempX, nTempY,cells,warpPosList,judgeReachTgt)):
                break
          nTempX = x + distance
          nTempY = y + distance
-         if (self.judgePosIsWalkAble(nTempX, nTempY)):
+         if (self.judgePosIsWalkAble(nTempX, nTempY,cells,warpPosList,judgeReachTgt)):
                break
          nTempX = x - distance
          nTempY = y + distance
-         if (self.judgePosIsWalkAble(nTempX, nTempY)):
+         if (self.judgePosIsWalkAble(nTempX, nTempY,cells,warpPosList,judgeReachTgt)):
                break
          nTempX = x + distance
          nTempY = y - distance
-         if (self.judgePosIsWalkAble(nTempX, nTempY)):
+         if (self.judgePosIsWalkAble(nTempX, nTempY,cells,warpPosList,judgeReachTgt)):
                break
          nTempX = x - distance
          nTempY = y - distance
-         if (self.judgePosIsWalkAble(nTempX, nTempY)):
+         if (self.judgePosIsWalkAble(nTempX, nTempY,cells,warpPosList,judgeReachTgt)):
                break
          break
       return CGPoint(nTempX, nTempY)
@@ -863,7 +884,101 @@ class CGAPI(CGAPython.CGA):
    def 等待窗口关闭返回(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_serverShutdonw_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
+   
+   #是否目标坐标附近
+   def IsNearTarget(self,x,y,dis=1):
+      curPos = self.GetMapCoordinate()
+      if(abs(curPos.x) - x ) <= dis and (abs(curPos.y)-y) <= dis:
+         #self.debug_log("目标附近")
+         return True
+      #self.debug_log("不在目标附近")
+      return False
+
+   #目标坐标是否存在墙
+   def IsTargetExistWall(self,x,y):
+      cells = self.GetMapCollisionTable(True)
+      if x > cells.x_size or y > cells.y_size:
+         self.debug_log("坐标超出地图范围:x:%d,y:%d" % (x,y))
+         return -1
+      
+      cellData = cells.cell
+      if cellData[x+y*cells.x_size] == 0:
+         return 0
+      else:
+         return 1
+       
+
+   #移动到坐标附近
+   def MoveToNpcNear(self,x,y,dis=1):
+      if dis<1:
+         dis = 1
+      pos = self.GetRandomSpace(x,y,dis)
+      #self.debug_log("空地%d,%d"%(pos.x,pos.y))
+      if (self.IsTargetExistWall(pos.x,pos.y)):
+         return False
+      self.AutoMoveTo(pos.x,pos.y)
+      if(self.GetMapCoordinate() == pos):
+         return True
+      return False
+
+   def TalkNpcClicked(self,dlg,selectVal):
+      if dlg==None:
+         return False
+      match(dlg.options):
+         case 12:
+            self.ClickNPCDialog(selectVal, -1)
+            return True
+         case 32:
+            self.ClickNPCDialog(32, -1)
+            return True
+         case 1:
+            self.ClickNPCDialog(1, -1)
+            return True
+         case 2:
+            self.ClickNPCDialog(2, -1)
+            return True
+         case 3:
+            self.ClickNPCDialog(1, -1)
+            return True
+         case 4:
+            self.ClickNPCDialog(4, -1)
+            return True
+         case 8:
+            self.ClickNPCDialog(8, -1)
+            return True
+         case 0:
+            return True
+         case _:
+            return False
+      return False
+   def TalkNpcSelectYes(self,x,y,count=32):
+      talkCount=3
+      dlg=None
+      while(talkCount and not self.g_stop and not dlg):
+         self.TurnTo(x,y)
+         dlg = self.等待服务器返回()
+         talkCount=talkCount-1
+      bTalkNpc = self.TalkNpcClicked(dlg,4)
+      count=count-1
+      while (count and not self.g_stop and bTalkNpc):
+         dlg = self.等待服务器返回()
+         bTalkNpc = self.TalkNpcClicked(dlg,4)
+         count=count-1
+      return bTalkNpc
+
+   def TalkNpcPosSelectYes(self,x,y,count=32):
+      if not (self.IsNearTarget(x,y,1)):
+         self.MoveToNpcNear(x,y)
+      return self.TalkNpcSelectYes(x,y,count)
 
 
 #返回单例对象
 cg = CGAPI()
+人物 = cg.GetCharacterData
+日志 = cg.chat_log
+取当前地图编号 = cg.GetMapIndex
+取当前地图名 = cg.GetMapName
+等待 = time.sleep
+回城 = cg.LogBack
+转向 = cg.TurnAbout
+对话选是 = cg.TalkNpcPosSelectYes
