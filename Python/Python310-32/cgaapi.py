@@ -11,6 +11,7 @@ from collections import namedtuple
 import asyncio
 import threading
 import queue
+import enum
 from AStar import *
 
 #封装元组，便于访问
@@ -47,7 +48,29 @@ def singleton(cls):
     cls.__init__ = object.__init__
 
     return cls
-
+class GameInfo:
+   def __init__(self) -> None:
+      self.name=""
+      self.hp=0
+      self.maxhp=0
+      self.mp=0
+      self.maxmp=0
+      self.xp=0
+      self.maxxp=0
+      self.health=0
+      self.id=0
+      self.showname=""
+      self.realname=""
+      self.level=0
+class GameTeamPlayer(GameInfo):
+   def __init__(self) -> None:         
+      self.nick_name=""
+      self.title_name=""
+      self.injury=0         
+      self.is_me=False         
+      self.x=0
+      self.y=0
+      self.unit_id=0      
 #同步等待信息的类，队列实现
 class AsyncWaitNotify:
     def __init__(self,global_wait_list):
@@ -74,6 +97,19 @@ class AsyncWaitNotify:
                 self._global_wait_list.remove(self)  
             return None  
 
+
+TCharacter_Action_PK = 1,			      #PK
+TCharacter_Action_JOINTEAM = 3,		   #加入队伍
+TCharacter_Action_EXCAHNGECARD = 4,	   #交换名片
+TCharacter_Action_TRADE = 5,		      #交易
+TCharacter_Action_KICKTEAM = 11,	      #剔除队伍
+TCharacter_Action_LEAVETEAM = 12,	   #离开队伍
+TCharacter_Action_TRADE_CONFIRM = 13,  #交易确定
+TCharacter_Action_TRADE_REFUSE = 14,   #交易取消
+TCharacter_Action_TEAM_CHAT = 15,	   #队聊
+TCharacter_Action_REBIRTH_ON = 16,	   #开始摆摊
+TCharacter_Action_REBIRTH_OFF = 17,	   #停止摆摊
+TCharacter_Action_Gesture = 18,		   #人物动作
 @singleton
 class CGAPI(CGAPython.CGA):   
    
@@ -106,6 +142,7 @@ class CGAPI(CGAPython.CGA):
    g_downMap_asyncs=[]             #下载地图通知
    g_connectionState_asyncs=[]     #连接状态变更
    g_unitMenu_asyncs=[]            #菜单项通知
+
 
 
    #构造函数
@@ -277,32 +314,53 @@ class CGAPI(CGAPython.CGA):
          if skill.name == name:
                return skill.index
       return -1
-
+   def WaitForMap(self,name):
+      self.Nowhile(name)
+   def WaitForMapEx(self,name,x,y):
+      self.NowhileEx(name,x,y)
    #等待到指定地图-地图名称，x坐标，y坐标
    def Nowhile(self,name):
-      curMapName = self.GetMapName()
-      curPoint = self.GetMapCoordinate()
       timeout = 60
-      for i in range(timeout):
-         curMapName = self.GetMapName()
-         curPoint = self.GetMapCoordinate()
-         if curMapName == name:
-            return True		
-         time.sleep(1)
+      if type(name) == int:
+         for i in range(timeout):
+            if self.g_stop:
+               return False  
+            curMapIndex = self.GetMapIndex()
+            if self.IsInNormalState() and curMapIndex == name:
+               return True		
+            time.sleep(1)
+      elif type(name) == str:         
+         for i in range(timeout):
+            if self.g_stop:
+               return False
+            curMapName = self.GetMapName()         
+            if self.IsInNormalState() and curMapName == name:
+               return True		
+            time.sleep(1)
       return False
 
 
    #等待到指定地图-地图名称，x坐标，y坐标
-   def NowhileEx(self,name,x,y):
-      curMapName = self.GetMapName()
-      curPoint = self.GetMapCoordinate()
+   def NowhileEx(self,name,x,y): 
       timeout = 60
-      for i in range(timeout):
-         curMapName = self.GetMapName()
-         curPoint = self.GetMapCoordinate()
-         if curMapName == name and curPoint.x == x and curPoint.y == y:
-            return True		
-         time.sleep(1)
+      if type(name) == int:
+         for i in range(timeout):
+            if self.g_stop:
+               return False           
+            curPoint = self.GetMapCoordinate()
+            curMapIndex = self.GetMapIndex()
+            if self.IsInNormalState() and curMapIndex == name and curPoint.x == x and curPoint.y == y:
+               return True		
+            time.sleep(1)
+      elif type(name) == str:         
+         for i in range(timeout):
+            if self.g_stop:
+               return False
+            curMapName = self.GetMapName()
+            curPoint = self.GetMapCoordinate()           
+            if self.IsInNormalState() and curMapName == name and curPoint.x == x and curPoint.y == y:
+               return True		
+            time.sleep(1)
       return False
     
    #合成制造-技能名称，物品名称，超时时间
@@ -704,22 +762,6 @@ class CGAPI(CGAPython.CGA):
                time.sleep(0.01)
       self.WaitInNormalState()
       return True
-
-
-                                 
-
-
-
-
-
-
-
-
-
-
-
-
-
    #通过A*算法，查找当前点到目标点的路径
    def CalculatePath(self,curX, curY, targetX, targetY):
       self.debug_log("计算路径")
@@ -825,56 +867,56 @@ class CGAPI(CGAPython.CGA):
          q.put_chat_msg(val)
       self.g_unitMenu_asyncs.clear()
 
-
-   def 等待聊天消息返回(self,tSecond=10):        
-    testWait = AsyncWaitNotify(self.g_chatMsg_asyncs)       
-    return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待服务器返回(self,tSecond=10):        
+   def WaitRecvChatMsg(self,tSecond=10):        
+      testWait = AsyncWaitNotify(self.g_chatMsg_asyncs)       
+      return testWait.wait_msg_timeout(tSecond)
+   #API
+   def WaitRecvNpcDialog(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_npcDialog_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待工作返回(self,tSecond=10):        
+   def WaitRecvWorkingResult(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_workingResult_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待交易对话框返回(self,tSecond=10):        
+   def WaitRecvTradeDialog(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_tradeDialog_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待交易信息返回(self,tSecond=10):        
+   def WaitRecvTradeStuffs(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_tradeStuffs_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待交易状态返回(self,tSecond=10):        
+   def WaitRecvTradeState(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_tradeState_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待菜单返回(self,tSecond=10):        
+   def WaitRecvPlayerMenu(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_playerMenu_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待菜单项返回(self,tSecond=10):        
+   def WaitRecvUnitMenu(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_unitMenu_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待战斗返回(self,tSecond=10):        
+   def WaitRecvBattleAction(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_battleAction_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待连接状态返回(self,tSecond=10):        
+   def WaitRecvConnectionState(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_connectionState_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待窗口按键返回(self,tSecond=10):        
+   def WaitRecvGameWndKeyDown(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_gameWndKeyDown_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待下载地图返回(self,tSecond=10):        
+   def WaitRecvDownloadMap(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_downMap_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    #API
-   def 等待窗口关闭返回(self,tSecond=10):        
+   def WaitRecvServerShutdown(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_serverShutdonw_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    
@@ -882,9 +924,9 @@ class CGAPI(CGAPython.CGA):
    def IsNearTarget(self,x,y,dis=1):
       curPos = self.GetMapCoordinate()
       if(abs(curPos.x) - x ) <= dis and (abs(curPos.y)-y) <= dis:
-         #self.debug_log("目标附近")
+         self.debug_log("目标附近")
          return True
-      #self.debug_log("不在目标附近")
+      self.debug_log("不在目标附近")
       return False
 
    #目标坐标是否存在墙
@@ -949,20 +991,633 @@ class CGAPI(CGAPython.CGA):
       dlg=None
       while(talkCount and not self.g_stop and not dlg):
          self.TurnTo(x,y)
-         dlg = self.等待服务器返回()
+         dlg = self.WaitRecvNpcDialog()
          talkCount=talkCount-1
       bTalkNpc = self.TalkNpcClicked(dlg,4)
       count=count-1
       while (count and not self.g_stop and bTalkNpc):
-         dlg = self.等待服务器返回()
+         dlg = self.WaitRecvNpcDialog()
          bTalkNpc = self.TalkNpcClicked(dlg,4)
          count=count-1
       return bTalkNpc
+
+   def GetCoordinateDirectionPos(self,x,y,nDir,nVal): 
+      if(nDir==0):
+         x = x
+         y = y - nVal
+      elif(nDir==1):
+         x = x + nVal
+         y = y - nVal
+      elif(nDir==2):
+         x = x + nVal
+         y = y
+      elif(nDir==3):
+         x = x + nVal
+         y = y + nVal
+      elif(nDir==4):
+         x = x
+         y = y + nVal
+      elif(nDir==5):
+         x = x - nVal
+         y = y + nVal
+      elif(nDir==6):
+         x = x - nVal
+         y = y
+      elif(nDir==7):
+         x = x - nVal
+         y = y - nVal
+      return CGPoint(x,y)      
+
+   def GetDirectionPos(self,nDir,nVal=1):
+      mapPos=self.GetMapCoordinate()	
+      return self.GetCoordinateDirectionPos(mapPos.x, mapPos.y, nDir, nVal)
 
    def TalkNpcPosSelectYes(self,x,y,count=32):
       if not (self.IsNearTarget(x,y,1)):
          self.MoveToNpcNear(x,y)
       return self.TalkNpcSelectYes(x,y,count)
+
+   def TalkNpcPosSelectYesEx(self,nDir,count=32):
+      dirPos=self.GetDirectionPos(nDir, 2)
+      return self.TalkNpcSelectYes(dirPos.x, dirPos.y, count)
+
+
+   #--法兰传送一次
+   def FaLanStoreWarpOne(self):
+      mapPos=self.GetMapCoordinate()
+      mapName=self.GetMapName()		
+      if (mapPos.x==72 and mapPos.y==123 ):#		#-- 西2登录点
+         self.TurnAbout(2)			# 东	
+         self.WaitForMapEx("法兰城",233,78)	
+      elif (mapPos.x==233 and mapPos.y==78 ):#	# 东2登录点
+         self.TurnAbout(0)			# 北	
+         self.WaitForMapEx("市场一楼 - 宠物交易区", 46, 16)		
+      elif (mapPos.x==162 and mapPos.y==130 ):#	# 南2登录点
+         self.TurnAbout(2)	
+         self.WaitForMapEx("法兰城",72,123)	
+      elif (mapPos.x==63 and mapPos.y==79 ):#	# 西1登录点
+         self.TurnAbout(0)			# 北	
+         self.WaitForMapEx("法兰城", 242, 100)
+      elif (mapPos.x==242 and mapPos.y==100 ):#	# 东1登录点
+         self.TurnAbout(2)			# 北	
+         self.WaitForMapEx("市场三楼 - 修理专区", 46, 16)	
+      elif (mapPos.x==141 and mapPos.y==148 ):#	# 南1登录点
+         self.TurnAbout(0)			# 北	
+         self.WaitForMapEx("法兰城", 63, 79)	
+      elif (mapName=="市场三楼 - 修理专区" and mapPos.x==46 and mapPos.y==16 ):#	# t3
+         self.TurnAbout(0)			# 北	
+         self.WaitForMapEx("法兰城", 141, 148)		
+      elif (mapName=="市场一楼 - 宠物交易区" and mapPos.x==46 and mapPos.y==16 ):#	# t1
+         self.TurnAbout(0)			# 北	
+         self.WaitForMapEx("法兰城", 162, 130)	     
+      return
+
+   #开始遇敌
+   def begin_auto_action(self):
+      self.debug_log("开始遇敌")
+      self.m_bAutoEncounterEnemy=True
+      t=threading.Thread(target=AutoEncounterEnemyThread)
+      t.start()
+
+   def AutoEncounterEnemyThread(self):
+      bMoveNext=False
+      startPoint = self.GetMapCoordinate()
+      preMapName = self.GetMapName()
+      nDir = self.m_nAutoEncounterDir
+      targetPos = self.GetDirectionPos(nDir, 1)
+      while self.m_bAutoEncounterEnemy:
+         if (bMoveNext):
+            self.ForceMoveTo(targetPos.x(), targetPos.y(), self.m_bIsShowAutoEncounterEnemy)
+         else:
+            self.ForceMoveTo(startPoint.x(), startPoint.y(), self.m_bIsShowAutoEncounterEnemy)
+      
+   def end_auto_action(self):
+      self.debug_log("停止遇敌")
+      self.m_bAutoEncounterEnemy=False
+   
+   #前往法兰城 6个点
+   #"s2","w2","e2","t1"	t1市场一楼 t3市场三楼
+   #"s1","w1","e1","t3"
+   def gotoFaLanCity(self,storeName):            
+      def liBao():
+         if(self.GetMapName() != "里谢里雅堡"):
+            time.sleep(2)
+            return    
+         self.AutoMoveToEx(41,98,"法兰城")	
+         self.AutoMoveTo(153, 130)		
+         if(storeName=="" or storeName=="s"):
+            return          
+      def faLan():
+         warpList={
+            "w2":{"x":72,"y":123,"name":"法兰城"},    #西2登录点
+            "w1":{"x":63,"y":79,"name":"法兰城"},		#西1登录点
+            "e1":{"x":242,"y":100,"name":"法兰城"},   #东1登录点
+            "e2":{"x":233,"y":78,"name":"法兰城"},		#东2登录点
+            "s1":{"x":141,"y":148,"name":"法兰城"},	#南1登录点
+            "s2":{"x":162,"y":130,"name":"法兰城"},	#南2登录点
+            "t3":{"x":46,"y":16,"name":"市场三楼 - 修理专区"},		#市场三楼
+            "t1":{"x":46,"y":16,"name":"市场一楼 - 宠物交易区"},	#市场1楼
+            "whospital":{"x":82,"y":83,"name":"医院"}		#西医院		            
+         }
+         warp1={"s2","w2","e2","t1"}
+         warp2={"s1","w1","e1","t3"}
+         #西二 东二 南二 市场一楼宠物交易区
+         tmpWarpList={}         
+         isFind = True if storeName in warp1 else False
+         if isFind : #找最近传送点
+            tmpWarpList= warp1	
+         else:
+            isFind = True if storeName in warp2 else False
+            if isFind : #找最近传送点
+               tmpWarpList= warp2		         
+         mapPos=self.GetMapCoordinate()	
+         if isFind : #找最近传送点
+            data = warpList[storeName]
+            nearPos={}
+            minDistance=99999
+            for warpName in tmpWarpList:
+               warpData = warpList[warpName]
+               tDis = self.GetDistanceEx(mapPos.x,mapPos.y,warpData["x"],warpData["y"])
+               if(minDistance > tDis):
+                  nearPos = warpData
+                  minDistance=tDis               
+             
+            self.AutoMoveTo(nearPos["x"],nearPos["y"])
+            tryNum=0
+            while True:
+               mapPos=self.GetMapCoordinate()	
+               if self.GetMapName() == data["name"] and mapPos.x==data["x"] and mapPos.y==data["y"]:
+                  return
+               else:
+                  self.FaLanStoreWarpOne()               
+               if(tryNum > 10):
+                  self.debug_log("前往法兰城坐标错误！")
+                  return               
+               tryNum = tryNum+1	
+      while True:
+         self.WaitInNormalState()
+         mapName = self.GetMapName()
+         if (mapName=="艾尔莎岛" ):			
+            self.AutoMoveTo(140,105)				
+            self.TurnAbout(1)
+            self.WaitRecvNpcDialog()
+            self.ClickNPCDialog(4,0)	            
+         elif (mapName=="里谢里雅堡" ):	
+            liBao()
+         elif (mapName=="法兰城" ):	
+            faLan()
+            return
+         elif (mapName=="召唤之间" ):	#登出 bank
+            self.AutoMoveTo( 3, 7)	
+            self.WaitForMap("里谢里雅堡")	 
+         elif (mapName=="芙蕾雅" ):
+            return
+         else:
+            self.LogBack() 
+         time.sleep(1)
+
+   def outFaLan(self,sDir):
+      if sDir == "e":
+         self.gotoFaLanCity("e1")
+         self.AutoMoveTo(281,88)
+      elif sDir=="s":
+         self.gotoFaLanCity("s")
+         self.AutoMoveTo(154, 241)
+      elif sDir=="w":
+         self.gotoFaLanCity("w1")
+         self.AutoMoveTo(22,88)	
+
+   def outCastle(self,sDir):
+      while True:
+         self.WaitInNormalState()  
+         mapName = self.GetMapName()
+         if mapName=="艾尔莎岛":
+            self.TurnAbout(1)
+            self.WaitRecvNpcDialog()
+            self.ClickNPCDialog(4,0)
+            self.WaitForMap("里谢里雅堡")
+         elif mapName=="召唤之间":
+            self.AutoMoveTo(3,7)
+            self.WaitForMap("里谢里雅堡")
+         elif mapName=="里谢里雅堡":
+            if(sDir=="e"):
+               self.AutoMoveTo(65,53)
+            elif(sDir == "s"):
+               self.AutoMoveTo(41,98)
+            elif(sDir == "w"):
+               self.AutoMoveTo(17,53)
+            elif(sDir == "n"):
+               self.AutoMoveTo(41,14)
+            return
+         else:
+            self.LogBack()
+         time.sleep(1)
+   def gotoFalanBankTalkNpc(self):
+      if self.GetMapIndex() != 1121:
+         self.gotoFaLanCity("e1")
+         self.WaitForMap("法兰城")
+         self.AutoMoveTo(238,111,"银行")	
+      self.AutoMoveTo(11,8)
+      self.TurnAbout(2)
+      self.WaitRecvNpcDialog()
+   #去银行和职员对话
+   def gotoBankTalkNpc(self):            
+      def star1():
+         self.AutoMoveTo(157,94)	
+         self.TurnAboutEx(158,93)		
+         self.WaitForMap("艾夏岛")	
+         self.AutoMoveTo(114,105)	
+         self.AutoMoveTo(114,104,"银行")	
+         self.AutoMoveTo(49,30)
+         self.TurnAbout(2)
+         self.WaitRecvNpcDialog()   
+      def star2():
+         self.AutoMoveTo(41,98,"法兰城")	
+         self.AutoMoveTo(162, 130)		         
+      def faLan():
+         self.gotoFaLanCity("e1")		
+         self.WaitForMap("法兰城")	
+         self.AutoMoveTo(238,111,"银行")	
+         self.AutoMoveTo(11,8)
+         self.TurnAbout(2)
+         self.WaitRecvNpcDialog()   
+      while True:
+         self.WaitInNormalState()  
+         mapName = self.GetMapName()
+         if mapName=="艾尔莎岛":
+            star1()
+            return
+         elif mapName=="法兰城":
+            faLan()
+            return
+         elif mapName=="里谢里雅堡":
+            star2()
+            return
+         elif mapName=="召唤之间":
+            self.AutoMoveTo( 3, 7)	
+            self.WaitForMap("里谢里雅堡")	 
+         elif mapName=="银行":
+            if self.GetMapIndex() == 59548:
+               self.AutoMoveTo(49,30)
+               self.TurnAbout(2)
+               self.WaitRecvNpcDialog()   
+            elif self.GetMapIndex() == 1121:
+               self.AutoMoveTo(11,8)
+               self.TurnAbout(2)
+               self.WaitRecvNpcDialog()   
+            return
+         else:
+            self.LogBack()
+         time.sleep(1)       
+      
+   def GetTeamPlayers(self):
+      #GameTeamPlayer
+      teaminfo=self.GetTeamPlayerInfo()
+      units=self.GetMapUnits()
+      playerinfo=self.GetPlayerInfo()
+      pTeamInfoList=[]
+      for tmpTeam in teaminfo:
+         newTeam=GameTeamPlayer()
+         newTeam.name = tmpTeam.name
+         newTeam.hp = tmpTeam.hp
+         newTeam.maxhp = tmpTeam.maxhp
+         newTeam.mp = tmpTeam.mp
+         newTeam.maxmp = tmpTeam.maxmp
+         newTeam.x = tmpTeam.xpos
+         newTeam.y = tmpTeam.ypos
+         newTeam.unit_id = tmpTeam.unit_id
+         pTeamInfoList.append(newTeam)
+      for tmpTeam in pTeamInfoList:
+         for unit in units:
+            if unit.type == 8 and unit.unit_id == tmpTeam.unit_id:			
+               tmpTeam.name = unit.unit_name
+               tmpTeam.nick_name = unit.nick_name
+               tmpTeam.title_name = unit.title_name
+               tmpTeam.x = unit.xpos
+               tmpTeam.y = unit.ypos
+               tmpTeam.injury = unit.injury
+               tmpTeam.level = unit.level
+               break		
+         if playerinfo.unitid == tmpTeam.unit_id:         
+            tmpTeam.name = playerinfo.name
+            tmpTeam.level = playerinfo.level
+            tmpTeam.injury = 1 if playerinfo.health > 0 else 0
+            tmpTeam.is_me = True         
+      return pTeamInfoList
+   #获取队伍人数
+   def GetTeammatesCount(self):
+      playerInfos=self.GetTeamPlayerInfo()
+      return len(playerInfos)
+   
+   def DoCharacterAction(self,nType):
+      self.DoRequest(nType)
+   #离开队伍
+   def LeaveTeammate(self):      
+      if self.GetTeammatesCount() > 0:
+         return self.DoCharacterAction(TCharacter_Action_LEAVETEAM)  #离队
+      return False
+
+   #取钱 1存 2取 3扔
+   #银行("取钱", 金额)
+   #将钱从银行取出，当金额为负数时表示取出钱后身上的金币数，当金额大于银行钱数时则全部取出，
+   #银行("取钱", 100000) //取出10万金币，如果银行不足则全部取出
+   #银行("取钱", -10000) //取出金币后身上有1万金币
+   def WithdrawGold(self,nVal):
+      bankGold = self.GetBankGold()
+      if (bankGold <= 0):
+         self.debug_log( "银行没有钱，取钱失败！")
+         return False
+      pCharacter = self.GetPlayerInfo()
+      realGold = nVal #实际取钱数
+      if (realGold < 0):      
+         if (abs(realGold) >= pCharacter.gold):
+            realGold = (abs(realGold) - pCharacter.gold)         
+         else: #身上已经有这么多钱 则取钱失败         
+            self.debug_log( "银行没有那么多钱了，取钱失败！")
+            return False
+      if ((realGold + pCharacter.gold) > 1000000):#身上最多100万
+         realGold = (1000000 - pCharacter.gold)
+      
+      if (realGold > bankGold):
+         realGold = bankGold
+      return self.MoveGold(realGold, 2)
+
+
+   #去银行取钱      
+   def getMoneyFromBank(self,money):
+      self.WaitInNormalState()
+      if self.GetTeammatesCount() > 1:
+         self.LeaveTeammate()      
+      self.gotoBankTalkNpc()
+      self.WithdrawGold(money) #没有取钱金额判断
+
+   def DepositPetPos(self,nPos):
+      bankPets=self.GetBankPetsInfo()
+      if len(bankPets) >= 5:
+         self.debug_log("银行宠物满了")
+         return False
+      petPos = nPos
+      if (petPos == -1):
+         self.debug_log("身上指定位置没有宠物!")
+         return False     
+      bRes = False
+      bankPetIndex=[]
+      for bankPet in bankPets:
+         bankPetIndex.push_back(bankPet.index)      
+      for i in range(100,105):
+         if i not in bankPetIndex:         
+            return self.MovePet(petPos, i)         
+      return False
+   #把非作战宠物全存银行
+   
+   def depositNoBattlePetToBank(self):
+      self.WaitInNormalState()
+      if(self.GetTeammatesCount()>1):
+         self.LeaveTeammate()
+      self.gotoBankTalkNpc()
+      allPets = self.GetPetsInfo()		
+	   #除了作战宠物 其余全存
+      for pet in allPets:
+         if(pet.battle_flags!=2):	
+            self.DepositPetPos(pet.index)
+            time.sleep(2)       
+      		
+      allPets = self.GetPetsInfo()		
+      for pet in allPets:
+         if(pet.battle_flags!=2):
+            self.DepositPetPos(pet.index)		
+
+   def Renew(self,nDir):
+      dirPos = self.GetDirectionPos(nDir, 2)
+      self.RenewEx(dirPos.x, dirPos.y)
+
+   def RenewEx(self,x, y):
+      self.TurnAboutEx(x, y)
+      #选择回复人物
+      nCount = 10
+      bNeedRenew = True
+      while (nCount>0 and not self.g_stop and bNeedRenew):      
+         dlg = self.WaitRecvNpcDialog()
+         bNeedRenew = self.RenewNpcClicked(dlg)
+         nCount=nCount-1
+
+   def NeedHPSupply(self,pl):
+      return  True if (pl.hp < pl.maxhp) else False
+
+   def NeedMPSupply(self,pl):
+      return True if(pl.mp < pl.maxmp) else False
+
+   def NeedPetSupply(self,pets):
+      for pet in pets:
+         if (pet.hp < pet.maxhp or pet.mp < pet.maxmp):
+            return True      
+      return False
+
+   def RenewNpcClicked(self,dlg):
+      result = False
+      if (dlg and dlg.type == 2 and dlg.message.find("要回复吗")!=-1 ):     
+         playerinfo = self.GetPlayerInfo()
+         if (playerinfo):
+            bNeedHP = self.NeedHPSupply(playerinfo)
+            bNeedMP = self.NeedMPSupply(playerinfo)
+            #如果身上金钱<加魔钱 只加血
+            if (bNeedHP and (not bNeedMP and playerinfo.gold < playerinfo.maxmp - playerinfo.mp)):            
+               self.ClickNPCDialog(0, 2, result)
+               return True            
+            elif (bNeedMP and playerinfo.gold >= playerinfo.maxmp - playerinfo.mp):# //加魔钱够 回复魔和血
+               self.ClickNPCDialog(0, 0, result)
+               return True
+            #人物不需要回复 则回复宠物
+            petsinfo = self.GetPetsInfo()
+            if (not result and petsinfo):
+               if (self.NeedPetSupply(petsinfo)):# //回复宠物            
+                  self.ClickNPCDialog(0, 4, result)
+                  return True
+      elif (dlg and dlg.type == 0):      
+         if (dlg.options == 12): #//是   
+            self.ClickNPCDialog(4, -1, result)# //4 是 8否 32下一步 1确定
+            return True        
+         if (dlg.options == 1):# //确定
+            self.ClickNPCDialog(1, -1, result)
+            return True             
+      return False
+   def WaitSupplyFini(self,timeout):
+      for i in range(0,timeout):
+         if (self.g_bStop):
+            return False
+         playerinfo=self.GetPlayerInfo()
+         petsinfo=self.GetPetsInfo()
+         if (playerinfo):
+            bNeedHP = self.NeedHPSupply(playerinfo)
+            bNeedMP = self.NeedMPSupply(playerinfo)           
+            bNeedPet = self.NeedPetSupply(petsinfo)
+            if (bNeedHP and bNeedMP and bNeedPet):         
+               return True
+         time.sleep(1)
+      return True
+
+   def IsTeamLeader(self,sName=None):
+      if self.GetTeammatesCount() <= 1:
+         return True
+      else:
+         teamInfos = self.GetTeamPlayers()
+         if sName==None:
+            if len(teamInfos)>0 and teamInfos[0].is_me:
+               return True
+         else:
+            if len(teamInfos)>0 and teamInfos[0].name == sName:
+               return True
+      return False
+
+   def toTeleRoomTemplate(self,warpData):
+      tryCount=0
+      while True:
+         mapPos = self.GetMapCoordinate()
+         当前地图名 = self.GetMapName()
+         if (当前地图名=="艾尔莎岛" ):	
+            self.AutoMoveTo(140,105)	
+            self.TurnAbout(1)
+            self.WaitRecvNpcDialog()	
+            self.ClickNPCDialog(4,0)	           
+         elif (当前地图名=="里谢里雅堡" ):           	
+            self.AutoMoveToEx(41,50,"里谢里雅堡 1楼")
+         elif (当前地图名=="里谢里雅堡 1楼" ):
+            self.AutoMoveToEx(45,20,"启程之间")	
+         elif (当前地图名=="启程之间" ):	
+            #self.AutoMoveTo(25, 27) 	
+            if (self.IsTeamLeader()):
+               self.AutoMoveTo(warpData[0]["x"],warpData[0]["y"])
+               self.AutoMoveTo(warpData[1]["x"],warpData[1]["y"])
+               self.AutoMoveTo(warpData[0]["x"],warpData[0]["y"])
+               self.AutoMoveTo(warpData[1]["x"],warpData[1]["y"])
+               self.AutoMoveTo(warpData[0]["x"],warpData[0]["y"])	
+            else:
+               self.AutoMoveTo(warpData[0]["x"],warpData[0]["y"])	    
+            self.TurnAboutEx(warpData[2]["x"],warpData[2]["y"])
+            dlg=self.WaitRecvNpcDialog()
+            #self.debug_log(dlg.message)
+            if dlg and (dlg.message.find("此传送点的资格")!=-1 or dlg.message.find("不能使用这个传送石")!=-1):
+               #执行脚本(warpData[4].script)		
+               return True
+            elif(dlg.message==""):
+               tryCount=tryCount+1
+               if(tryCount >= 5):#	--尝试5次，还卡对话框退出
+                  return False   
+               continue
+            #self.debug_log("Select Yes")
+            self.ClickNPCDialog(8,0)
+            self.WaitRecvNpcDialog()
+            self.ClickNPCDialog(1,0)
+            self.TalkNpcPosSelectYes(warpData[2]["x"],warpData[2]["y"])	
+            return True
+         else:
+            self.toCastle()           
+   def toCastle(self,warpPos=None):
+      while True:
+         self.WaitInNormalState()
+         当前地图名 = self.GetMapName()
+         if (当前地图名=="艾尔莎岛" ):			
+            self.AutoMoveTo(140,105)				
+            转向(1)
+            等待服务器返回()
+            对话选择(4,0)
+            等待到指定地图("里谢里雅堡")           
+         elif (当前地图名=="里谢里雅堡" ):	
+            if(warpPos == None):
+               self.AutoMoveTo(27,82)	#--艾岛上来传送点
+               return
+            if(warpPos == "c"):#	--clock打卡处
+               self.AutoMoveTo(58, 83)	
+            elif(warpPos == "召唤之间"):#--召唤之间
+               self.AutoMoveToEx(47,85,"召唤之间")
+            elif(warpPos == "回廊"):#--回廊
+               self.AutoMoveToEx(47,85,"召唤之间")		
+               self.AutoMoveToEx(27,8,"回廊")	
+            elif(warpPos == "灵堂"):#--灵堂
+               self.AutoMoveToEx(47,85,"召唤之间")		
+               self.AutoMoveToEx(27,8,"回廊")		
+               self.AutoMoveToEx(23,19,"灵堂")
+            elif(warpPos == "f1"):#--里堡1层
+               self.AutoMoveToEx(41,50,"里谢里雅堡 1楼")			
+            elif(warpPos == "f2"):#--里堡1层
+               self.AutoMoveToEx(41,50,"里谢里雅堡 1楼")	
+               self.AutoMoveToEx(74,19,"里谢里雅堡 2楼")
+            elif(warpPos == "f3"):#--谒见之间
+               self.AutoMoveToEx(41,50,"里谢里雅堡 1楼")	
+               self.AutoMoveToEx(74,19,"里谢里雅堡 2楼")	
+               self.AutoMoveToEx(49,22,"谒见之间")	
+            elif(warpPos == "l"):#--图书室
+               self.AutoMoveToEx(41,50,"里谢里雅堡 1楼")	
+               self.AutoMoveToEx(74,19,"里谢里雅堡 2楼")	
+               self.AutoMoveToEx(0, 74,"图书室")
+            return
+         elif (当前地图名=="法兰城" ):		
+            self.gotoFaLanCity("s1")
+            self.AutoMoveToEx(153,100,"里谢里雅堡")           
+         elif (当前地图名=="召唤之间" ):#	--登出 bank
+            self.AutoMoveToEx( 3, 7)	
+            self.WaitForMap("里谢里雅堡")		 
+         else:
+            self.LogBack()
+         time.sleep(2)    
+	
+
+   def toTeleRoom(self,villageName=""):
+      warpList={
+         "亚留特村":[{"x":43,"y":23},{"x":43, "y":22},{"x":44,"y":22},{"script":"./Python脚本/直通车/★开传送-亚留特村.python"}],
+         "伊尔村":[{"x":43,"y":33},{"x":43, "y":32},{"x":44,"y":32},{"script":"./Python脚本/直通车/★开传送-伊尔村.python"}],
+         "圣拉鲁卡村":[{"x":43,"y":44},{"x":43, "y":43},{"x":44,"y":43},{"script":"./Python脚本/直通车/★开传送-圣拉鲁卡村.python"}],
+         "维诺亚村":[{"x":9,"y":22},{"x":9, "y":23},{"x":8,"y":22},{"script":"./Python脚本/直通车/★开传送-维诺亚村.python"}],
+         "奇利村":[{"x":9,"y":33},{"x":8, "y":33},{"x":8,"y":32},{"script":"./Python脚本/直通车/★开传送-奇利村.python"}],
+         "加纳村":[{"x":9,"y":44},{"x":8, "y":44},{"x":8,"y":43},{"script":"./Python脚本/直通车/★开传送-加纳村.python"}],
+         "杰诺瓦镇":[{"x":15,"y":4},{"x":15, "y":5},{"x":16,"y":4},{"script":"./Python脚本/直通车/★开传送-杰诺瓦镇.python"}],
+         "阿巴尼斯村":[{"x":37,"y":4},{"x":37, "y":5},{"x":38,"y":4},{"script":"./Python脚本/直通车/★开传送-阿巴尼斯村.python"}],
+         "蒂娜村":[{"x":25,"y":4},{"x":25, "y":5},{"x":26,"y":4},{"script":"./Python脚本/直通车/★开传送-蒂娜村.python"}],
+         }
+      def jiecun():
+         self.toTeleRoom("杰诺瓦镇")
+         self.WaitForMap("杰诺瓦镇的传送点")
+         self.AutoMoveToEx(14, 6,"村长的家")
+         self.AutoMoveToEx(1, 9,"杰诺瓦镇")
+         self.AutoMoveToEx(24, 40,"莎莲娜")
+         self.AutoMoveToEx(196, 443,"莎莲娜海底洞窟 地下1楼")	
+         self.AutoMoveToEx(14, 41,"莎莲娜海底洞窟 地下2楼")
+         self.AutoMoveTo(32, 21)
+         self.TrunAbout(5)
+         self.WaitRecvNpcDialog()	
+         self.chat_log("咒术",0,0,0)	
+         self.WaitRecvNpcDialog()
+         self.ClickNPCDialog(1, 0)
+         self.WaitForMapEx("莎莲娜海底洞窟 地下2楼",31,22)	
+         self.AutoMoveToEx(38, 37,"咒术师的秘密住处")		
+      if villageName in warpList:
+         data = warpList[villageName]
+         self.toTeleRoomTemplate(data)	  
+      elif(villageName == "魔法大学"):
+         data = warpList["阿巴尼斯村"]
+         self.toTeleRoomTemplate(data)
+         self.AutoMoveToEx(5, 4, 4313)
+         self.AutoMoveToEx(6, 13, 4312)
+         self.AutoMoveToEx(6, 13, "阿巴尼斯村")
+         self.AutoMoveToEx(37, 71,"莎莲娜")
+         self.AutoMoveToEx(118, 100,"魔法大学")
+      elif(villageName == "咒术师的秘密住处"):		
+         self.toCastle("f1")
+         self.AutoMoveToEx(45,20,"启程之间")	
+         self.AutoMoveTo(15, 4)	
+         self.LeaveTeammate()
+         self.TurnAbout(2)
+         dlg=self.WaitRecvNpcDialog()
+         if dlg and (dlg.message.find("此传送点的资格")!=-1 or dlg.message.find("不能使用这个传送石")!=-1):			
+            exec(open("./脚本/直通车/★开传送-杰诺瓦镇.py").read())			
+            jiecun()         	
+         self.TurnAbout(2)
+         self.WaitRecvNpcDialog()
+         self.ClickNPCDialog(4,0)
+         jiecun()
+      else:
+         self.chat_log("未知地图名称！",1)
+	
 
 
 #返回单例对象
@@ -971,7 +1626,44 @@ cg = CGAPI()
 日志 = cg.chat_log
 取当前地图编号 = cg.GetMapIndex
 取当前地图名 = cg.GetMapName
-等待 = time.sleep
+def 等待(nTime):
+   time.sleep(nTime*0.001)
 回城 = cg.LogBack
 转向 = cg.TurnAbout
-对话选是 = cg.TalkNpcPosSelectYes
+对话选择 = cg.ClickNPCDialog
+#对话选是 = cg.TalkNpcPosSelectYes
+def 对话选是(*args):
+   if len(args) == 1:
+      cg.TalkNpcPosSelectYesEx(args[0],100)
+   elif len(args)>=2:
+      cg.TalkNpcPosSelectYes(args[0],args[1],100)
+
+等待空闲 = cg.WaitInNormalState
+#自动寻路 = cg.AutoMoveTo
+def 自动寻路(*args):
+   if len(args) == 2:
+      cg.AutoMoveTo(args[0],args[1])
+   elif len(args)>=3:
+      cg.AutoMoveToEx(args[0],args[1])
+等待到指定地图 = cg.Nowhile
+等待服务器返回 = cg.WaitRecvNpcDialog
+等待聊天信息返回 = cg.WaitRecvChatMsg
+等待工作返回 = cg.WaitRecvWorkingResult
+等待交易对话框 = cg.WaitRecvTradeDialog
+等待交易信息返回=cg.WaitRecvTradeStuffs
+等待交易状态返回=cg.WaitRecvTradeState
+等待菜单返回=cg.WaitRecvPlayerMenu
+等待菜单项返回=cg.WaitRecvUnitMenu
+等待战斗返回=cg.WaitRecvBattleAction
+等待连接状态返回=cg.WaitRecvConnectionState
+等待窗口按键返回=cg.WaitRecvGameWndKeyDown
+等待下载地图返回=cg.WaitRecvDownloadMap
+等待窗口关闭返回=cg.WaitRecvServerShutdown
+def 回复(*args):
+   if len(args) == 1:
+      cg.Renew(args[0])
+   elif len(args)>=2:
+      cg.RenewEx(args[0],args[1])
+
+出法兰城 = cg.outFaLan
+出里谢里亚堡=cg.outCastle

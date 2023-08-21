@@ -33,8 +33,8 @@ def aiersa():
     cg.Nowhile("艾尔莎岛")
     cg.AutoMoveTo(140,105)
     cg.TurnAbout(1)
-    ret,dlg= cg.等待服务器返回()
-    if ret:
+    dlg= 等待服务器返回()
+    if dlg:
         cg.log(dlg.message)
     cg.ClickNPCDialog(4,0)
     time.sleep(1)

@@ -430,6 +430,9 @@ function main()
 	if(取当前地图名() == "奇怪的洞窟地下1楼") then
 		goto 狗洞
 	end		
+	if(取当前地图名() ~= "芙蕾雅") then
+		goto begin
+	end	
 	goto fuleiya
 ::狗洞::
 --	等待到指定地图("奇怪的洞窟地下1楼")	
