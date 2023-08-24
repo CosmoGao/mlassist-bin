@@ -538,6 +538,13 @@ class CGAPI(CGAPython.CGA):
                break
          break
       return CGPoint(nTempX, nTempY)
+   #获取人物信息 类型
+   def GetCharacterData(sType):
+       playerinfo = self.GetPlayerInfo()
+       match(sType):
+           case("gid"):return playerinfo.gid
+               
+       
 
    #是否在迷宫地图
    def IsInRandomMap(self):
