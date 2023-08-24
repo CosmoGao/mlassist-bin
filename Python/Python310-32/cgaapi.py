@@ -98,18 +98,35 @@ class AsyncWaitNotify:
             return None  
 
 
-TCharacter_Action_PK = 1,			      #PK
-TCharacter_Action_JOINTEAM = 3,		   #加入队伍
-TCharacter_Action_EXCAHNGECARD = 4,	   #交换名片
-TCharacter_Action_TRADE = 5,		      #交易
-TCharacter_Action_KICKTEAM = 11,	      #剔除队伍
-TCharacter_Action_LEAVETEAM = 12,	   #离开队伍
-TCharacter_Action_TRADE_CONFIRM = 13,  #交易确定
-TCharacter_Action_TRADE_REFUSE = 14,   #交易取消
-TCharacter_Action_TEAM_CHAT = 15,	   #队聊
-TCharacter_Action_REBIRTH_ON = 16,	   #开始摆摊
-TCharacter_Action_REBIRTH_OFF = 17,	   #停止摆摊
-TCharacter_Action_Gesture = 18,		   #人物动作
+TCharacter_Action_PK = 1			      #PK
+TCharacter_Action_JOINTEAM = 3		   #加入队伍
+TCharacter_Action_EXCAHNGECARD = 4     #交换名片
+TCharacter_Action_TRADE = 5		      #交易
+TCharacter_Action_KICKTEAM = 11	      #剔除队伍
+TCharacter_Action_LEAVETEAM = 12	   #离开队伍
+TCharacter_Action_TRADE_CONFIRM = 13  #交易确定
+TCharacter_Action_TRADE_REFUSE = 14   #交易取消
+TCharacter_Action_TEAM_CHAT = 15	   #队聊
+TCharacter_Action_REBIRTH_ON = 16	   #开始摆摊
+TCharacter_Action_REBIRTH_OFF = 17	   #停止摆摊
+TCharacter_Action_Gesture = 18		   #人物动作
+
+TPET_STATE_NONE = 0
+TPET_STATE_READY = 1  #待命
+TPET_STATE_BATTLE = 2 #战斗
+TPET_STATE_REST = 3   #休息
+TPET_STATE_WALK = 16  #散步
+
+MOVE_DIRECTION_Origin = 0	   #原地
+MOVE_DIRECTION_North = 0	   #MOVE_DIRECTION_North			北
+MOVE_DIRECTION_NorthEast = 1 #MOVE_DIRECTION_NorthEast		东北
+MOVE_DIRECTION_East = 2	   #MOVE_DIRECTION_RIGH				东
+MOVE_DIRECTION_SouthEast = 3 #MOVE_DIRECTION_SouthEast		东南
+MOVE_DIRECTION_South = 4	   #MOVE_DIRECTION_South			南
+MOVE_DIRECTION_SouthWest = 5 #MOVE_DIRECTION_WestDOWN			西南
+MOVE_DIRECTION_West = 6	   #MOVE_DIRECTION_West				西
+MOVE_DIRECTION_NorthWest = 7 #MOVE_DIRECTION_WestUP			西北
+
 @singleton
 class CGAPI(CGAPython.CGA):   
    
@@ -265,6 +282,14 @@ class CGAPI(CGAPython.CGA):
 
    def TurnAboutEx(self,x,y):
       self.TurnTo(x,y)
+   
+   def TurnAboutPointDir(self,x,y):
+      nDir = self.GetOrientation(x, y)
+      self.TurnAbout(nDir)
+
+   def GetOrientation(self,tx, ty):
+      p = self.GetMapCoordinate()
+      return self.GetDirection(p.x, p.y, tx, ty)
 
    #转换预定放行到self方向
    def TransDirectionToCGA(self,nDir):
@@ -929,6 +954,11 @@ class CGAPI(CGAPython.CGA):
       self.debug_log("不在目标附近")
       return False
 
+   def IsNearTargetEx(selx,srcx, srcy,tgtx, tgty, dis=1):
+      if (abs(srcx - tgtx) <= dis and abs(srcy - tgty) <= dis):
+         return True
+      return False
+
    #目标坐标是否存在墙
    def IsTargetExistWall(self,x,y):
       cells = self.GetMapCollisionTable(True)
@@ -942,19 +972,6 @@ class CGAPI(CGAPython.CGA):
       else:
          return 1
        
-
-   #移动到坐标附近
-   def MoveToNpcNear(self,x,y,dis=1):
-      if dis<1:
-         dis = 1
-      pos = self.GetRandomSpace(x,y,dis)
-      #self.debug_log("空地%d,%d"%(pos.x,pos.y))
-      if (self.IsTargetExistWall(pos.x,pos.y)):
-         return False
-      self.AutoMoveTo(pos.x,pos.y)
-      if(self.GetMapCoordinate() == pos):
-         return True
-      return False
 
    def TalkNpcClicked(self,dlg,selectVal):
       if dlg==None:
@@ -1028,6 +1045,33 @@ class CGAPI(CGAPython.CGA):
          y = y - nVal
       return CGPoint(x,y)      
 
+   def GetDirection(self,x,y,tx, ty):
+      if (x == tx and y == ty):
+         return MOVE_DIRECTION_Origin
+      dy = ty - y
+      dx = tx - x
+      if ((x - tx) == 0 or (y - ty) == 0):
+         if ((x - tx) == 0):
+            if (ty > y): #魔力反的 在下
+               return MOVE_DIRECTION_South
+            else:
+               return MOVE_DIRECTION_North		
+         else:
+            if (tx > x):
+               return MOVE_DIRECTION_East
+            else:
+               return MOVE_DIRECTION_West
+      else:
+         if (dy > 0 and dx > 0):
+            return MOVE_DIRECTION_SouthEast
+         elif (dx > 0 and dy < 0): #//第二象限
+            return MOVE_DIRECTION_NorthEast
+         elif (dx < 0 and dy < 0):# //第三象限
+            return MOVE_DIRECTION_NorthWest
+         elif (dx < 0 and dy > 0):# //第四象限
+            return MOVE_DIRECTION_SouthWest
+
+
    def GetDirectionPos(self,nDir,nVal=1):
       mapPos=self.GetMapCoordinate()	
       return self.GetCoordinateDirectionPos(mapPos.x, mapPos.y, nDir, nVal)
@@ -1076,7 +1120,7 @@ class CGAPI(CGAPython.CGA):
    def begin_auto_action(self):
       self.debug_log("开始遇敌")
       self.m_bAutoEncounterEnemy=True
-      t=threading.Thread(target=AutoEncounterEnemyThread)
+      t=threading.Thread(target=self.AutoEncounterEnemyThread)
       t.start()
 
    def AutoEncounterEnemyThread(self):
@@ -1094,7 +1138,133 @@ class CGAPI(CGAPython.CGA):
    def end_auto_action(self):
       self.debug_log("停止遇敌")
       self.m_bAutoEncounterEnemy=False
-   
+
+   def GetBattlePet(self):
+      pets=self.GetPetsInfo()
+      for pet in pets:
+         if pet.battle_flags == TPET_STATE_BATTLE:
+            return pet
+      return None
+
+   def recallSoul(self):
+      tryCount=0
+      petinfo = self.GetBattlePet()
+      charInfo = self.GetPlayerInfo()
+      while tryCount < 3:
+         if charInfo.souls > 0:
+            self.chat_log("人物掉魂：登出招魂")
+            self.outCastle("n")#出城堡北门	
+            self.AutoMoveToEx(154, 29,"大圣堂的入口")				
+            self.AutoMoveToEx(14, 7,"礼拜堂")		
+            self.AutoMoveTo(12, 19)	
+            self.TalkNpcPosSelectYesEx(0)
+            if tryCount > 3 : 
+               return          
+            tryCount = tryCount+1
+            charInfo = self.GetPlayerInfo()
+            if charInfo.souls > 0  :			
+               self.chat_log("没钱招魂了，去看看银行有没钱")
+               self.checkGold(人物("灵魂")*30000,1000001,200000)
+
+
+   def MoveToNpcNear(self, x, y, dis=1):
+      dis = dis if dis > 0 else 1
+      pos = self.GetRandomSpace(x, y, dis)
+      if (self.IsTargetExistWall(pos.x, pos.y) != 0):
+         self.debug_log("目标为墙")
+         return False
+      self.AutoMoveTo(pos.x, pos.y)
+      if (self.GetMapCoordinate() == pos):
+         return True
+      return False
+
+   def healPlayer(self,doctorName):
+      charInfo = self.GetPlayerInfo()
+      if charInfo.health == 0 :
+         return	
+      self.chat_log("人物受伤：登出治伤")
+      tryNum=0
+      filterName=["星落护士","谢谢惠顾☆","司徒启绒","毋然溟","喻天磊","段干澎乔"]
+      if(doctorName != None and type(doctorName) == str):
+         filterName.append(doctorName)
+      elif(doctorName != None and type(doctorName) == list):		
+         filterName += doctorName
+      self.toCastle()      
+      self.AutoMoveTo(34, 89)
+      time.sleep(2)
+      self.Renew(1)		
+      while True:
+         self.AutoMoveTo(29, 85)
+         charInfo = self.GetPlayerInfo()
+         if charInfo.health == 0 :
+            self.LeaveTeammate()
+            return		
+         units=self.GetMapUnits()     
+         doctor=None		
+         for u in units:
+            if ((u.flags & 256)!=0 and filterName.find(u.unit_name)!=-1) :
+               doctor = u
+               break	 			
+         if doctor ==None :#找周围医生
+            for u in units:
+               # if ((u.flags & 256)!=0) :
+                  # #日志(u.unit_name.."icon:"..u.icon.."flags"..(u.flags & 256))
+               # 
+               if ((u.flags & 256)!=0 and (u.title_name.find("医")!=-1 )) :
+                  doctor = u
+                  break						
+         if doctor !=None :
+            self.MoveToNpcNear(doctor.x,doctor.y,1)	#最后一个距离
+            oldHealth=charInfo.health
+            healTryNum=0
+            self.AddTeammate(doctor.unit_name)
+            if(self.GetTeammatesCount() > 1):
+               while(healTryNum < 4):
+                  if self.GetPlayerInfo().health == 0 :
+                     self.LeaveTeammate()
+                     return				
+                  time.sleep(8)	#等待8秒 还受伤 重新加队
+   #					if( oldHealth == 人物("健康")) : #医生水平太差没治好 或者是医德太差 站着不治疗
+   #						break
+   #					
+                  healTryNum = healTryNum+1               
+               if self.GetPlayerInfo().health > 0 :				
+                  self.LeaveTeammate()	#重新找医生
+                  filterName.remove(doctor.unit_name)						
+         if tryNum >= 10 :
+            return      
+         tryNum = tryNum+1
+    
+   def healPet(self):
+      if self.GetBattlePet().health== 0:
+         return
+      #宠物受伤 登出治伤
+      self.chat_log("宠物受伤：登出治伤")
+      self.gotoFaLanCity("e2")
+      self.AutoMoveToEx(221,83,"医院")
+      self.AutoMoveTo(12, 18)
+      tryNum=0
+      while True:
+         self.TurnAbout(10,18)
+         self.WaitRecvNpcDialog()
+         self.ClickNPCDialog(-1,6)
+         if self.GetBattlePet().health== 0:
+            self.LogBack()
+            return
+         if tryNum>=10:
+            return
+         tryNum = tryNum+1
+
+
+   def checkHealth(self,doctorName):     
+      petinfo = self.GetBattlePet()
+      charInfo = self.GetPlayerInfo()
+      if( charInfo.health > 0 or charInfo.souls > 0 or (petinfo and petinfo.health > 0)):
+         #登出 去治疗 招魂
+         self.toCastle()
+         self.recallSoul()	
+         self.healPlayer(doctorName)
+         self.healPet()
    #前往法兰城 6个点
    #"s2","w2","e2","t1"	t1市场一楼 t3市场三楼
    #"s1","w1","e1","t3"
@@ -1311,6 +1481,91 @@ class CGAPI(CGAPython.CGA):
    
    def DoCharacterAction(self,nType):
       self.DoRequest(nType)
+
+   def FindPlayerUnit(self,szName):
+      units=self.GetMapUnits()
+      for mapUnit in units:
+         if mapUnit.valid and mapUnit.type == 8 and mapUnit.model_id != 0 and (mapUnit.flags & 256) != 0 and mapUnit.unit_name == szName:
+            return  mapUnit
+      return None
+
+   def AddTeammate(self,sName:str,timeout=180):
+      if (len(sName) == 0): #没有队长名称 直接加队返回
+         self.DoCharacterAction(TCharacter_Action_JOINTEAM)
+         return True
+      if (self.GetTeammatesCount() > 0 and self.IsTeamLeader(sName)):
+         return True
+      else:
+         self.DoCharacterAction(TCharacter_Action_LEAVETEAM)   #离队
+      
+      orgPos = self.GetMapCoordinate()
+      dwStartTime = time.time()
+      while (not self.g_stop):
+         #3分钟 还没组队成功 返回
+         if ((time.time() - dwStartTime) > timeout):
+            return False
+         teamLeaderUnit = self.FindPlayerUnit(sName)
+         if (teamLeaderUnit == None):
+            #没有找到队长 返回
+            time.sleep(2)
+            continue
+         curPos = self.GetMapCoordinate()
+         if (curPos.x == teamLeaderUnit.xpos and curPos.y == teamLeaderUnit.ypos):
+			   #//Sleep(2000); //和队长重叠坐标 返回
+            if (self.GetTeammatesCount() > 0 and self.IsTeamLeader(sName)):
+               return True
+            else:
+               self.DoCharacterAction(TCharacter_Action_LEAVETEAM)   #离队
+            self.MoveToNpcNear(teamLeaderUnit.xpos, teamLeaderUnit.ypos)
+		
+         curPos = self.GetMapCoordinate()
+         if (not self.IsNearTargetEx(curPos.x, curPos.y, teamLeaderUnit.xpos, teamLeaderUnit.ypos)):
+			   #Sleep(2000); //距离队长过远 跳过
+            if (self.GetTeammatesCount() > 0 and self.IsTeamLeader(sName)):
+               return True
+            else:
+               self.DoCharacterAction(TCharacter_Action_LEAVETEAM)#离队
+            self.MoveToNpcNear(teamLeaderUnit.xpos, teamLeaderUnit.ypos)
+         self.TurnAboutEx(teamLeaderUnit.xpos, teamLeaderUnit.ypos)
+         #第一次发送后 对话框没回弹回来，发两次
+         self.debug_log("组队请求")
+         time.sleep(1)  #等1秒
+         self.DoCharacterAction(TCharacter_Action_JOINTEAM)        
+         dlg=self.WaitRecvNpcDialog(3)
+         stripper = "你要和谁组成队伍？"
+         bResult = False        
+         if (dlg and len(dlg.message)> 0 and dlg.message.find(stripper) != -1):
+            self.debug_log(dlg.message)
+            self.debug_log("index:%d,len:%d"%(dlg.message.find(stripper),len(stripper)))
+            strip = dlg.message[dlg.message.find(stripper)+len(stripper):]
+            #self.debug_log(strip)
+            sMatch = strip.split("\n")            
+            #self.debug_log(sMatch)     
+            #self.debug_log("Count:%d"%(len(sMatch)))  
+            #sMatch.remove("")
+            sMatch=list(filter(lambda s:s!='',sMatch))
+            #self.debug_log("Count:%d"%(len(sMatch)))  
+            #for tmpMatch in sMatch:
+            #   self.debug_log(tmpMatch)     
+            #	qDebug() << match;
+            for j in range(0,len(sMatch)):
+               if (sMatch[j] == sName):        
+                  self.ClickNPCDialog(0, j)
+                  time.sleep(1.5)
+                  break         
+         else:
+            self.debug_log("dlg == None")
+         teamPlayers = self.GetTeamPlayers()
+         if (len(teamPlayers) > 0 and teamPlayers[0].name == sName):
+            #self.debug_log("队伍数量%d,队长名称：%s"%(len(teamPlayers),teamPlayers[0].name))   
+            return True
+         else:
+            #self.debug_log("离队")  
+            self.DoCharacterAction(TCharacter_Action_LEAVETEAM)#离队
+         time.sleep(1)
+         #//坐标归位
+         self.AutoMoveTo(orgPos.x, orgPos.y)	         
+
    #离开队伍
    def LeaveTeammate(self):      
       if self.GetTeammatesCount() > 0:
@@ -1458,6 +1713,7 @@ class CGAPI(CGAPython.CGA):
 
    def IsTeamLeader(self,sName=None):
       if self.GetTeammatesCount() <= 1:
+         self.debug_log("队伍人数等于1，当前是队长")
          return True
       else:
          teamInfos = self.GetTeamPlayers()
@@ -1466,6 +1722,7 @@ class CGAPI(CGAPython.CGA):
                return True
          else:
             if len(teamInfos)>0 and teamInfos[0].name == sName:
+               self.debug_log("队伍人数等于%d，当前是队长：%s"%(len(teamInfos),teamInfos[0].name))
                return True
       return False
 
@@ -1667,3 +1924,6 @@ def 回复(*args):
 
 出法兰城 = cg.outFaLan
 出里谢里亚堡=cg.outCastle
+取队伍人数=cg.GetTeammatesCount
+加入队伍=cg.AddTeammate
+离开队伍=cg.LeaveTeammate
