@@ -12,6 +12,7 @@ import asyncio
 import threading
 import queue
 import enum
+import requests
 from AStar import *
 
 #封装元组，便于访问
@@ -160,6 +161,8 @@ class CGAPI(CGAPython.CGA):
    g_connectionState_asyncs=[]     #连接状态变更
    g_unitMenu_asyncs=[]            #菜单项通知
 
+   g_gui_port=0
+   g_game_port=0
 
 
    #构造函数
@@ -196,7 +199,10 @@ class CGAPI(CGAPython.CGA):
       self.debug_log(sys.argv[0])
       self.debug_log(sys.argv[1])
       self.debug_log(os.getenv("CGA_DIR_PATH"))
+      self.g_gui_port = os.getenv("CGA_GUI_PORT")
+      self.g_game_port = os.getenv("CGA_GAME_PORT")
       CGADirPath = os.getenv("CGA_DIR_PATH")
+      
       pythonScriptPath = CGADirPath + "/Python脚本/"
       pythonScriptFiles = glob.glob(pythonScriptPath+"/官方脚本/*")
       sys.path.append(pythonScriptPath+'./common/') 
@@ -231,6 +237,31 @@ class CGAPI(CGAPython.CGA):
       self.log(log) 
       self.chat(log,v1,v2,v3)
 
+   
+   def getFriendServerLine(self,friendName):
+      if(friendName == None):
+         return 0
+      friendCards = self.GetCardsInfo()
+      for friendCard in friendCards:
+         if friendCard.name == friendName:
+            return friendCard.server
+      return 0
+   def changeLineFollowLeader(self,leaderName):
+      if(leaderName==None):
+         return
+      if(self.GetPlayerInfo().name == leaderName):
+         return
+      leaderServerLine = self.getFriendServerLine(leaderName)
+      if(leaderServerLine==0):
+         return
+      curLine=super().GetMapIndex()[1]
+      if(curLine == 0):
+         return
+      if(leaderServerLine != curLine):         
+         requests.post("http://127.0.0.1:"+self.g_gui_port+'/cga/LoadAccount',{"server":leaderServerLine} ,json=True)
+         self.LogOut()	
+         #登录游戏()	#--如果有自动登录 这步不需要
+                
    #获取人物职业
    def GetCharacterProfession(self):
       pass
@@ -312,7 +343,7 @@ class CGAPI(CGAPython.CGA):
       return nDir
 
    #获取地图编号
-   def GetMapIndex(self):          #包装下 原生是返回4个值  这里只拿地图编号
+   def GetMapNumber(self):          #包装下 原生是返回4个值  这里只拿地图编号
       return super().GetMapIndex()[2]
 
    #强制移动-穿墙方向，步数，是否显示
@@ -350,7 +381,7 @@ class CGAPI(CGAPython.CGA):
          for i in range(timeout):
             if self.g_stop:
                return False  
-            curMapIndex = self.GetMapIndex()
+            curMapIndex = self.GetMapNumber()
             if self.IsInNormalState() and curMapIndex == name:
                return True		
             time.sleep(1)
@@ -373,7 +404,7 @@ class CGAPI(CGAPython.CGA):
             if self.g_stop:
                return False           
             curPoint = self.GetMapCoordinate()
-            curMapIndex = self.GetMapIndex()
+            curMapIndex = self.GetMapNumber()
             if self.IsInNormalState() and curMapIndex == name and curPoint.x == x and curPoint.y == y:
                return True		
             time.sleep(1)
@@ -581,7 +612,7 @@ class CGAPI(CGAPython.CGA):
          while tryNum < 3:
             self.AutoMoveTo(x,y,timeout)
             curMapName = self.GetMapName()
-            curMapNum = self.GetMapIndex()
+            curMapNum = self.GetMapNumber()
             if (len(mapName) > 0):
                if (self.IsInNormalState() and (curMapName == mapName or (mapName.isdigit() and curMapNum == int(mapName)))):              
                   #到达目标地 返回1  否则尝试3次后返回0
@@ -628,7 +659,7 @@ class CGAPI(CGAPython.CGA):
       self.g_navigatorLoopCount=self.g_navigatorLoopCount+1
       backPath = path
       curX=curY=tarX=tarY=lastX=lastY=0
-      curMapIndex = self.GetMapIndex()
+      curMapIndex = self.GetMapNumber()
       curMapName = self.GetMapName()
       dwTimeoutTryCount = dwCurTime = dwLastTime=0
       isNormal=True
@@ -651,7 +682,7 @@ class CGAPI(CGAPython.CGA):
                   isNormal = False
                   time.sleep(1)
                #//2、判断地图是否发送变更 例如：迷宫送出来，登出，切到下个图
-               if (curMapIndex != self.GetMapIndex() or curMapName != self.GetMapName()):
+               if (curMapIndex != self.GetMapNumber() or curMapName != self.GetMapName()):
                   self.debug_log("当前地图更改，寻路判断！")
                   lastWarpMap202=0
                   while (self.GetGameStatus() == 202):
@@ -664,7 +695,7 @@ class CGAPI(CGAPython.CGA):
                      time.sleep(1)
                   self.WaitInNormalState()
                   #再次判断 有些会卡回原图，这里再次判断
-                  if (curMapIndex == self.GetMapIndex() and curMapName == self.GetMapName() and isLoop):
+                  if (curMapIndex == self.GetMapNumber() and curMapName == self.GetMapName() and isLoop):
                   #//重新执行一次重新寻路
                      self.debug_log( "还在原图：重新查找路径 进行寻路")
                      tgtPos = backPath.end()
@@ -716,15 +747,15 @@ class CGAPI(CGAPython.CGA):
                               tryNum=tryNum+1
                               fixWarpTime = time.time()
                               curPos = self.GetMapCoordinate()
-                              if curMapIndex != self.GetMapIndex() or curMapName != self.GetMapName():
+                              if curMapIndex != self.GetMapNumber() or curMapName != self.GetMapName():
                                  self.WaitInNormalState()
                                  if self.IsInRandomMap():
                                        time.sleep(self.g_mazeWaitTime)
                                  return True
-                              elif curMapIndex == self.GetMapIndex() and curMapName != self.GetMapName() and (curPos.x != tarX or curPos.y != tarY):
+                              elif curMapIndex == self.GetMapNumber() and curMapName != self.GetMapName() and (curPos.x != tarX or curPos.y != tarY):
                                  self.WaitInNormalState()
                                  return True
-                              elif curMapIndex == self.GetMapIndex() and curMapName != self.GetMapName() and (curPos.x != tarX or curPos.y != tarY):
+                              elif curMapIndex == self.GetMapNumber() and curMapName != self.GetMapName() and (curPos.x != tarX or curPos.y != tarY):
                                  if not self.IsReachableTarget(walkprePos.x, walkprePos.y):#用移动前点判断 不能到 说明换图成功，特别是ud这个图
                                        self.debug_log( "原坐标不可达，移动至目标点成功，寻路结束！")
                                        self.WaitInNormalState()
@@ -747,12 +778,12 @@ class CGAPI(CGAPython.CGA):
                               tryNum=tryNum+1
                            else:
                               curPos = self.GetMapCoordinate()
-                              if curMapIndex != self.GetMapIndex() or curMapName != self.GetMapName():
+                              if curMapIndex != self.GetMapNumber() or curMapName != self.GetMapName():
                                  self.WaitInNormalState()
                                  if self.IsInRandomMap():
                                        time.sleep(self.g_mazeWaitTime)
                                  return True
-                              elif curMapIndex == self.GetMapIndex() and curMapName != self.GetMapName() and (curPos.x != tarX or curPos.y != tarY):
+                              elif curMapIndex == self.GetMapNumber() and curMapName != self.GetMapName() and (curPos.x != tarX or curPos.y != tarY):
                                  self.WaitInNormalState()
                                  return True
                            time.sleep(1)
@@ -1390,7 +1421,7 @@ class CGAPI(CGAPython.CGA):
             self.LogBack()
          time.sleep(1)
    def gotoFalanBankTalkNpc(self):
-      if self.GetMapIndex() != 1121:
+      if self.GetMapNumber() != 1121:
          self.gotoFaLanCity("e1")
          self.WaitForMap("法兰城")
          self.AutoMoveTo(238,111,"银行")	
@@ -1434,11 +1465,11 @@ class CGAPI(CGAPython.CGA):
             self.AutoMoveTo( 3, 7)	
             self.WaitForMap("里谢里雅堡")	 
          elif mapName=="银行":
-            if self.GetMapIndex() == 59548:
+            if self.GetMapNumber() == 59548:
                self.AutoMoveTo(49,30)
                self.TurnAbout(2)
                self.WaitRecvNpcDialog()   
-            elif self.GetMapIndex() == 1121:
+            elif self.GetMapNumber() == 1121:
                self.AutoMoveTo(11,8)
                self.TurnAbout(2)
                self.WaitRecvNpcDialog()   
@@ -1495,6 +1526,40 @@ class CGAPI(CGAPython.CGA):
          if mapUnit.valid and mapUnit.type == 8 and mapUnit.model_id != 0 and (mapUnit.flags & 256) != 0 and mapUnit.unit_name == szName:
             return  mapUnit
       return None
+   def MakeTeam(self,teamCount,teammateList,timeout):
+      if(teamCount == None and teammateList == None):
+         self.log("队伍人数和队员列表为空，建立队伍失败！",1)
+         return     
+      if(timeout==None):
+         timeout=100 	#	--100秒
+      else:
+         if(timeout < 0):
+            timeout = 100
+         elif(timeout<1):
+            timeout = 1			
+      waitNum=timeout
+      tryNum=0
+      
+      while tryNum<=waitNum  do		
+         if(队伍("人数") >= teamCount) then	--数量不足 等待
+            --日志("队伍人数达标")
+            break
+         end		
+         等待(1000)
+         tryNum=tryNum+1
+      end
+      if(tryNum > waitNum)then	--超时退出
+         return
+      end
+      if(teammateList == nil)then		--不判断队友
+         goto goEnd
+      else							--判断是否是设置队员 
+         common.kickTeam(teammateList)
+         if(队伍("人数") < teamCount) then	--重新等待组队 
+            goto begin
+         end
+      end
+      ::goEnd::
 
    def AddTeammate(self,sName:str,timeout=180):
       if (len(sName) == 0): #没有队长名称 直接加队返回
@@ -1888,7 +1953,7 @@ class CGAPI(CGAPython.CGA):
 cg = CGAPI()
 人物 = cg.GetCharacterData
 日志 = cg.chat_log
-取当前地图编号 = cg.GetMapIndex
+取当前地图编号 = cg.GetMapNumber
 取当前地图名 = cg.GetMapName
 def 等待(nTime):
    time.sleep(nTime*0.001)
