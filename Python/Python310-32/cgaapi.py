@@ -13,6 +13,7 @@ import threading
 import queue
 import enum
 import requests
+import json
 from AStar import *
 
 #封装元组，便于访问
@@ -163,7 +164,34 @@ class CGAPI(CGAPython.CGA):
 
    g_gui_port=0
    g_game_port=0
+   g_fz_Path=""
 
+   g_sPrestigeMap={"恶人":-3,	
+   "受忌讳的人": -2,
+	"受挫折的人": -1,
+	"无名的旅人": 0,
+	"路旁的落叶": 1,
+	"水面上的小草": 2,
+	"呢喃的歌声": 3,
+	"地上的月影": 4,
+	"奔跑的春风": 5,
+	"苍之风云": 6,
+	"摇曳的金星": 7,
+	"欢喜的慈雨": 8,
+	"蕴含的太阳": 9,
+	"敬畏的寂静": 10,
+	"无尽星空": 11,
+	"迈步前进者": 1,
+	"追求技巧的人": 2,
+	"刻于新月之铭": 3,
+	"掌上的明珠": 4,
+	"敬虔的技巧": 5,
+	"踏入神的领域": 6,
+	"贤者": 7,
+	"神匠": 8,
+	"摘星的技巧": 9,
+	"万物创造者": 10,
+	"持石之贤者": 11}
 
    #构造函数
    def __init__(self):
@@ -201,9 +229,11 @@ class CGAPI(CGAPython.CGA):
       self.debug_log(os.getenv("CGA_DIR_PATH"))
       self.g_gui_port = os.getenv("CGA_GUI_PORT")
       self.g_game_port = os.getenv("CGA_GAME_PORT")
-      CGADirPath = os.getenv("CGA_DIR_PATH")
-      
-      pythonScriptPath = CGADirPath + "/Python脚本/"
+      self.g_fz_Path = os.getenv("CGA_DIR_PATH")
+      self.debug_log("CGA_GUI_PORT:" + self.g_gui_port )
+      self.debug_log("CGA_GAME_PORT:" + self.g_game_port )
+      self.debug_log("CGA_GAME_PORT:" + self.g_fz_Path )
+      pythonScriptPath = self.g_fz_Path + "/Python脚本/"
       pythonScriptFiles = glob.glob(pythonScriptPath+"/官方脚本/*")
       sys.path.append(pythonScriptPath+'./common/') 
       for tFile in pythonScriptFiles:
@@ -264,13 +294,59 @@ class CGAPI(CGAPython.CGA):
                 
    #获取人物职业
    def GetCharacterProfession(self):
-      pass
+      sJob = self.GetCharacterData("职称")
+      professions=None
+      #self.debug_log(sJob)
+      #self.debug_log(os.path.abspath('.'))
+      #self.debug_log(os.path.abspath(__file__))
+      #self.debug_log(self.g_fz_Path)
+      with open(self.g_fz_Path+'//profession.json',"r", encoding='utf-8' ) as f:
+         professions = json.load(f)
+      #self.debug_log(professions)
+      if professions == None:
+         return sJob
+      for tmpProfession in professions:
+         titles = tmpProfession["titles"]
+         #self.debug_log(titles)
+         if sJob in titles:
+            return tmpProfession["name"]
+      return ""
+   def GetCharacterRank(self,sJob=None):
+      if sJob == None:
+         sJob = self.GetCharacterData("职称")
+      professions=None
+      #self.debug_log(sJob)
+      #self.debug_log(os.path.abspath('.'))
+      #self.debug_log(os.path.abspath(__file__))
+      #self.debug_log(self.g_fz_Path)
+      with open(self.g_fz_Path+'//profession.json',"r", encoding='utf-8' ) as f:
+         professions = json.load(f)
+      #self.debug_log(professions)
+      if professions == None:
+         return sJob
+      for tmpProfession in professions:
+         titles = tmpProfession["titles"]
+         #self.debug_log(titles)
+         if sJob in titles:
+            return titles.index(sJob)
+      return ""
+   def GetCharacterPrestige(self,titles):
+      sTitleKeys=self.g_sPrestigeMap.keys()
+      for sTitle in titles:
+         if sTitle in sTitleKeys:
+            return sTitle
+      return ""
+   def GetCharacterPrestigeLv(self,titles):
+      sTitleKeys=self.g_sPrestigeMap.keys()
+      for sTitle in titles:
+         if sTitle in sTitleKeys:
+            return self.g_sPrestigeMap[sTitle]
+      return 0
 
    #获取人物信息
    def GetCharacterData(self,sType):
       playerinfo = self.GetPlayerInfo()
-      match(sType):
-         case("职业"):return self.GetCharacterProfession()
+      match(sType):        
          case("名称"):return playerinfo.name
          case("name"):return playerinfo.name
          case("血"):return playerinfo.hp
@@ -279,6 +355,63 @@ class CGAPI(CGAPython.CGA):
          case("mp"):return playerinfo.hp
          case("等级"):return playerinfo.level
          case("level"):return playerinfo.level
+         case("最大血"):return playerinfo.maxhp
+         case("maxhp"):return playerinfo.maxhp
+         case("最大魔"):return playerinfo.maxmp
+         case("maxmp"):return playerinfo.maxhp
+         case("健康"):return playerinfo.health
+         case("health"):return playerinfo.health
+         case("经验"):return playerinfo.exp
+         case("下一级经验"):return playerinfo.maxexp
+         case("宠物数量"):return len(self.GetPetsInfo())
+         case("几线"):return super().GetMapIndex()[1]
+         case("大线"):return super().GetMapIndex()[0]
+         case("灵魂"):return playerinfo.souls
+         case("gid"):return playerinfo.gid
+         case("坐标"):
+            mapPos=self.GetMapCoordinate()
+            return mapPos.x,mapPos.y
+         case("4转属组"):return playerinfo.x
+         case("性别"):return playerinfo.x
+         case("外观"):return playerinfo.image_id
+         case("角色"):return playerinfo.player_index
+         case("金币"):return playerinfo.gold
+         case("银行金币"):return self.GetBankGold()
+         case("卡时"):return playerinfo.punchclock
+         case("打卡状态"):return playerinfo.usingpunchclock
+         case("职业"):return self.GetCharacterProfession()
+         case("职称"):return playerinfo.job
+         case("职称等级"):return self.GetCharacterRank()
+         case("声望"):return self.GetCharacterPrestige(playerinfo.titles)
+         case("称号"):return self.GetCharacterPrestige(playerinfo.titles)         
+         case("声望等级"):return self.GetCharacterPrestigeLv(playerinfo.titles)
+         case("称号等级"):return self.GetCharacterPrestigeLv(playerinfo.titles)
+   
+   def GetBattlePetData(self,sType):
+      pet=self.GetBattlePet()
+      if pet==None:
+         return None
+      match(sType):
+         case("名称"):return pet.name
+         case("name"):return pet.name
+         case("血"):return pet.hp
+         case("hp"):return pet.hp
+         case("魔"):return pet.mp
+         case("mp"):return pet.hp
+         case("等级"):return pet.level
+         case("level"):return pet.level
+         case("最大血"):return pet.maxhp
+         case("maxhp"):return pet.maxhp
+         case("最大魔"):return pet.maxmp
+         case("maxmp"):return pet.maxhp
+         case("健康"):return pet.health
+         case("health"):return pet.health
+         case("经验"):return pet.exp
+         case("最大经验"):return pet.maxexp
+         case("档次"):return -1#pet.maxexp
+         case("忠诚"):return pet.loyality
+         case("状态"):return pet.battle_flags
+         case("检查图鉴"):return False#
 
    #人物转向
    def TurnAbout(self,nDir):  
@@ -569,14 +702,7 @@ class CGAPI(CGAPython.CGA):
                break
          break
       return CGPoint(nTempX, nTempY)
-   #获取人物信息 类型
-   def GetCharacterData(sType):
-       playerinfo = self.GetPlayerInfo()
-       match(sType):
-           case("gid"):return playerinfo.gid
-               
-       
-
+            
    #是否在迷宫地图
    def IsInRandomMap(self):
       #index1  0固定地图 否则随机地图  index2 当前线路 index3地图编号 filemap地图文件名
@@ -1227,7 +1353,7 @@ class CGAPI(CGAPython.CGA):
          filterName.append(doctorName)
       elif(doctorName != None and type(doctorName) == list):		
          filterName += doctorName
-      self.toCastle()      
+      self.ToCastle()      
       self.AutoMoveTo(34, 89)
       time.sleep(2)
       self.Renew(1)		
@@ -1299,7 +1425,7 @@ class CGAPI(CGAPython.CGA):
       charInfo = self.GetPlayerInfo()
       if( charInfo.health > 0 or charInfo.souls > 0 or (petinfo and petinfo.health > 0)):
          #登出 去治疗 招魂
-         self.toCastle()
+         self.ToCastle()
          self.recallSoul()	
          self.healPlayer(doctorName)
          self.healPet()
@@ -1420,6 +1546,7 @@ class CGAPI(CGAPython.CGA):
          else:
             self.LogBack()
          time.sleep(1)
+   #去法兰银行对话NPC
    def gotoFalanBankTalkNpc(self):
       if self.GetMapNumber() != 1121:
          self.gotoFaLanCity("e1")
@@ -1477,7 +1604,8 @@ class CGAPI(CGAPython.CGA):
          else:
             self.LogBack()
          time.sleep(1)       
-      
+   
+   #获取队伍信息
    def GetTeamPlayers(self):
       #GameTeamPlayer
       teaminfo=self.GetTeamPlayerInfo()
@@ -1517,16 +1645,46 @@ class CGAPI(CGAPython.CGA):
       playerInfos=self.GetTeamPlayerInfo()
       return len(playerInfos)
    
+   #人物动作
    def DoCharacterAction(self,nType):
       self.DoRequest(nType)
 
+   #查找附近指定名称单位
    def FindPlayerUnit(self,szName):
       units=self.GetMapUnits()
       for mapUnit in units:
          if mapUnit.valid and mapUnit.type == 8 and mapUnit.model_id != 0 and (mapUnit.flags & 256) != 0 and mapUnit.unit_name == szName:
             return  mapUnit
       return None
-   def MakeTeam(self,teamCount,teammateList,timeout):
+
+   #查找周围迷宫
+   def FindAroundMaze(self):
+      units = self.GetMapUnits()
+      for mapUnit in units:	
+         if (mapUnit.flags & 4096)!=0 and mapUnit.model_id > 0:	
+            return mapUnit
+      return None
+
+   #查找周围迷宫，有名字则自动寻路进入
+   def FindAroundMazeEx(self,mazeName,modelid=None):
+      units = self.GetMapUnits()		
+      for mapUnit in units:	
+         if (mapUnit.flags & 4096)!=0 and mapUnit.model_id > 0:	
+            if(modelid==None or (modelid!=None and mapUnit.model_id == modelid)):
+               self.AutoMoveTo(mapUnit.xpos,mapUnit.ypos)
+               self.WaitInNormalState()
+               if(self.GetMapName() == mazeName):
+                  return True
+               else:#--出去
+                  curPos=self.GetMapCoordinate()
+                  tPoint=self.GetRandomSpace(curPos.x,curPos.y,1)#取当前坐标指定距离范围内 空地
+                  self.AutoMoveTo(tPoint.x,tPoint.y)
+                  self.AutoMoveTo(curPos.x,curPos.y)		
+                  self.WaitInNormalState()	
+      return False
+
+   #队长进行组队等待
+   def MakeTeam(self,teamCount,teammateList,timeout=100):
       if(teamCount == None and teammateList == None):
          self.log("队伍人数和队员列表为空，建立队伍失败！",1)
          return     
@@ -1539,28 +1697,70 @@ class CGAPI(CGAPython.CGA):
             timeout = 1			
       waitNum=timeout
       tryNum=0
+      self.debug_log("组队等待中...")
+      while True:
+         while tryNum<=waitNum:		
+            if(self.GetTeammatesCount() >= teamCount):#	--数量不足 等待
+               self.debug_log("队伍人数达标")
+               break         		
+            time.sleep(1)
+            tryNum=tryNum+1      
+         if(tryNum > waitNum):	#--超时退出
+            return      
+         if(teammateList == None):	#	--不判断队友
+            return
+         else:							#判断是否是设置队员 
+            self.kickTeam(teammateList)
+            if(self.GetTeammatesCount() < teamCount): #	--重新等待组队 
+               self.debug_log("剔除人员，人数不够，继续等待")
+               continue
+            else:
+               self.debug_log("队伍人数达标，返回")
+               return
       
-      while tryNum<=waitNum  do		
-         if(队伍("人数") >= teamCount) then	--数量不足 等待
-            --日志("队伍人数达标")
-            break
-         end		
-         等待(1000)
-         tryNum=tryNum+1
-      end
-      if(tryNum > waitNum)then	--超时退出
+   #--剔除不在队员列表里的队员
+   def kickTeam(self,teammateList):
+      self.debug_log("剔除不在名单的人")
+      if(teammateList==None):
          return
-      end
-      if(teammateList == nil)then		--不判断队友
-         goto goEnd
-      else							--判断是否是设置队员 
-         common.kickTeam(teammateList)
-         if(队伍("人数") < teamCount) then	--重新等待组队 
-            goto begin
-         end
-      end
-      ::goEnd::
+      teamPlayers = self.GetTeamPlayers()
+      self.debug_log("GetTeamPlayers")
+      for teamPlayer in teamPlayers :
+         self.debug_log(teamPlayer.name)
+         if teamPlayer.is_me:
+            continue
+         if(teamPlayer.name not in teammateList):   #不在列表 踢
+            self.DoCharacterAction(TCharacter_Action_KICKTEAM) 	
+            dlg=self.WaitRecvNpcDialog()
+            if(dlg != None):
+               teamMsg=dlg.message
+               self.debug_log(teamMsg)
+               msgIndexEnd=teamMsg.find("你要把谁踢出队伍？\n")
+               if(msgIndexEnd != -1):
+                  teamMsg=teamMsg[msgIndexEnd+len("你要把谁踢出队伍？\n"):]
+                  #self.debug_log(teamMsg)
+                  kickIndex=-1
+                  teamNameList = teamMsg.split("\n")
+                  for i in range(len(teamNameList)):
+                     tName = teamNameList[i]
+                     #self.debug_log("split:"+tName)
+                     if(tName.find("|") != -1):
+                        #self.debug_log("|" + tName + teamPlayer.name)
+                        kickIndex=kickIndex+1
+                        if(tName.find(teamPlayer.name) != -1):
+                           self.ClickNPCDialog(0,kickIndex)
+                           self.debug_log("剔除队伍：" + tName+ str(kickIndex))
+                           time.sleep(1.5)   #等1.5秒哈，不然命令还没过去，下一个代码就执行了
+                           break
+   #判断队长名称是否一致
+   def JudgeTeamLeader(self,leaderName):
+      teamPlayers = self.GetTeamPlayers()
+      if (len(teamPlayers) > 0 and teamPlayers[0].name == leaderName):         
+         return True
+      else:
+         return False
 
+   #加入队伍
    def AddTeammate(self,sName:str,timeout=180):
       if (len(sName) == 0): #没有队长名称 直接加队返回
          self.DoCharacterAction(TCharacter_Action_JOINTEAM)
@@ -1728,6 +1928,16 @@ class CGAPI(CGAPython.CGA):
          bNeedRenew = self.RenewNpcClicked(dlg)
          nCount=nCount-1
 
+   def IsNeedSupply(self):
+      needSupply = False
+      playerinfo=self.GetPlayerInfo()
+      petsinfo=self.GetPetsInfo() 
+      if(self.NeedHPSupply(playerinfo) or self.NeedMPSupply(playerinfo)):
+         needSupply=True      
+      if(self.NeedPetSupply(petsinfo)):#所有宠
+         needSupply=True
+      
+      return needSupply
    def NeedHPSupply(self,pl):
       return  True if (pl.hp < pl.maxhp) else False
 
@@ -1783,6 +1993,15 @@ class CGAPI(CGAPython.CGA):
          time.sleep(1)
       return True
 
+   def SupplyCastle(self):
+      needSupply = self.IsNeedSupply()	
+      if(needSupply == False):
+         return
+      self.WaitInNormalState()
+      self.ToCastle()
+      self.AutoMoveTo(34,89)
+      self.Renew(1)
+
    def IsTeamLeader(self,sName=None):
       if self.GetTeammatesCount() <= 1:
          self.debug_log("队伍人数等于1，当前是队长")
@@ -1798,7 +2017,7 @@ class CGAPI(CGAPython.CGA):
                return True
       return False
 
-   def toTeleRoomTemplate(self,warpData):
+   def ToTeleRoomTemplate(self,warpData):
       tryCount=0
       while True:
          mapPos = self.GetMapCoordinate()
@@ -1840,18 +2059,27 @@ class CGAPI(CGAPython.CGA):
             self.TalkNpcPosSelectYes(warpData[2]["x"],warpData[2]["y"])	
             return True
          else:
-            self.toCastle()           
-   def toCastle(self,warpPos=None):
+            self.ToCastle()          
+
+   '''去里堡 空参:34,89 
+   --"c" 里堡打卡点
+   --"f1"里堡1层
+   --"f2"里堡2层
+   --"f3"谒见之间
+   --"s"召唤之间
+   --"l"图书室
+   '''
+   def ToCastle(self,warpPos=None):
       while True:
          self.WaitInNormalState()
-         当前地图名 = self.GetMapName()
-         if (当前地图名=="艾尔莎岛" ):			
+         curMapName = self.GetMapName()
+         if (curMapName=="艾尔莎岛" ):			
             self.AutoMoveTo(140,105)				
-            转向(1)
-            等待服务器返回()
-            对话选择(4,0)
-            等待到指定地图("里谢里雅堡")           
-         elif (当前地图名=="里谢里雅堡" ):	
+            self.TurnAbout(1)
+            self.WaitRecvNpcDialog()
+            self.ClickNPCDialog(4,0)
+            self.WaitForMap("里谢里雅堡")           
+         elif (curMapName=="里谢里雅堡" ):	
             if(warpPos == None):
                self.AutoMoveTo(27,82)	#--艾岛上来传送点
                return
@@ -1880,10 +2108,10 @@ class CGAPI(CGAPython.CGA):
                self.AutoMoveToEx(74,19,"里谢里雅堡 2楼")	
                self.AutoMoveToEx(0, 74,"图书室")
             return
-         elif (当前地图名=="法兰城" ):		
+         elif (curMapName=="法兰城" ):		
             self.gotoFaLanCity("s1")
             self.AutoMoveToEx(153,100,"里谢里雅堡")           
-         elif (当前地图名=="召唤之间" ):#	--登出 bank
+         elif (curMapName=="召唤之间" ):#	--登出 bank
             self.AutoMoveToEx( 3, 7)	
             self.WaitForMap("里谢里雅堡")		 
          else:
@@ -1891,7 +2119,7 @@ class CGAPI(CGAPython.CGA):
          time.sleep(2)    
 	
 
-   def toTeleRoom(self,villageName=""):
+   def ToTeleRoom(self,villageName=""):
       warpList={
          "亚留特村":[{"x":43,"y":23},{"x":43, "y":22},{"x":44,"y":22},{"script":"./Python脚本/直通车/★开传送-亚留特村.python"}],
          "伊尔村":[{"x":43,"y":33},{"x":43, "y":32},{"x":44,"y":32},{"script":"./Python脚本/直通车/★开传送-伊尔村.python"}],
@@ -1904,7 +2132,7 @@ class CGAPI(CGAPython.CGA):
          "蒂娜村":[{"x":25,"y":4},{"x":25, "y":5},{"x":26,"y":4},{"script":"./Python脚本/直通车/★开传送-蒂娜村.python"}],
          }
       def jiecun():
-         self.toTeleRoom("杰诺瓦镇")
+         self.ToTeleRoom("杰诺瓦镇")
          self.WaitForMap("杰诺瓦镇的传送点")
          self.AutoMoveToEx(14, 6,"村长的家")
          self.AutoMoveToEx(1, 9,"杰诺瓦镇")
@@ -1921,17 +2149,17 @@ class CGAPI(CGAPython.CGA):
          self.AutoMoveToEx(38, 37,"咒术师的秘密住处")		
       if villageName in warpList:
          data = warpList[villageName]
-         self.toTeleRoomTemplate(data)	  
+         self.ToTeleRoomTemplate(data)	  
       elif(villageName == "魔法大学"):
          data = warpList["阿巴尼斯村"]
-         self.toTeleRoomTemplate(data)
+         self.ToTeleRoomTemplate(data)
          self.AutoMoveToEx(5, 4, 4313)
          self.AutoMoveToEx(6, 13, 4312)
          self.AutoMoveToEx(6, 13, "阿巴尼斯村")
          self.AutoMoveToEx(37, 71,"莎莲娜")
          self.AutoMoveToEx(118, 100,"魔法大学")
       elif(villageName == "咒术师的秘密住处"):		
-         self.toCastle("f1")
+         self.ToCastle("f1")
          self.AutoMoveToEx(45,20,"启程之间")	
          self.AutoMoveTo(15, 4)	
          self.LeaveTeammate()
@@ -1946,8 +2174,56 @@ class CGAPI(CGAPython.CGA):
          jiecun()
       else:
          self.chat_log("未知地图名称！",1)
-	
 
+   def PileItem(self,name,count):
+      itemsInfo=self.GetItemsInfo()
+      for pItem in itemsInfo:
+         if  pItem.name == name and pItem.count < count:
+            for pOtherItem in itemsInfo:
+               if pOtherItem.name == pItem.name and pOtherItem != pItem and pOtherItem.count < count:
+                  self.MoveItem(pItem.pos, pOtherItem.pos, -1)
+                  break
+   def sellPilePos(self,x,y,saleItem,count=20,maxCount=40):
+      loopCount=0      
+      while loopCount < 2:         
+         apiSaleItems=[]
+         bagItems = self.GetItemsInfo()
+         for v in bagItems:
+            if(v.pos > 7 and v.name == saleItem and v.count>=count):
+               apiSaleItem=self.cga_sell_item_t()#{"id":v.itemid,"pos":v.pos,"count":v.count/count}
+               apiSaleItem.itemid=v.itemid
+               apiSaleItem.itempos=v.pos
+               apiSaleItem.count=v.count/count
+               apiSaleItems.append(apiSaleItem)	         
+         self.TrunAboutEx(x,y)
+         self.WaitRecvNpcDialog()		
+         self.ClickNPCDialog(-1,0)#	--这边没有类型判断 直接-1了
+         self.WaitRecvNpcDialog()
+         self.SellNPCStore(apiSaleItems)
+         self.PileItem(saleItem,maxCount)
+         time.sleep(3)
+         loopCount=loopCount+1
+	#卖堆叠物
+   def sellPileDir(self,saleItem,count=20,maxCount=40):     
+      loopCount=0      
+      while loopCount < 2:         
+         apiSaleItems=[]
+         bagItems = self.GetItemsInfo()
+         for v in bagItems:
+            if(v.pos > 7 and v.name == saleItem and v.count>=count):
+               apiSaleItem=self.cga_sell_item_t()#{"id":v.itemid,"pos":v.pos,"count":v.count/count}
+               apiSaleItem.itemid=v.itemid
+               apiSaleItem.itempos=v.pos
+               apiSaleItem.count=v.count/count
+               apiSaleItems.append(apiSaleItem)	         
+         self.TrunAbout(dir)
+         self.WaitRecvNpcDialog()		
+         self.ClickNPCDialog(-1,0)#	--这边没有类型判断 直接-1了
+         self.WaitRecvNpcDialog()
+         self.SellNPCStore(apiSaleItems)
+         self.PileItem(saleItem,maxCount)
+         time.sleep(3)
+         loopCount=loopCount+1
 
 #返回单例对象
 cg = CGAPI()
@@ -1955,6 +2231,7 @@ cg = CGAPI()
 日志 = cg.chat_log
 取当前地图编号 = cg.GetMapNumber
 取当前地图名 = cg.GetMapName
+取当前坐标 = cg.GetMapCoordinate
 def 等待(nTime):
    time.sleep(nTime*0.001)
 回城 = cg.LogBack
@@ -1999,3 +2276,8 @@ def 回复(*args):
 取队伍人数=cg.GetTeammatesCount
 加入队伍=cg.AddTeammate
 离开队伍=cg.LeaveTeammate
+def 宠物(*args):
+   if len(args) == 1:
+      cg.Renew(args[0])
+   elif len(args)>=2:
+      cg.RenewEx(args[0],args[1])
