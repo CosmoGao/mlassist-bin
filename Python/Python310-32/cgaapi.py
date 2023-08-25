@@ -387,31 +387,89 @@ class CGAPI(CGAPython.CGA):
          case("声望等级"):return self.GetCharacterPrestigeLv(playerinfo.titles)
          case("称号等级"):return self.GetCharacterPrestigeLv(playerinfo.titles)
    
-   def GetBattlePetData(self,sType):
-      pet=self.GetBattlePet()
-      if pet==None:
-         return None
+   def GetBattlePetData(self,sType,*args):
+      pet=self.GetBattlePet()      
       match(sType):
-         case("名称"):return pet.name
-         case("name"):return pet.name
-         case("血"):return pet.hp
-         case("hp"):return pet.hp
-         case("魔"):return pet.mp
-         case("mp"):return pet.hp
-         case("等级"):return pet.level
-         case("level"):return pet.level
-         case("最大血"):return pet.maxhp
-         case("maxhp"):return pet.maxhp
-         case("最大魔"):return pet.maxmp
-         case("maxmp"):return pet.maxhp
-         case("健康"):return pet.health
-         case("health"):return pet.health
-         case("经验"):return pet.exp
-         case("最大经验"):return pet.maxexp
-         case("档次"):return -1#pet.maxexp
-         case("忠诚"):return pet.loyality
-         case("状态"):return pet.battle_flags
-         case("检查图鉴"):return False#
+         case("名称"):return pet.name if pet != None else ""
+         case("name"):return pet.name if pet != None else ""
+         case("血"):return pet.hp if pet != None else -1
+         case("hp"):return pet.hp if pet != None else -1
+         case("魔"):return pet.mp if pet != None else -1
+         case("mp"):return pet.hp if pet != None else -1
+         case("等级"):return pet.level if pet != None else -1
+         case("level"):return pet.level if pet != None else -1
+         case("最大血"):return pet.maxhp if pet != None else -1
+         case("maxhp"):return pet.maxhp if pet != None else -1
+         case("最大魔"):return pet.maxmp if pet != None else -1
+         case("maxmp"):return pet.maxhp if pet != None else -1
+         case("健康"):return pet.health if pet != None else -1
+         case("health"):return pet.health if pet != None else -1
+         case("经验"):return pet.exp if pet != None else -1
+         case("最大经验"):return pet.maxexp if pet != None else -1
+         case("档次"):return -1#pet.maxexp  if pet != None else -1
+         case("忠诚"):return pet.loyality  if pet != None else -1
+         case("状态"):return pet.battle_flags if pet != None else -1
+         case("检查图鉴"):
+            if len(args) == 0:
+               return False
+            elif len(args)>=1:
+               tgtPetName = args[0]
+               books = self.GetPicBooksInfo()
+               for petBook in books:
+                  if petBook.name == tgtPetName:
+                     return True
+            return False
+         case("改状态"):
+            if len(args) == 0:
+               return -1
+            tgtPetVal=0
+            if type(args[0]) == str:
+               if args[0] == "待命":
+                  tgtPetVal = 1
+               elif (args[0] == "战斗"):
+                  tgtPetVal = 2
+               elif (args[0]  == "休息"):
+                  tgtPetVal = 3
+               elif (args[0]  == "散步"):
+                  tgtPetVal = 16
+            else:
+               tgtPetVal=args[0]
+            if (tgtPetVal != 1 and tgtPetVal != 2 and tgtPetVal != 3 and tgtPetVal != 16):
+               return pet.battle_flags if pet != None else -1
+            else:
+               petIndex = -1
+               petList =self.GetPetsInfo()
+               if (len(args) <= 1):
+                  petIndex =  pet.index if pet != None else -1
+               else:
+                  petIndex = args[1]                 
+                  pPet=None
+                  if (petIndex == 5):# //等级高
+                     nLv = 0
+                     for battlePet in petList:                     
+                        if (battlePet.level > nLv):
+                           nLv = battlePet.level
+                           pPet = battlePet                      
+                     if (nLv != 0 and pPet != None):
+                        petIndex = pPet.index                  
+                  elif (petIndex == 6):# //等级低                  
+                     nLv = 200
+                     for battlePet in petList:  
+                        if (battlePet.level < nLv):                        
+                           nLv = battlePet.level
+                           pPet = battlePet
+                     if (nLv != 200 and pPet!=None):                     
+                        petIndex = pPet.index              
+               if (petIndex < 0):
+                  return -1
+               if (tgtPetVal == TPET_STATE_BATTLE) :#//必须把当前战斗宠物设置为其余状态
+                  for battlePet in petList:                 
+                     if (battlePet.battle_flags == TPET_STATE_BATTLE):# //默认出战宠物                   
+                        self.ChangePetState(battlePet.index, TPET_STATE_READY)
+                        time.sleep(1)
+                        break     
+               self.ChangePetState(petIndex, tgtPetVal)
+               return 0
 
    #人物转向
    def TurnAbout(self,nDir):  
@@ -1404,7 +1462,7 @@ class CGAPI(CGAPython.CGA):
          return
       #宠物受伤 登出治伤
       self.chat_log("宠物受伤：登出治伤")
-      self.gotoFaLanCity("e2")
+      self.GotoFaLanCity("e2")
       self.AutoMoveToEx(221,83,"医院")
       self.AutoMoveTo(12, 18)
       tryNum=0
@@ -1432,16 +1490,18 @@ class CGAPI(CGAPython.CGA):
    #前往法兰城 6个点
    #"s2","w2","e2","t1"	t1市场一楼 t3市场三楼
    #"s1","w1","e1","t3"
-   def gotoFaLanCity(self,storeName):            
+   def GotoFaLanCity(self,storeName=None):            
       def liBao():
          if(self.GetMapName() != "里谢里雅堡"):
             time.sleep(2)
             return    
          self.AutoMoveToEx(41,98,"法兰城")	
          self.AutoMoveTo(153, 130)		
-         if(storeName=="" or storeName=="s"):
+         if(storeName==None or storeName=="" or storeName=="s"):
             return          
       def faLan():
+         if(storeName==None or storeName=="" ):
+            return     
          warpList={
             "w2":{"x":72,"y":123,"name":"法兰城"},    #西2登录点
             "w1":{"x":63,"y":79,"name":"法兰城"},		#西1登录点
@@ -1453,6 +1513,7 @@ class CGAPI(CGAPython.CGA):
             "t1":{"x":46,"y":16,"name":"市场一楼 - 宠物交易区"},	#市场1楼
             "whospital":{"x":82,"y":83,"name":"医院"}		#西医院		            
          }
+         
          warp1={"s2","w2","e2","t1"}
          warp2={"s1","w1","e1","t3"}
          #西二 东二 南二 市场一楼宠物交易区
@@ -1512,13 +1573,13 @@ class CGAPI(CGAPython.CGA):
 
    def outFaLan(self,sDir):
       if sDir == "e":
-         self.gotoFaLanCity("e1")
+         self.GotoFaLanCity("e1")
          self.AutoMoveTo(281,88)
       elif sDir=="s":
-         self.gotoFaLanCity("s")
+         self.GotoFaLanCity("s")
          self.AutoMoveTo(154, 241)
       elif sDir=="w":
-         self.gotoFaLanCity("w1")
+         self.GotoFaLanCity("w1")
          self.AutoMoveTo(22,88)	
 
    def outCastle(self,sDir):
@@ -1549,7 +1610,7 @@ class CGAPI(CGAPython.CGA):
    #去法兰银行对话NPC
    def gotoFalanBankTalkNpc(self):
       if self.GetMapNumber() != 1121:
-         self.gotoFaLanCity("e1")
+         self.GotoFaLanCity("e1")
          self.WaitForMap("法兰城")
          self.AutoMoveTo(238,111,"银行")	
       self.AutoMoveTo(11,8)
@@ -1570,7 +1631,7 @@ class CGAPI(CGAPython.CGA):
          self.AutoMoveTo(41,98,"法兰城")	
          self.AutoMoveTo(162, 130)		         
       def faLan():
-         self.gotoFaLanCity("e1")		
+         self.GotoFaLanCity("e1")		
          self.WaitForMap("法兰城")	
          self.AutoMoveTo(238,111,"银行")	
          self.AutoMoveTo(11,8)
@@ -2109,7 +2170,7 @@ class CGAPI(CGAPython.CGA):
                self.AutoMoveToEx(0, 74,"图书室")
             return
          elif (curMapName=="法兰城" ):		
-            self.gotoFaLanCity("s1")
+            self.GotoFaLanCity("s1")
             self.AutoMoveToEx(153,100,"里谢里雅堡")           
          elif (curMapName=="召唤之间" ):#	--登出 bank
             self.AutoMoveToEx( 3, 7)	
@@ -2183,7 +2244,7 @@ class CGAPI(CGAPython.CGA):
                if pOtherItem.name == pItem.name and pOtherItem != pItem and pOtherItem.count < count:
                   self.MoveItem(pItem.pos, pOtherItem.pos, -1)
                   break
-   def sellPilePos(self,x,y,saleItem,count=20,maxCount=40):
+   def SellPilePos(self,x,y,saleItem,count=20,maxCount=40):
       loopCount=0      
       while loopCount < 2:         
          apiSaleItems=[]
@@ -2204,7 +2265,7 @@ class CGAPI(CGAPython.CGA):
          time.sleep(3)
          loopCount=loopCount+1
 	#卖堆叠物
-   def sellPileDir(self,saleItem,count=20,maxCount=40):     
+   def SellPileDir(self,saleItem,count=20,maxCount=40):     
       loopCount=0      
       while loopCount < 2:         
          apiSaleItems=[]
@@ -2224,6 +2285,103 @@ class CGAPI(CGAPython.CGA):
          self.PileItem(saleItem,maxCount)
          time.sleep(3)
          loopCount=loopCount+1
+   #取身上物品数量
+   def GetAllItemCount(self,itemName):
+      itemsInfo = self.GetItemsInfo()
+      nCount=0
+      if type(itemName) == str:
+         for iteminfo in itemsInfo:
+            if (iteminfo.name == itemName.toStdString() ):
+               nCount += 1
+      else:
+         for iteminfo in itemsInfo:
+            if (iteminfo.itemid == itemName):
+               nCount += 1	
+      return nCount
+   #取背包物品数量
+   def GetBagItemCount(self,itemName):
+      itemsInfo = self.GetItemsInfo()
+      nCount=0
+      if type(itemName) == str:
+         for iteminfo in itemsInfo:
+            if (iteminfo.pos > 7 and iteminfo.name == itemName.toStdString() ):
+               nCount += 1
+      else:
+         for iteminfo in itemsInfo:
+            if (iteminfo.pos > 7 and iteminfo.itemid == itemName):
+               nCount += 1	
+      return nCount
+   #取银行物品数量
+   def GetBankItemCount(self,itemName):
+      itemsInfo = self.GetBankItemsInfo()
+      nCount=0     
+      for iteminfo in itemsInfo:
+         if ( iteminfo.name == itemName.toStdString()):
+            nCount += 1      
+      return nCount
+   
+   #取背包物品叠加数量
+   def GetBagItemPileCount(self,itemName):
+      itemsInfo = self.GetItemsInfo()
+      nCount=0
+      if type(itemName) == str:
+         for iteminfo in itemsInfo:
+            if (iteminfo.pos > 7 and iteminfo.name == itemName.toStdString() ):
+               nCount += iteminfo.count
+      else:
+         for iteminfo in itemsInfo:
+            if (iteminfo.pos > 7 and iteminfo.itemid == itemName):
+               nCount += iteminfo.count			
+      return nCount
+   #取身上物品叠加总数
+   def GetAllItemPileCount(self,itemName):
+      itemsInfo = self.GetItemsInfo()
+      nCount=0
+      if type(itemName) == str:
+         for iteminfo in itemsInfo:
+            if (iteminfo.name == itemName.toStdString() ):
+               nCount += iteminfo.count
+      else:
+         for iteminfo in itemsInfo:
+            if (iteminfo.itemid == itemName):
+               nCount += iteminfo.count			
+      return nCount
+   #取银行物品叠加数量
+   def GetBankItemPileCount(self,itemName):
+      itemsInfo = self.GetBankItemsInfo()
+      nCount=0
+      if type(itemName) == str:
+         for iteminfo in itemsInfo:
+            if (iteminfo.name == itemName.toStdString() ):
+               nCount += iteminfo.count
+      # else:
+      #    for iteminfo in itemsInfo:
+      #       if (and iteminfo.itemid == itemName):
+      #          nCount += iteminfo.count			
+      return nCount
+
+   def sellCastlePile(self,saleItem,count=20,maxCount=40):	
+      needSale=False	
+      if(self.GetBagItemPileCount(saleItem) >= count):
+         needSale = True		
+      if(needSale == False): 
+         return
+   
+      self.WaitInNormalState()
+      mapName = self.GetMapName()
+      if (mapName=="工房" ):			
+         if(self.IsNearTarget(21,23,1)):
+            self.SellPilePos(21,23,saleItem,count,maxCount)	
+      else:
+         self.ToCastle()
+         self.AutoMoveTo(31,77)		
+         self.SellPileDir(6,saleItem,count,maxCount)	
+     
+   def sellFaLanPile(self,saleItem):
+      self.GotoFaLanCity()
+	   #--自动寻路(40, 98,"法兰城")	
+      self.AutoMoveTo(150, 123)
+	   卖(0,saleItem)		
 
 #返回单例对象
 cg = CGAPI()
