@@ -14,6 +14,12 @@ import queue
 import enum
 import requests
 import json
+from  CGData_pb2 import *
+from CGData_pb2_grpc import *
+import socketio
+import eventlet
+import asyncio
+from configparser import ConfigParser 
 from AStar import *
 
 #封装元组，便于访问
@@ -73,6 +79,33 @@ class GameTeamPlayer(GameInfo):
       self.x=0
       self.y=0
       self.unit_id=0      
+class GameItem:
+   def __init__(self) -> None:       
+      self.name=""   #				//名称
+      self.maybeName=""			   #//没鉴定时 数据库查询可能名称
+      self.info=""#				//物品介绍
+      self.attr=""				#物品属性
+      self.image_id = 0			#图片id
+      self.count = -1				#数量
+      self.pos = -1				#位置
+      self.itemid = -1				#id
+      self.type = -1				#物品类型
+      self.level = 0				#等级
+      self.assessed = False		#是否已鉴定
+      self.assess_flags=0			#标志 可丢 可交易 可宠邮等
+      self.exist = False			#存在
+      self.maxCount = -1			#物品堆叠上限
+      self.isDrop = False		#是否扔
+      self.isPile = False		#是否叠加
+      self.isSale = False		#是否卖
+      self.isPick = False		#是否捡
+      self.nCurDurability = 0		#当前耐久度
+      self.nMaxDurability = 0		#最大耐久度
+      self.nDurabilityRate = 0 #当前耐久率
+      self.isDropInterval = False#是否扔区间
+      self.dropMinCode = 0		#扔区间最小值			
+      self.dropMaxCode = 0		#扔区间最大值
+
 #同步等待信息的类，队列实现
 class AsyncWaitNotify:
     def __init__(self,global_wait_list):
@@ -146,7 +179,8 @@ class CGAPI(CGAPython.CGA):
 
    #是否打印调试日志
    g_debug_log=False
-
+   g_channel = None
+   g_stub=None
 
    g_chatMsg_asyncs=[]             #聊天回调
    g_npcDialog_asyncs=[]           #对话框回调
@@ -165,6 +199,9 @@ class CGAPI(CGAPython.CGA):
    g_gui_port=0
    g_game_port=0
    g_fz_Path=""
+
+   g_sio=None
+   g_config=None
 
    g_sPrestigeMap={"恶人":-3,	
    "受忌讳的人": -2,
@@ -196,14 +233,14 @@ class CGAPI(CGAPython.CGA):
    #构造函数
    def __init__(self):
       super().__init__()
-      self.log=logging.info
+      self.log=print#logging.info
       self.init_data()
       #self.debug_init_data(4397)      #如果要自己调试 打开这行代码 屏蔽上一行代码，把游戏端口号填入括号即可调试
 
    #打印日志
    def debug_log(self,txt):
       if(self.g_debug_log):
-         logging.info(txt)
+         print(txt)#logging.info(txt)
 
    #初始化数据-指定调试端口
    def debug_init_data(self,port):
@@ -236,11 +273,30 @@ class CGAPI(CGAPython.CGA):
       pythonScriptPath = self.g_fz_Path + "/Python脚本/"
       pythonScriptFiles = glob.glob(pythonScriptPath+"/官方脚本/*")
       sys.path.append(pythonScriptPath+'./common/') 
+      #读取配置文件
+      self.g_config = ConfigParser()  # 需要实例化一个ConfigParser对象
+      self.g_config.read(self.g_fz_Path+'/config.ini',"utf-8")   
       for tFile in pythonScriptFiles:
          self.debug_log(tFile)
          sys.path.append(tFile)
       self.registerCallBackFuns()
 
+   def init_grpc(self):
+      sToolIp = self.g_config["server"]["ip"]
+      nPort = self.g_config["server"]["port"]
+      if sToolIp.find(";") != -1:
+         sToolIp = sToolIp[0:sToolIp.find(";")]
+         sToolIp=sToolIp.strip()
+      if len(sToolIp) < 1:
+         sToolIp = "127.0.0.1"
+      if nPort.find(";") != -1:
+         nPort = nPort[0:nPort.find(";")]
+         nPort=nPort.strip()
+      if len(nPort) < 1:
+         nPort = "50051"
+      if self.g_channel == None:#配置文件读取ip，暂时设本地
+         self.g_channel =grpc.insecure_channel(sToolIp + ":" + nPort)
+         self.g_stub = CGRpcServiceStub(self.g_channel)
    #注册回调函数，接收游戏通知信息
    def registerCallBackFuns(self):
       #注册回调函数
@@ -266,8 +322,141 @@ class CGAPI(CGAPython.CGA):
    def chat_log(self,log,v1=2,v2=3,v3=5):      
       self.log(log) 
       self.chat(log,v1,v2,v3)
+   #获取打卡时长
+   def GetPunchClockStr(self,a, b):
+      a = a / 1000
+      h = str(math.floor((a / 3600) < 10) and '0') + str(math.floor(a / 3600) or math.floor(a / 3600))
+      m = str(math.floor((a / 60 % 60)) < 10 and '0') + str(math.floor((a / 60 % 60)) or math.floor((a / 60 % 60)))
+      s = str(math.floor((a % 60)) < 10 and '0') + str(math.floor((a % 60)) or math.floor((a % 60)))
+      sText = h + ":" + m + ":" + s
+      if (b!=0):
+         sText = sText + " (已打卡)"
+      else: 
+         sText = sText + " (未打卡)"
+      return sText
+   #保存两位数
+   def KeepDecimalTest(self,num, n):    
+      if not (type(num) == int or type(num) == float):
+         return num          
+      return round(num,n)
 
-   
+   def GetRatio(self,a, b):
+      if (b == 0):
+         return 0
+      else:
+         return self.KeepDecimalTest((a / b),2)
+   #宠物信息打印
+   def PetInfoPrint(self):
+      pets=self.GetPetsInfo()
+      for pet in pets:
+         self.chat_log("宠物位置%d : Lv%d  %s (%s)"%(pet.index,pet.level,pet.realname,pet.name))
+       
+   #装备信息
+   def GetPlayereEquipData(self):
+      itemsInfo = self.GetItemsInfo()
+      equipInfo=[]
+      for itemInfo in itemsInfo:
+         if itemInfo.pos >= 0 and itemInfo.pos < 8:
+            equipInfo.append(itemInfo) 
+      return equipInfo
+
+   #信息打印
+   def BaseInfoPrint(self):
+      playerinfo =self.GetPlayerInfo()
+      self.chat_log("人物信息： Lv" + str(playerinfo.level)+"【 "+playerinfo.name+"】【 "+ playerinfo.job + " 】")
+      self.chat_log("生命： %d/%d (%.2f)"%(playerinfo.hp,playerinfo.maxhp,self.GetRatio(playerinfo.hp, playerinfo.maxhp)))
+      self.chat_log("魔法： %d/%d (%.2f)"%(playerinfo.mp,playerinfo.maxmp,self.GetRatio(playerinfo.mp, playerinfo.maxmp)))
+      self.chat_log("健康： " + str(playerinfo.health) + "  掉魂： " + str(playerinfo.souls))
+      self.chat_log("金钱： " + str(playerinfo.gold) + "  卡时： " + self.GetPunchClockStr(playerinfo.punchclock, playerinfo.usingpunchclock))
+      #--装备信息
+      self.chat_log("装备信息： ")
+      items = self.GetPlayereEquipData()
+      for item in items:	
+         nCur,nMax = self.ParseItemDurabilityEx(item.attr)	
+         self.chat_log("穿戴位置"+str(item.pos) + "： Lv" + str(item.level) + " " + item.name + "  (" + str(nCur) + "/" + str(nMax) + ")")
+       
+      
+      # #--出战宠物
+      petinfo = self.GetPetInfo(playerinfo.petid)
+      self.chat_log("出战宠物： Lv" + str(petinfo.level) + " " + petinfo.realname + "  (" + petinfo.name + ")")
+      self.chat_log("生命： %d/%d (%.2f)"%(petinfo.hp,petinfo.maxhp,self.GetRatio(petinfo.hp, petinfo.maxhp)))
+      self.chat_log("魔法： %d/%d (%.2f)"%(petinfo.mp,petinfo.maxmp,self.GetRatio(petinfo.mp, petinfo.maxmp)))  
+      self.chat_log("健康： " + str(petinfo.health))
+      #--宠物信息
+      self.chat_log("宠物信息： ")
+      self.PetInfoPrint()
+   #统计练级信息
+   def Statistics(self,beginTime,oldXp,oldPetXp,oldGold):   
+      playerinfo = self.GetPlayerInfo()
+      nowTime = time.time() 
+      sTime = math.floor((nowTime - beginTime)/60) #--已持续练级时间
+      if(sTime == 0):
+         sTime=1
+      
+      nowLevel = playerinfo.level
+      nowXp = playerinfo.xp
+      nowMaxXp = playerinfo.maxxp
+      if(nowLevel==0 or nowXp == 0 or nowMaxXp==0):
+         self.chat_log("获取人物信息错误，统计失败")
+         return      
+      getXp = math.floor((nowXp - oldXp)/10000)
+      avgXp = math.floor(60 * getXp/sTime)
+      nextXp = 0
+      if(nowLevel != 160):	
+         nextXp=math.floor((nowMaxXp-nowXp)/10000)      
+      levelUpTime=0
+      if(avgXp > 0):
+         levelUpTime = math.floor(60 * nextXp/avgXp)      
+      goldContent =""
+      if(oldGold!=None):
+         nowGold = playerinfo.gold
+         getGold = nowGold - oldGold
+         avgGold = math.floor(60 * getGold/sTime)
+         goldContent = "，总消耗【"+str(getGold)+"】金币，平均每小时消耗【"+str(avgGold)+"】金币"
+      
+      content ="已持续练级【"+str(sTime)+"】分钟，人物共获得【"+str(getXp)+"万】经验，平均每小时【"+str(avgXp)+"万】经验，当前等级【"+str(nowLevel)+"】，距离下一级还差【"+str(nextXp)+"万】经验，大约需要【"+str(levelUpTime)+"】分钟 "+str(goldContent)
+      if(oldPetXp==None):
+         if(nowLevel==160):
+            return ""#--满级不打印信息
+         else:
+            self.chat_log(content)
+            return content
+      curPet = self.GetBattlePet()
+      nowPetLevel = curPet.level
+      nowPetXp = curPet.xp
+      nowMaxPetXp = curPet.maxxp
+      getPetXp = math.floor((nowPetXp - oldPetXp)/10000)
+      avgPetXp = math.floor(60 * getPetXp/sTime)
+      nextPetXp = 0
+      if(nowPetLevel!=160):	
+         nextPetXp=math.floor((nowMaxPetXp-nowPetXp)/10000)
+      	
+      petLevelUpTime =0
+      if(avgPetXp > 0):
+         petLevelUpTime = math.floor(60 * nextPetXp/avgPetXp)
+      petcontent ="，宠物共获得【%d万】经验，平均每小时【%d万】经验，当前等级【%d】，距离下一级还差【%d万】经验，大约需要【%d】分钟"%(getPetXp,avgPetXp,nowPetLevel,nextPetXp,petLevelUpTime)
+      allContent=content+petcontent
+      self.log(allContent)  #--字符串太长 崩溃
+      return allContent
+
+   #统计金币
+   def StatisticsTime(self,beginTime,oldGold):
+      nowTime = time.time() 
+      lastTime = math.floor((nowTime - beginTime)/60)#--已持续练级时间
+      if(lastTime == 0):
+         lastTime=1
+      goldContent =""
+      if(oldGold!=None):
+         nowGold = self.GetCharacterData("金币")
+         getGold = nowGold - oldGold
+         avgGold = math.floor(60 * getGold/lastTime)
+         goldContent = "总消耗【"+ str(getGold) + "】金币，平均每小时消耗【"+str(avgGold)+"】金币"
+      
+      content ="脚本已持续【"+str(lastTime)+"】分钟，"+str(goldContent	)
+      self.chat_log(content)  #--字符串太长 崩溃
+      return content
+
+   #获取好友服务器线路
    def getFriendServerLine(self,friendName):
       if(friendName == None):
          return 0
@@ -276,7 +465,8 @@ class CGAPI(CGAPython.CGA):
          if friendCard.name == friendName:
             return friendCard.server
       return 0
-   def changeLineFollowLeader(self,leaderName):
+   #通过名片获取队长线路跟随换线
+   def ChangeLineFollowLeader(self,leaderName):
       if(leaderName==None):
          return
       if(self.GetPlayerInfo().name == leaderName):
@@ -311,6 +501,7 @@ class CGAPI(CGAPython.CGA):
          if sJob in titles:
             return tmpProfession["name"]
       return ""
+   #获取职称等级
    def GetCharacterRank(self,sJob=None):
       if sJob == None:
          sJob = self.GetCharacterData("职称")
@@ -330,12 +521,14 @@ class CGAPI(CGAPython.CGA):
          if sJob in titles:
             return titles.index(sJob)
       return ""
+   #获取声望
    def GetCharacterPrestige(self,titles):
       sTitleKeys=self.g_sPrestigeMap.keys()
       for sTitle in titles:
          if sTitle in sTitleKeys:
             return sTitle
       return ""
+   #获取声望等级
    def GetCharacterPrestigeLv(self,titles):
       sTitleKeys=self.g_sPrestigeMap.keys()
       for sTitle in titles:
@@ -387,6 +580,7 @@ class CGAPI(CGAPython.CGA):
          case("声望等级"):return self.GetCharacterPrestigeLv(playerinfo.titles)
          case("称号等级"):return self.GetCharacterPrestigeLv(playerinfo.titles)
    
+   #获取宠物信息
    def GetBattlePetData(self,sType,*args):
       pet=self.GetBattlePet()      
       match(sType):
@@ -501,14 +695,16 @@ class CGAPI(CGAPython.CGA):
          x = x - 2
          y = y - 2
       self.TurnTo(x, y)
-
+   #转向坐标
    def TurnAboutEx(self,x,y):
       self.TurnTo(x,y)
    
+   #转向目标方向
    def TurnAboutPointDir(self,x,y):
       nDir = self.GetOrientation(x, y)
       self.TurnAbout(nDir)
 
+   #获取目标在当前坐标的方向
    def GetOrientation(self,tx, ty):
       p = self.GetMapCoordinate()
       return self.GetDirection(p.x, p.y, tx, ty)
@@ -788,22 +984,34 @@ class CGAPI(CGAPython.CGA):
       #如果是组队状态 并且不是队长 则退出
       return self.AutoMoveInternal(x, y, timeout)
 
-   def AutoMoveToEx(self,x,y,mapName="",timeout=100):
-      if len(mapName)==0:
+   def AutoMoveToEx(self,x,y,mapName=None,timeout=100):
+      if mapName==None:
          return self.AutoMoveTo(x,y,timeout)
       else:     
          tryNum=0
-         while tryNum < 3:
-            self.AutoMoveTo(x,y,timeout)
-            curMapName = self.GetMapName()
-            curMapNum = self.GetMapNumber()
-            if (len(mapName) > 0):
-               if (self.IsInNormalState() and (curMapName == mapName or (mapName.isdigit() and curMapNum == int(mapName)))):              
-                  #到达目标地 返回1  否则尝试3次后返回0
-                  return 1
-               
-            tryNum=tryNum+1
-         self.log("尝试3次后，到达目标地图失败%s %d %d "%(mapName,x,y))
+         if type(mapName)==str:
+            while tryNum < 3:
+               self.AutoMoveTo(x,y,timeout)
+               curMapName = self.GetMapName()
+               curMapNum = self.GetMapNumber()
+               if (len(mapName) > 0):
+                  if (self.IsInNormalState() and (curMapName == mapName or (mapName.isdigit() and curMapNum == int(mapName)))):              
+                     #到达目标地 返回1  否则尝试3次后返回0
+                     return 1                  
+               tryNum=tryNum+1
+            self.log("尝试3次后，到达目标地图失败%s %d %d "%(mapName,x,y))
+         elif type(mapName)==int:
+            while tryNum < 3:
+               self.AutoMoveTo(x,y,timeout)
+               curMapName = self.GetMapName()
+               curMapNum = self.GetMapNumber()
+               if (len(mapName) > 0):
+                  if (self.IsInNormalState() and  curMapNum == int(mapName)):              
+                     #到达目标地 返回1  否则尝试3次后返回0
+                     return 1
+                  
+               tryNum=tryNum+1
+            self.log("尝试3次后，到达目标地图失败%s %d %d "%(mapName,x,y))
       return 0
    
 
@@ -971,7 +1179,7 @@ class CGAPI(CGAPython.CGA):
                                  self.WaitInNormalState()
                                  return True
                            time.sleep(1)
-                     if not IsReachableTarget(walkprePos.x, walkprePos.y):   #用移动前点判断 不能到 说明换图成功，特别是ud这个图
+                     if not self.IsReachableTarget(walkprePos.x, walkprePos.y):   #用移动前点判断 不能到 说明换图成功，特别是ud这个图
                            self.debug_log( "原坐标不可达，移动至目标点成功，寻路结束！")
                            self.WaitInNormalState()
                            return True
@@ -1368,14 +1576,14 @@ class CGAPI(CGAPython.CGA):
             return pet
       return None
 
-   def recallSoul(self):
+   #招魂
+   def RecallSoul(self):
       tryCount=0
-      petinfo = self.GetBattlePet()
       charInfo = self.GetPlayerInfo()
       while tryCount < 3:
          if charInfo.souls > 0:
             self.chat_log("人物掉魂：登出招魂")
-            self.outCastle("n")#出城堡北门	
+            self.OutCastle("n")#出城堡北门	
             self.AutoMoveToEx(154, 29,"大圣堂的入口")				
             self.AutoMoveToEx(14, 7,"礼拜堂")		
             self.AutoMoveTo(12, 19)	
@@ -1386,9 +1594,93 @@ class CGAPI(CGAPython.CGA):
             charInfo = self.GetPlayerInfo()
             if charInfo.souls > 0  :			
                self.chat_log("没钱招魂了，去看看银行有没钱")
-               self.checkGold(人物("灵魂")*30000,1000001,200000)
+               self.CheckGold(人物("灵魂")*30000,1000001,200000)
+   #哥拉尔检查状态
+   def GleCheckHealth(self,doctorName):   
+      playerinfo = self.GetPlayerInfo()
+      if( playerinfo.health > 0 or playerinfo.souls > 0 or self.GetPlayerInfo().health > 0):
+         #--登出 去治疗 招魂
+         self.ToGle()
+         self.GleRecallSoul()	
+         self.GleHealPlayer(doctorName)		
+
+   def ToGle(self):
+      mapPos=self.GetMapCoordinate()		
+      if (self.GetMapName()=="哥拉尔镇" and mapPos.x==120 ):
+         return 
+      self.LogBack()
+      time.sleep(3)
+
+   def GleRecallSoul(self):
+      if( self.GetPlayerInfo().souls > 0 ):
+         self.chat_log("触发登出补给:人物掉魂")
+         self.ToGle()
+         self.TurnAbout(0)
+         time.Sleep(1)
+         self.AutoMoveToEx(140,214,"白之宫殿")
+         self.AutoMoveToEx(47, 36, 43210)
+         self.AutoMoveTo(61, 46)
+         self.TalkNpcPosSelectYesEx(2)
+         time.Sleep(1)
+
+   def GleSupply(self):
+      needSupply = self.IsNeedSupply()	
+      if(needSupply == False):
+         return      
+      if (self.GetMapName()!="哥拉尔镇" ):
+         self.ToGle()
+      self.AutoMoveToEx(165,91,"医院")
+      self.AutoMoveTo(29,26)	
+      self.RenewEx(30,26)	
+
+   def GleHealPlayer(self,doctorName):
+      petinfo = self.GetBattlePet()
+      if( self.GetPlayerInfo().health > 0  or (petinfo and petinfo.health > 0)):
+         self.ToGle()
+         self.chat_log("人物受伤")
+         self.AutoMoveToEx(165,91,"医院")
+         self.AutoMoveTo(29,15)
+         self.TurnAbout(2)
+         self.WaitRecvNpcDialog()
+         self.ClickNPCDialog(-1,6)
+         self.AutoMoveTo(29,26)
+         self.RenewEx(30,26)	
+
+   #检查身上金币
+   def CheckGold(self,minGold,maxGold,bagGold):      
+      oldGold=self.GetPlayerInfo().gold
+      if(oldGold < minGold):
+         self.chat_log("人物现有金币【" + str(oldGold)+"】小于设定的最少值【"+(minGold)+"】,去银行取钱",1)
+         self.GotoBankTalkNpc()
+         self.WithdrawGold(-bagGold)
+         time.sleep(1)
+         nowGold=self.GetPlayerInfo().gold
+         if(nowGold != oldGold):
+            self.chat_log("取钱成功，现有金币：" + str(nowGold))         
+      elif(oldGold > maxGold):
+         self.chat_log("人物现有金币【"+ str(oldGold)+"】大于设定的最大值【"+str(maxGold)+"】,去银行存钱",1)
+         self.GotoBankTalkNpc()
+         self.DepositPetPos
+         self.DepositGold(-bagGold)
+         time.sleep(1)
+         nowGold=self.GetPlayerInfo().gold
+         if(nowGold == oldGold): #-银行满了 存少点
+            self.chat_log("银行金币满了，尝试存部分金币")
+            bankGold = self.GetBankGold()
+            if(bagGold > 1000000):	
+               self.DepositGold(10000000-bankGold)
+            else:
+               self.DepositGold(1000000-bankGold)            
+            time.sleep(1)
+            nowGold=self.GetPlayerInfo().gold
+            if(nowGold != oldGold):
+               self.chat_log("存钱成功，现有金币："+ str(nowGold))            
+         else:
+            self.chat_log("存钱成功，现有金币："+ str(nowGold))   
+         
 
 
+   #移动到目标坐标附近
    def MoveToNpcNear(self, x, y, dis=1):
       dis = dis if dis > 0 else 1
       pos = self.GetRandomSpace(x, y, dis)
@@ -1399,8 +1691,8 @@ class CGAPI(CGAPython.CGA):
       if (self.GetMapCoordinate() == pos):
          return True
       return False
-
-   def healPlayer(self,doctorName):
+   #人物治疗
+   def HealPlayer(self,doctorName):
       charInfo = self.GetPlayerInfo()
       if charInfo.health == 0 :
          return	
@@ -1456,8 +1748,8 @@ class CGAPI(CGAPython.CGA):
          if tryNum >= 10 :
             return      
          tryNum = tryNum+1
-    
-   def healPet(self):
+   #宠物治伤
+   def HealPet(self):
       if self.GetBattlePet().health== 0:
          return
       #宠物受伤 登出治伤
@@ -1477,16 +1769,281 @@ class CGAPI(CGAPython.CGA):
             return
          tryNum = tryNum+1
 
-
-   def checkHealth(self,doctorName):     
+   #检查健康状态 招魂-治疗
+   def CheckHealth(self,doctorName):     
       petinfo = self.GetBattlePet()
       charInfo = self.GetPlayerInfo()
       if( charInfo.health > 0 or charInfo.souls > 0 or (petinfo and petinfo.health > 0)):
          #登出 去治疗 招魂
          self.ToCastle()
-         self.recallSoul()	
-         self.healPlayer(doctorName)
-         self.healPet()
+         self.RecallSoul()	
+         self.HealPlayer(doctorName)
+         self.HealPet()
+
+   #使用物品，重载基类函数，增加类型判断
+   def UseItem(self,itemName):
+      if type(itemName) == int:
+         super().UseItem(itemName)
+      else:
+         itemsInfo=self.GetItemsInfo()
+         for itemInfo in itemsInfo:
+            if itemInfo.name == itemName or (itemName.isdigit() and itemInfo.itemid == int(itemName)):
+               super().UseItem(itemInfo.pos)
+               return
+   #解析物品耐久
+   def ParseItemDurability(self,pItem):
+      if (not pItem or not pItem.exist or len(pItem.attr) < 1):
+         return
+      sAttr = pItem.attr
+      if (sAttr.find("耐久") == -1):
+         return
+      sAttr = sAttr[sAttr.find("耐久"):]
+      #print(sAttr)
+      sAttr = sAttr[0:sAttr.find("$")]
+      #print("$------",sAttr)
+      sAttr=sAttr.replace("耐久","")
+      #print("$------",sAttr)
+      matchResult = sAttr.split("/")
+      #print(matchResult)
+      #print(pItem.attr,matchResult)
+      if (len(matchResult) == 2):
+         pItem.nCurDurability = int(matchResult[0])
+         pItem.nMaxDurability = int(matchResult[1])
+         if (pItem.nMaxDurability > 0):
+            pItem.nDurabilityRate = pItem.nCurDurability / pItem.nMaxDurability
+   #装备耐久
+   def ParseItemDurabilityEx(self,sItemAttr):
+      sAttr = sItemAttr
+      if (sAttr.find("耐久") == -1):
+         return
+      sAttr = sAttr[sAttr.find("耐久"):]
+      #print(sAttr)
+      sAttr = sAttr[0:sAttr.find("$")]
+      #print("$------",sAttr)
+      sAttr=sAttr.replace("耐久","")
+      #print("$------",sAttr)
+      matchResult = sAttr.split("/")
+      #print(matchResult)
+      #print(pItem.attr,matchResult)
+      if (len(matchResult) == 2):
+         nCurDurability = int(matchResult[0])
+         nMaxDurability = int(matchResult[1])
+         return nCurDurability,nMaxDurability
+      else:
+         return -1,-1
+
+   #获取物品信息，带耐久
+   def GetGameItems(self):
+      newItemList=[]
+      itemsinfo=self.GetItemsInfo()   
+      for  iteminfo in itemsinfo:       
+         item = GameItem()
+         item.name = iteminfo.name
+         item.attr = iteminfo.attr
+         item.info =iteminfo.info
+         item.itemid = iteminfo.itemid
+         item.image_id = iteminfo.image_id
+         item.type = iteminfo.type
+         item.count = iteminfo.count
+         item.pos = iteminfo.pos
+         item.assessed = iteminfo.assessed
+         item.level = iteminfo.level
+         item.exist = True
+         self.ParseItemDurability(item)
+         #ITObjectDataMgr::getInstance().StoreServerItemData(item)
+         #/qDebug() << QString::fromStdString(iteminfo.name) << QString::fromStdString(iteminfo.attr) << iteminfo.itemid << iteminfo.type << iteminfo.count << iteminfo.pos << iteminfo.assessed << iteminfo.level;
+         newItemList.append(item)     
+      return newItemList
+   def CheckCrystal(self,crystalName=None,equipsProtectValue=None):
+      if(equipsProtectValue==None):
+         equipsProtectValue =100
+      if(crystalName == None):
+         crystalName = "水火的水晶（5：5）"
+      itemList =  self.GetGameItems()
+      crystal = None
+      for item in itemList:
+         if(item.pos == 7):
+            crystal = item
+            break
+      #--当前水晶不需要更换
+      #--喊话(crystal.name.."耐久"..crystal.durability.."设置值"..equipsProtectValue)
+      if(crystal!=None and crystal.name == crystalName and crystal.nCurDurability > equipsProtectValue):
+         return      
+      crystal=None
+      #--需要更换 检查身上是否有备用水晶
+      for item in itemList:
+         if(item.pos > 7 and item.name == crystalName and item.nCurDurability > equipsProtectValue):
+            crystal = item
+            break
+      if(crystal!=None ):
+         self.MoveItem(crystal.pos,7,-1)
+         return      
+      #买水晶
+      self.BuyCrystal(crystalName)
+      self.DropItem(7)#--扔旧的
+      time.sleep(1)	#等待刷新
+      self.UseItem(crystalName)
+
+   #购买平民装备
+   def BuyPopulaceEquip(self,equipName,buyCount):
+      self.GotoFaLanCity()
+      sWeapon="平民剑|平民斧|平民枪|平民弓|平民回力镖|平民小刀|平民杖"
+      if(sWeapon.find(equipName) != -1):
+         #--自动寻路(40, 98,"法兰城")	
+         self.AutoMoveTo(150, 123)
+         self.TurnAbout(0)
+         self.WaitRecvNpcDialog()
+         self.BuyDstItem(equipName,buyCount)	
+      else:
+         self.AutoMoveTo(156, 123)
+         self.TurnAbout(0)
+         self.WaitRecvNpcDialog()
+         self.BuyDstItem(equipName,buyCount)	
+
+   #检查装备耐久
+   def CheckEquipDurable(self,equipPos,equipName,equipProtectValue=None):
+      if(equipProtectValue==None):
+         equipProtectValue =20  
+      itemList = self.GetGameItems()
+      tgtEquip = None
+      for item in itemList:
+         if(item.pos == equipPos):
+            tgtEquip = item
+            break        
+      #--当前水晶不需要更换
+      #--喊话(crystal.name.."耐久"..crystal.durability.."设置值"..equipsProtectValue)
+      if(tgtEquip!=None and tgtEquip.name == equipName and tgtEquip.nCurDurability > equipProtectValue):
+         return      
+      tgtEquip=None
+      #--需要更换 检查身上是否有备用水晶
+      for item in itemList:
+         if(item.pos > 7 and item.name == equipName and item.nCurDurability > equipProtectValue):
+            tgtEquip = item
+            break  
+      if(tgtEquip!=None ):
+         self.MoveItem(tgtEquip.pos,equipPos,-1)
+         return      
+      #买水晶
+      self.BuyPopulaceEquip(equipName,1)
+      self.DropItem(equipPos)   #--扔旧的
+      time.sleep(1)	   #--等待刷新
+      self.UseItem(equipName)
+   
+   #城堡打卡
+   def ToCastleBeginWork(self):
+      self.ToCastle("c")	
+      if(self.GetCharacterData("卡时") == 0):
+         日志("没有卡时，无法打卡")
+         return      
+      self.TalkNpcPosSelectYes(58,84)
+
+   #取包裹空格
+   def GetInventoryEmptySlotCount(self):
+      nCount = 0
+      posExist=[]
+      itemsinfo = self.GetItemsInfo()     
+      for iteminfo in itemsinfo:         
+         if (iteminfo.pos > 7):
+            posExist.append(iteminfo.pos)
+      for i in range(8,28):
+         if (i not in posExist):
+            nCount+=1      
+      return nCount
+
+   #解析商店购买列表
+   def ParseBuyStoreMsg(self,msg):
+      obj={}
+      if (len(msg) < 1):
+         return obj    
+      sMatch = msg.split("|")
+      if (len(sMatch) < 5):
+         return obj
+      storeItemCount = (len(sMatch) - 5) / 6
+      obj["storeid"]=sMatch[0]
+      obj["name"]=sMatch[1]
+      obj["welcome"]=sMatch[2]
+      obj["insuff_funds"]=sMatch[3]
+      obj["insuff_inventory"]= sMatch[4]
+      itemList=[]      
+      for i in range(int(storeItemCount)):   
+         itemMap={}
+         itemMap["name"]=sMatch[5 + 6 * i + 0]
+         itemMap["image_id"]= sMatch[5 + 6 * i + 1]
+         itemMap["cost"]= sMatch[5 + 6 * i + 2]
+         itemMap["attr"]= sMatch[5 + 6 * i + 3]
+         itemMap["unk1"]= sMatch[5 + 6 * i + 4]
+         itemMap["max_buy"]= sMatch[5 + 6 * i + 5]
+         itemList.append(itemMap)      
+      obj["items"]=itemList
+      return obj
+
+   #买
+   def Shopping(self,index,count):
+      items = []
+      subItem = CGAPython.cga_buy_item_t()
+      subItem.index = index
+      subItem.count = count
+      items.append(subItem)
+      self.BuyNPCStore(items )
+
+   #商店购买指定物品
+   def BuyDstItem(self,itemName=None,buyCount=None):
+      if(itemName == None): 
+         self.chat_log("购买物品名为空，返回")
+         return 
+      if(buyCount==None):
+         buyCount=1
+      self.ClickNPCDialog(0,0)# --第二个参数0 0买 1卖 2不用了
+      dlg = self.WaitRecvNpcDialog()
+      if(dlg == None):
+         return False
+      buyData = self.ParseBuyStoreMsg(dlg.message)
+      itemList = buyData["items"]
+      dstItem = None
+      for i in range(len(itemList)):
+         if( itemList[i]["name"] == itemName):
+            dstItem={"index":i,"count":buyCount}			         
+      
+      if (dstItem != None):
+         self.Shopping(dstItem["index"],dstItem["count"])
+         time.sleep(1)
+         self.ClickNPCDialog(-1,0)
+         return True
+      else:
+         self.chat_log("购买道具" + itemName + "失败！")
+         return False      
+      return False
+
+   #买水晶
+   def BuyCrystal(self,crystalName=None,buyCount=None):
+      self.chat_log("买水晶")
+      if(buyCount==None):
+         buyCount=1
+      if(crystalName == None):
+         crystalName = "水火的水晶（5：5）"
+      if(self.GetInventoryEmptySlotCount() < 1):
+         self.LogBack()
+         self.SellCastle()		
+
+      if(self.GetInventoryEmptySlotCount() < 1):
+         self.chat_log("背包没有空格，买水晶中断！")
+         self.LogBack()
+         return
+      
+      if(self.GetInventoryEmptySlotCount() < buyCount):
+         self.chat_log("背包空格数量不够，买水晶中断！")
+         self.LogBack()
+         return      
+      mapNumber = self.GetMapNumber()
+      if mapNumber != 1041:
+         self.GotoFaLanCity("w1")
+         self.AutoMoveToEx(94,78,"达美姊妹的店")	
+      self.AutoMoveTo(17,18)
+      time.sleep(1)
+      self.TurnAbout(2)
+      self.WaitRecvNpcDialog()	
+      return self.BuyDstItem(crystalName,buyCount)	
+
    #前往法兰城 6个点
    #"s2","w2","e2","t1"	t1市场一楼 t3市场三楼
    #"s1","w1","e1","t3"
@@ -1571,7 +2128,7 @@ class CGAPI(CGAPython.CGA):
             self.LogBack() 
          time.sleep(1)
 
-   def outFaLan(self,sDir):
+   def OutFaLan(self,sDir):
       if sDir == "e":
          self.GotoFaLanCity("e1")
          self.AutoMoveTo(281,88)
@@ -1582,7 +2139,7 @@ class CGAPI(CGAPython.CGA):
          self.GotoFaLanCity("w1")
          self.AutoMoveTo(22,88)	
 
-   def outCastle(self,sDir):
+   def OutCastle(self,sDir):
       while True:
          self.WaitInNormalState()  
          mapName = self.GetMapName()
@@ -1608,7 +2165,7 @@ class CGAPI(CGAPython.CGA):
             self.LogBack()
          time.sleep(1)
    #去法兰银行对话NPC
-   def gotoFalanBankTalkNpc(self):
+   def GotoFalanBankTalkNpc(self):
       if self.GetMapNumber() != 1121:
          self.GotoFaLanCity("e1")
          self.WaitForMap("法兰城")
@@ -1617,7 +2174,7 @@ class CGAPI(CGAPython.CGA):
       self.TurnAbout(2)
       self.WaitRecvNpcDialog()
    #去银行和职员对话
-   def gotoBankTalkNpc(self):            
+   def GotoBankTalkNpc(self):            
       def star1():
          self.AutoMoveTo(157,94)	
          self.TurnAboutEx(158,93)		
@@ -1929,14 +2486,27 @@ class CGAPI(CGAPython.CGA):
       if (realGold > bankGold):
          realGold = bankGold
       return self.MoveGold(realGold, 2)
-
+   #存钱
+   def DepositGold(self,nVal):
+      pCharacter = self.GetPlayerInfo()
+      realGold = nVal   #实际存入钱
+      if (realGold < 0):
+         if (pCharacter.gold > abs(realGold)):         
+            realGold = pCharacter.gold - abs(realGold)
+         else:         
+            self.chat_log("身上没有那么多钱了，存储失败！")
+            return False     
+      if (realGold > pCharacter.gold):
+         realGold = pCharacter.gold
+      #//存储不判断银行金额 因为有些大客户可以存1000 万
+      self.MoveGold(realGold, 1)
 
    #去银行取钱      
-   def getMoneyFromBank(self,money):
+   def GetMoneyFromBank(self,money):
       self.WaitInNormalState()
       if self.GetTeammatesCount() > 1:
          self.LeaveTeammate()      
-      self.gotoBankTalkNpc()
+      self.GotoBankTalkNpc()
       self.WithdrawGold(money) #没有取钱金额判断
 
    def DepositPetPos(self,nPos):
@@ -1956,13 +2526,12 @@ class CGAPI(CGAPython.CGA):
          if i not in bankPetIndex:         
             return self.MovePet(petPos, i)         
       return False
-   #把非作战宠物全存银行
-   
-   def depositNoBattlePetToBank(self):
+   #把非作战宠物全存银行   
+   def DepositNoBattlePetToBank(self):
       self.WaitInNormalState()
       if(self.GetTeammatesCount()>1):
          self.LeaveTeammate()
-      self.gotoBankTalkNpc()
+      self.GotoBankTalkNpc()
       allPets = self.GetPetsInfo()		
 	   #除了作战宠物 其余全存
       for pet in allPets:
@@ -2251,7 +2820,7 @@ class CGAPI(CGAPython.CGA):
          bagItems = self.GetItemsInfo()
          for v in bagItems:
             if(v.pos > 7 and v.name == saleItem and v.count>=count):
-               apiSaleItem=self.cga_sell_item_t()#{"id":v.itemid,"pos":v.pos,"count":v.count/count}
+               apiSaleItem=CGAPython.cga_sell_item_t()#{"id":v.itemid,"pos":v.pos,"count":v.count/count}
                apiSaleItem.itemid=v.itemid
                apiSaleItem.itempos=v.pos
                apiSaleItem.count=v.count/count
@@ -2272,7 +2841,7 @@ class CGAPI(CGAPython.CGA):
          bagItems = self.GetItemsInfo()
          for v in bagItems:
             if(v.pos > 7 and v.name == saleItem and v.count>=count):
-               apiSaleItem=self.cga_sell_item_t()#{"id":v.itemid,"pos":v.pos,"count":v.count/count}
+               apiSaleItem=CGAPython.cga_sell_item_t()#{"id":v.itemid,"pos":v.pos,"count":v.count/count}
                apiSaleItem.itemid=v.itemid
                apiSaleItem.itempos=v.pos
                apiSaleItem.count=v.count/count
@@ -2359,8 +2928,42 @@ class CGAPI(CGAPython.CGA):
       #       if (and iteminfo.itemid == itemName):
       #          nCount += iteminfo.count			
       return nCount
+   #城堡卖
+   def SellCastle(self,saleItems):
+      saleList=["魔石","锥形水晶","卡片？","锹型虫的卡片","水晶怪的卡片","哥布林的卡片","红帽哥布林的卡片","迷你蝙蝠的卡片","绿色口臭鬼的卡片","锥形水晶"]
+      if type(saleList) == list:
+         saleList+=saleItems
+      else:
+         saleList.append(saleItems)
+      needSale=False
+      for itemName in saleList:
+         if self.GetBagItemCount(itemName) > 0 :
+            needSale=True
+            break
+      if needSale==False:
+         return 
+      self.WaitInNormalState()
+      mapName = self.GetMapName()
+      if mapName == "工房":
+         if(self.IsNearTarget(21,23,1)==True):
+            for item in saleList:
+               if(self.GetBagItemCount(itemName) > 0):
+                  self.Sale(21,23,item)
+            for item in saleList:
+               if(self.GetBagItemCount(itemName) > 0):
+                  self.Sale(21,23,item)
+      else:
+         self.ToCastle()
+         self.AutoMoveTo(31,77)		
+         for item in saleList:
+            if(self.GetBagItemCount(itemName) > 0):
+               self.SaleEx(6,item)
+         for item in saleList:
+            if(self.GetBagItemCount(itemName) > 0):
+               self.SaleEx(6,item)
 
-   def sellCastlePile(self,saleItem,count=20,maxCount=40):	
+   #城堡卖叠加物
+   def SellCastlePile(self,saleItem,count=20,maxCount=40):	
       needSale=False	
       if(self.GetBagItemPileCount(saleItem) >= count):
          needSale = True		
@@ -2376,12 +2979,139 @@ class CGAPI(CGAPython.CGA):
          self.ToCastle()
          self.AutoMoveTo(31,77)		
          self.SellPileDir(6,saleItem,count,maxCount)	
-     
-   def sellFaLanPile(self,saleItem):
+   #卖
+   def Sale(self,x,y,itemName):
+      if not self.IsNearTarget(x, y, 2):
+         return False
+      sSaleItems = []
+      if itemName.find("|") != -1:
+         sSaleItems = itemName.split("|")
+      else:
+         sSaleItems.append(itemName)
+      itemsInfo=self.GetItemsInfo()
+      pExistItemList=[]	#重复判断
+      cgaSaleItems=[]
+      for itemInfo in itemsInfo:
+         if itemInfo.pos > 7 and  itemInfo.name in sSaleItems:
+            if itemInfo in pExistItemList:
+               continue
+            cgaItem = CGAPython.cga_sell_item_t()
+            cgaItem.itemid = itemInfo.itemid
+            cgaItem.itempos = itemInfo.pos
+            cgaItem.count = 1    #堆叠物自己改
+            #//不清楚最少卖的数量的话，卖东西会失败
+            cgaSaleItems.append(cgaItem)
+            pExistItemList.append(itemInfo)
+      if len(cgaSaleItems) < 1:
+         self.debug_log("没有要卖的物品")
+         return False
+      self.TurnAboutEx(x,y)
+      dlg = self.WaitRecvNpcDialog()
+      self.debug_log(dlg.message)
+      self.debug_log(dlg.message[(len(dlg.message) - 1)])
+      self.debug_log("-----")
+      if dlg != None and dlg.type==5:
+         self.ClickNPCDialog(-1, 1  if dlg.message[(len(dlg.message) - 1)] == "3" else 0)
+      dlg = self.WaitRecvNpcDialog()
+      if dlg != None and dlg.type==7:
+         self.SellNPCStore(cgaSaleItems)
+      self.WaitRecvNpcDialog()
+      return True
+   #卖
+   def SaleEx(self,nDir,itemName):
+      dirPos = self.GetDirectionPos(nDir, 2)
+      return self.Sale(dirPos.x, dirPos.y, itemName)
+   #法兰城卖叠加物品
+   def SellFaLanPile(self,saleItem):
       self.GotoFaLanCity()
 	   #--自动寻路(40, 98,"法兰城")	
       self.AutoMoveTo(150, 123)
-	   卖(0,saleItem)		
+      self.SaleEx(0,saleItem)		
+
+   #创建服务-ip为空时，则为本机，port为空时，则自动递增获取
+   #只启动服务，使用由外部自己定义
+   def CreateServer(self,ip=None,port=None):
+      sio = socketio.Server()
+      self.sio=sio
+      self.app = socketio.WSGIApp(sio)
+      # @self.sio.event
+      # def connect(sid, environ):
+      #    print('connect ', sid,flush=True)
+
+      # @self.sio.on('client')
+      # def another_event(sid, data):
+      #    print('serve received a message!', data)
+
+      @self.sio.event
+      def disconnect(sid):
+         print('disconnect ', sid,flush=True)
+
+      
+      self.g_sockt=eventlet.listen(("127.0.0.1", 0))
+      host, port =self.g_sockt.getsockname()
+      #上报端口
+      self.init_grpc()
+      if self.g_stub:#暂时ip用回环
+         self.g_stub.UploadCharcterServer(CGData__pb2.SelectCharacterServerResponse(char_name=self.GetPlayerInfo().name,big_line=cg.GetMapIndex()[0],ip="127.0.0.1",port=port,online=cg.IsInGame()))
+      
+      
+   def StartServer(self):
+      def ServerListen(): 
+         print("listen socket ",self.g_sockt,flush=True)
+         eventlet.wsgi.server(self.g_sockt, self.app)
+         print("listen socket线程退出",flush=True)     
+      t=threading.Thread(target=ServerListen)
+      t.start()
+
+   def SetPlayerInfo(self,*args):
+      if len(args)<=1:
+         return None
+      if args[0] == "玩家称号" and len(args)>=2:
+         self.ChangeNickName(args[1])
+      elif args[0]=="简介":
+         if len(args)<9:
+            return None
+         changeBits = args[1]
+         sellIcon = args[2]
+         sellString = args[3]
+         buyIcon = args[4]
+         buyString = args[5]
+         wantIcon = args[6]
+         wantString = args[7]
+         descString = args[8]
+         desc=CGAPython.cga_pers_desc_t()
+         desc.sellIcon = sellIcon
+         desc.sellString = sellString
+         desc.buyIcon = buyIcon
+         desc.buyString = buyString
+         desc.wantIcon = wantIcon
+         desc.wantString = wantString
+         desc.descString = descString
+         if (sellIcon):
+            changeBits |= 1
+         if (len(sellString) > 0):
+            changeBits |= 2
+         if (buyIcon):
+            changeBits |= 4
+         if (len(buyString) > 0):
+            changeBits |= 8
+         if (wantIcon):
+            changeBits |= 0x10
+         if (len(wantString) > 0):
+            changeBits |= 0x20
+         if (len(descString) > 0):
+            changeBits |= 0x40
+         desc.changeBits = changeBits
+         self.ChangePersDesc(desc)
+   def DropItem(self,itemName):
+      if type(itemName) == str:
+         itemsInfo = self.GetItemsInfo()
+         for itemInfo in itemsInfo:
+            if itemInfo.name == itemName or (itemName.isdigit() and itemInfo.itemid==int(itemName)):
+               super().DropItem(itemInfo.pos)               
+      elif type(itemName) == int:
+         super().DropItem(itemName)
+
 
 #返回单例对象
 cg = CGAPI()
@@ -2403,6 +3133,7 @@ def 对话选是(*args):
       cg.TalkNpcPosSelectYes(args[0],args[1],100)
 
 等待空闲 = cg.WaitInNormalState
+是否空闲中=cg.IsInNormalState
 #自动寻路 = cg.AutoMoveTo
 def 自动寻路(*args):
    if len(args) == 2:
@@ -2429,8 +3160,8 @@ def 回复(*args):
    elif len(args)>=2:
       cg.RenewEx(args[0],args[1])
 
-出法兰城 = cg.outFaLan
-出里谢里亚堡=cg.outCastle
+出法兰城 = cg.OutFaLan
+出里谢里亚堡=cg.OutCastle
 取队伍人数=cg.GetTeammatesCount
 加入队伍=cg.AddTeammate
 离开队伍=cg.LeaveTeammate
@@ -2439,3 +3170,37 @@ def 宠物(*args):
       cg.Renew(args[0])
    elif len(args)>=2:
       cg.RenewEx(args[0],args[1])
+创建服务=cg.CreateServer
+启动服务=cg.StartServer
+信息打印=cg.BaseInfoPrint
+统计信息=cg.StatisticsTime
+检查健康=cg.CheckHealth
+检查水晶=cg.CheckCrystal
+取包裹空格=cg.GetInventoryEmptySlotCount
+取物品数量=cg.GetBagItemCount
+装备信息=cg.GetPlayereEquipData
+队伍信息=cg.GetTeamPlayers
+是否目标附近=cg.IsNearTarget
+开始遇敌=cg.begin_auto_action
+停止遇敌=cg.end_auto_action
+转向坐标=cg.TurnAboutEx
+检查金币=cg.CheckGold
+去银行对话=cg.GotoBankTalkNpc
+def 银行(*args):
+   if len(args) == 1:
+      cg.Renew(args[0])
+   elif len(args)==3:
+      if args[0] == "取物":
+         cg.WithdrawGold()
+def 队伍(*args):
+   if len(args)==1:
+      if args[0] == "人数":
+         return cg.GetTeammatesCount()
+是否队长=cg.JudgeTeamLeader
+移动到目标附近=cg.MoveToNpcNear
+目标是否可达=cg.IsReachableTarget
+扔=cg.DropItem
+扔宠=cg.DropPet
+使用物品=cg.UseItem
+全部宠物信息=cg.GetPetsInfo
+设置个人简介=cg.SetPlayerInfo
