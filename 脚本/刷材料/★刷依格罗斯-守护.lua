@@ -689,11 +689,18 @@ end
 
 
 --获取好友的当前任务
-function getFriendSetText(name)
-	local friendcard = 取好友名片(name)
-	if( friendcard ~= nil)then
-		return tonumber(friendcard.title)		--转换失败 返回nil
-	end	
+function getFriendSetText(name,useCard)
+	if useCard == nil then
+		role=取角色信息(name)
+		if role~=nil then
+			return tonumber(role.character_data.nick)
+		end
+	else
+		local friendcard = 取好友名片(name)
+		if( friendcard ~= nil)then
+			return tonumber(friendcard.title)		--转换失败 返回nil
+		end	
+	end
 	return nil
 end
 --检查队友和队长是否同一任务

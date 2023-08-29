@@ -154,12 +154,21 @@ function common.getFriendServerLine(friendName)
 end
 
 --跟随好友换线 参数:好友名称
-function common.changeLineFollowLeader(leaderName)
+function common.changeLineFollowLeader(leaderName,useTool)
 	if(leaderName==nil)then return end
 	if(人物("名称",false) == leaderName)then	return	end
-	local leaderServerLine = common.getFriendServerLine(leaderName)
-	if(leaderServerLine==0)then
-		return
+	useTool=1
+	local leaderServerLine = nil
+	if useTool ==nil then
+		leaderServerLine = common.getFriendServerLine(leaderName)
+		if(leaderServerLine==0)then
+			return
+		end
+	else
+		role=取角色信息(leaderName)
+		if role~=nil then
+			leaderServerLine=role.character_data.server_line
+		end
 	end
 	local curLine=人物("几线")
 	if(curLine == 0)then

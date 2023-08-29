@@ -203,6 +203,10 @@ class CGAPI(CGAPython.CGA):
    g_sio=None
    g_config=None
 
+   #电信服务器列表
+   g_serverTelecoms=["221.122.119.111","221.122.119.112","221.122.119.113","221.122.119.114","221.122.119.115"]
+	#网通服务器列表
+   g_serverNetcom=["221.122.119.117","221.122.119.119","221.122.119.120","221.122.119.166","221.122.119.167"]
    g_sPrestigeMap={"恶人":-3,	
    "受忌讳的人": -2,
 	"受挫折的人": -1,
@@ -3111,6 +3115,15 @@ class CGAPI(CGAPython.CGA):
                super().DropItem(itemInfo.pos)               
       elif type(itemName) == int:
          super().DropItem(itemName)
+   #获取游戏大区-电信或网通
+   def GetGameServerType(self):
+      serverInfo=CGAPython.cga_game_server_info_t()
+      if(self.GetGameServerInfo(serverInfo)):
+         if serverInfo.ip in self.g_serverTelecoms:
+            return 13
+         elif serverInfo.ip in self.g_serverNetcom:
+            return 14
+      return -1
 
 
 #返回单例对象

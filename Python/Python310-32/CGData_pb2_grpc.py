@@ -395,8 +395,8 @@ class CGRpcServiceStub(object):
                 )
         self.UploadCharcterServer = channel.unary_unary(
                 '/CGData.CGRpcService/UploadCharcterServer',
-                request_serializer=CGData__pb2.SelectCharacterServerResponse.SerializeToString,
-                response_deserializer=CGData__pb2.CGVoidData.FromString,
+                request_serializer=CGData__pb2.UploadCharcterServerRequest.SerializeToString,
+                response_deserializer=CGData__pb2.UploadCharcterServerResponse.FromString,
                 )
         self.Publish = channel.unary_unary(
                 '/CGData.CGRpcService/Publish',
@@ -445,7 +445,7 @@ class CGRpcServiceServicer(object):
     """
 
     def GetCGItemData(self, request, context):
-        """根据item的id，获取item信息
+        """☆ 根据item的id，获取item信息
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -458,35 +458,35 @@ class CGRpcServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetPetGradeCalcData(self, request, context):
-        """获取所有宠物算档数据
+        """☆ 获取所有宠物算档数据
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetServerStoreMapData(self, request, context):
-        """获取服务端所有id和map名称的映射，用于本地缓存
+        """☆ 获取服务端所有id和map名称的映射，用于本地缓存
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def StoreCGItemData(self, request, context):
-        """客户端向服务器发送当前包裹物品信息，服务端用于缓存和更新数据库
+        """☆ 客户端向服务器发送当前包裹物品信息，服务端用于缓存和更新数据库
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def StoreCGMapData(self, request, context):
-        """客户端向服务器发送地图信息，服务端缓存更新
+        """☆ 客户端向服务器发送地图信息，服务端缓存更新
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def UploadGidData(self, request, context):
-        """定时上报当辅助信息
+        """☆定时上报当辅助信息
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -567,7 +567,7 @@ class CGRpcServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def SelectCharacterData(self, request, context):
-        """查询游戏角色当前信息
+        """☆ 查询游戏角色当前信息
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -628,8 +628,8 @@ def add_CGRpcServiceServicer_to_server(servicer, server):
             ),
             'UploadCharcterServer': grpc.unary_unary_rpc_method_handler(
                     servicer.UploadCharcterServer,
-                    request_deserializer=CGData__pb2.SelectCharacterServerResponse.FromString,
-                    response_serializer=CGData__pb2.CGVoidData.SerializeToString,
+                    request_deserializer=CGData__pb2.UploadCharcterServerRequest.FromString,
+                    response_serializer=CGData__pb2.UploadCharcterServerResponse.SerializeToString,
             ),
             'Publish': grpc.unary_unary_rpc_method_handler(
                     servicer.Publish,
@@ -864,8 +864,8 @@ class CGRpcService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/CGData.CGRpcService/UploadCharcterServer',
-            CGData__pb2.SelectCharacterServerResponse.SerializeToString,
-            CGData__pb2.CGVoidData.FromString,
+            CGData__pb2.UploadCharcterServerRequest.SerializeToString,
+            CGData__pb2.UploadCharcterServerResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
