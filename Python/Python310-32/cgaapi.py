@@ -6,6 +6,7 @@ import os
 import logging
 import glob
 import math
+import random
 import functools
 from collections import namedtuple
 import asyncio
@@ -200,7 +201,9 @@ class CGAPI(CGAPython.CGA):
    g_game_port=0
    g_fz_Path=""
 
-   g_sio=None
+   g_socket=None
+
+
    g_config=None
 
    #电信服务器列表
@@ -3058,9 +3061,7 @@ class CGAPI(CGAPython.CGA):
 
       @self.sio.event
       def disconnect(sid):
-         print('disconnect ', sid,flush=True)
-
-      
+         print('disconnect ', sid,flush=True)      
       self.g_sockt=eventlet.listen(("127.0.0.1", 0))
       host, port =self.g_sockt.getsockname()
       #上报端口
@@ -3076,6 +3077,24 @@ class CGAPI(CGAPython.CGA):
          print("listen socket线程退出",flush=True)     
       t=threading.Thread(target=ServerListen)
       t.start()
+
+   def CreateMulticasSocket(self):
+      client_id = random.randint(1000, 2000)
+      # 创建UDP socket
+      s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+      # 允许端口复用
+      s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      # 绑定监听多播数据包的端口
+      s.bind((HOST, PORT))
+      # 声明该socket为多播类型
+      s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+      # 加入多播组，组地址由第三个参数制定
+      s.setsockopt(
+         socket.IPPROTO_IP,
+         socket.IP_ADD_MEMBERSHIP,
+         socket.inet_aton(DES_IP) + socket.inet_aton(HOST)
+      )
+      s.setblocking(False)
 
    def SetPlayerInfo(self,*args):
       if len(args)<=1:
