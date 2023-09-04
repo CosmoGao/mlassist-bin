@@ -174,10 +174,15 @@ function common.changeLineFollowLeader(leaderName,useTool)
 	if(curLine == 0)then
 		return
 	end
+	if leaderServerLine == nil then
+		日志("获取队长线路失败..")
+		return
+	end
 	if(leaderServerLine ~= curLine)then
+		日志("队长线路:"..leaderServerLine.." 当前线路："..curLine.." 不一致，登出切换线路")
 		切换登录信息("",0,leaderServerLine,0) --0默认 
 		登出服务器()	
-		登录游戏()	--如果有自动登录 这步不需要
+		登录游戏()	--如果有自动登录 这步不需要	
 	end
 end
 --队伍人数 队员名称表

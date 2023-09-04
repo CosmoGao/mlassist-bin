@@ -353,7 +353,7 @@ class CGAPI(CGAPython.CGA):
    def PetInfoPrint(self):
       pets=self.GetPetsInfo()
       for pet in pets:
-         self.chat_log("宠物位置%d : Lv%d  %s (%s)"%(pet.index,pet.level,pet.realname,pet.name))
+         self.log("宠物位置%d : Lv%d  %s (%s)"%(pet.index,pet.level,pet.realname,pet.name))
        
    #装备信息
    def GetPlayereEquipData(self):
@@ -367,27 +367,27 @@ class CGAPI(CGAPython.CGA):
    #信息打印
    def BaseInfoPrint(self):
       playerinfo =self.GetPlayerInfo()
-      self.chat_log("人物信息： Lv" + str(playerinfo.level)+"【 "+playerinfo.name+"】【 "+ playerinfo.job + " 】")
-      self.chat_log("生命： %d/%d (%.2f)"%(playerinfo.hp,playerinfo.maxhp,self.GetRatio(playerinfo.hp, playerinfo.maxhp)))
-      self.chat_log("魔法： %d/%d (%.2f)"%(playerinfo.mp,playerinfo.maxmp,self.GetRatio(playerinfo.mp, playerinfo.maxmp)))
-      self.chat_log("健康： " + str(playerinfo.health) + "  掉魂： " + str(playerinfo.souls))
-      self.chat_log("金钱： " + str(playerinfo.gold) + "  卡时： " + self.GetPunchClockStr(playerinfo.punchclock, playerinfo.usingpunchclock))
+      self.log("人物信息： Lv" + str(playerinfo.level)+"【 "+playerinfo.name+"】【 "+ playerinfo.job + " 】")
+      self.log("生命： %d/%d (%.2f)"%(playerinfo.hp,playerinfo.maxhp,self.GetRatio(playerinfo.hp, playerinfo.maxhp)))
+      self.log("魔法： %d/%d (%.2f)"%(playerinfo.mp,playerinfo.maxmp,self.GetRatio(playerinfo.mp, playerinfo.maxmp)))
+      self.log("健康： " + str(playerinfo.health) + "  掉魂： " + str(playerinfo.souls))
+      self.log("金钱： " + str(playerinfo.gold) + "  卡时： " + self.GetPunchClockStr(playerinfo.punchclock, playerinfo.usingpunchclock))
       #--装备信息
-      self.chat_log("装备信息： ")
+      self.log("装备信息： ")
       items = self.GetPlayereEquipData()
       for item in items:	
          nCur,nMax = self.ParseItemDurabilityEx(item.attr)	
-         self.chat_log("穿戴位置"+str(item.pos) + "： Lv" + str(item.level) + " " + item.name + "  (" + str(nCur) + "/" + str(nMax) + ")")
+         self.log("穿戴位置"+str(item.pos) + "： Lv" + str(item.level) + " " + item.name + "  (" + str(nCur) + "/" + str(nMax) + ")")
        
       
       # #--出战宠物
       petinfo = self.GetPetInfo(playerinfo.petid)
-      self.chat_log("出战宠物： Lv" + str(petinfo.level) + " " + petinfo.realname + "  (" + petinfo.name + ")")
-      self.chat_log("生命： %d/%d (%.2f)"%(petinfo.hp,petinfo.maxhp,self.GetRatio(petinfo.hp, petinfo.maxhp)))
-      self.chat_log("魔法： %d/%d (%.2f)"%(petinfo.mp,petinfo.maxmp,self.GetRatio(petinfo.mp, petinfo.maxmp)))  
-      self.chat_log("健康： " + str(petinfo.health))
+      self.log("出战宠物： Lv" + str(petinfo.level) + " " + petinfo.realname + "  (" + petinfo.name + ")")
+      self.log("生命： %d/%d (%.2f)"%(petinfo.hp,petinfo.maxhp,self.GetRatio(petinfo.hp, petinfo.maxhp)))
+      self.log("魔法： %d/%d (%.2f)"%(petinfo.mp,petinfo.maxmp,self.GetRatio(petinfo.mp, petinfo.maxmp)))  
+      self.log("健康： " + str(petinfo.health))
       #--宠物信息
-      self.chat_log("宠物信息： ")
+      self.log("宠物信息： ")
       self.PetInfoPrint()
    #统计练级信息
    def Statistics(self,beginTime,oldXp,oldPetXp,oldGold):   
@@ -401,7 +401,7 @@ class CGAPI(CGAPython.CGA):
       nowXp = playerinfo.xp
       nowMaxXp = playerinfo.maxxp
       if(nowLevel==0 or nowXp == 0 or nowMaxXp==0):
-         self.chat_log("获取人物信息错误，统计失败")
+         self.log("获取人物信息错误，统计失败")
          return      
       getXp = math.floor((nowXp - oldXp)/10000)
       avgXp = math.floor(60 * getXp/sTime)
@@ -587,6 +587,7 @@ class CGAPI(CGAPython.CGA):
    #获取宠物信息
    def GetBattlePetData(self,sType,*args):
       pet=self.GetBattlePet()      
+      #print(sType,pet,flush=True)
       match(sType):
          case("名称"):return pet.name if pet != None else ""
          case("name"):return pet.name if pet != None else ""
@@ -600,7 +601,7 @@ class CGAPI(CGAPython.CGA):
          case("maxhp"):return pet.maxhp if pet != None else -1
          case("最大魔"):return pet.maxmp if pet != None else -1
          case("maxmp"):return pet.maxhp if pet != None else -1
-         case("健康"):return pet.health if pet != None else -1
+         case('健康'):return pet.health if pet != None else -1
          case("health"):return pet.health if pet != None else -1
          case("经验"):return pet.exp if pet != None else -1
          case("最大经验"):return pet.maxexp if pet != None else -1
@@ -776,14 +777,23 @@ class CGAPI(CGAPython.CGA):
             if self.IsInNormalState() and curMapIndex == name:
                return True		
             time.sleep(1)
-      elif type(name) == str:         
-         for i in range(timeout):
-            if self.g_stop:
-               return False
-            curMapName = self.GetMapName()         
-            if self.IsInNormalState() and curMapName == name:
-               return True		
-            time.sleep(1)
+      elif type(name) == str:  
+         if name.isdigit():
+            for i in range(timeout):
+               if self.g_stop:
+                  return False  
+               curMapIndex = self.GetMapNumber()
+               if self.IsInNormalState() and curMapIndex == name:
+                  return True		
+               time.sleep(1)
+         else:
+            for i in range(timeout):
+               if self.g_stop:
+                  return False
+               curMapName = self.GetMapName()         
+               if self.IsInNormalState() and curMapName == name:
+                  return True		
+               time.sleep(1)
       return False
 
 
@@ -1696,7 +1706,7 @@ class CGAPI(CGAPython.CGA):
          return True
       return False
    #人物治疗
-   def HealPlayer(self,doctorName):
+   def HealPlayer(self,doctorName=None):
       charInfo = self.GetPlayerInfo()
       if charInfo.health == 0 :
          return	
@@ -1774,7 +1784,7 @@ class CGAPI(CGAPython.CGA):
          tryNum = tryNum+1
 
    #检查健康状态 招魂-治疗
-   def CheckHealth(self,doctorName):     
+   def CheckHealth(self,doctorName=None):     
       petinfo = self.GetBattlePet()
       charInfo = self.GetPlayerInfo()
       if( charInfo.health > 0 or charInfo.souls > 0 or (petinfo and petinfo.health > 0)):
@@ -2593,23 +2603,23 @@ class CGAPI(CGAPython.CGA):
             bNeedMP = self.NeedMPSupply(playerinfo)
             #如果身上金钱<加魔钱 只加血
             if (bNeedHP and (not bNeedMP and playerinfo.gold < playerinfo.maxmp - playerinfo.mp)):            
-               self.ClickNPCDialog(0, 2, result)
+               result = self.ClickNPCDialog(0, 2)
                return True            
             elif (bNeedMP and playerinfo.gold >= playerinfo.maxmp - playerinfo.mp):# //加魔钱够 回复魔和血
-               self.ClickNPCDialog(0, 0, result)
+               result = self.ClickNPCDialog(0, 0)
                return True
             #人物不需要回复 则回复宠物
             petsinfo = self.GetPetsInfo()
             if (not result and petsinfo):
                if (self.NeedPetSupply(petsinfo)):# //回复宠物            
-                  self.ClickNPCDialog(0, 4, result)
+                  result = self.ClickNPCDialog(0, 4)
                   return True
       elif (dlg and dlg.type == 0):      
          if (dlg.options == 12): #//是   
-            self.ClickNPCDialog(4, -1, result)# //4 是 8否 32下一步 1确定
+            result = self.ClickNPCDialog(4, -1)# //4 是 8否 32下一步 1确定
             return True        
          if (dlg.options == 1):# //确定
-            self.ClickNPCDialog(1, -1, result)
+            result = self.ClickNPCDialog(1, -1)
             return True             
       return False
    def WaitSupplyFini(self,timeout):
@@ -2877,7 +2887,7 @@ class CGAPI(CGAPython.CGA):
       nCount=0
       if type(itemName) == str:
          for iteminfo in itemsInfo:
-            if (iteminfo.pos > 7 and iteminfo.name == itemName.toStdString() ):
+            if (iteminfo.pos > 7 and iteminfo.name == itemName ):
                nCount += 1
       else:
          for iteminfo in itemsInfo:
@@ -2889,7 +2899,7 @@ class CGAPI(CGAPython.CGA):
       itemsInfo = self.GetBankItemsInfo()
       nCount=0     
       for iteminfo in itemsInfo:
-         if ( iteminfo.name == itemName.toStdString()):
+         if ( iteminfo.name == itemName):
             nCount += 1      
       return nCount
    
@@ -3129,6 +3139,16 @@ class CGAPI(CGAPython.CGA):
 #返回单例对象
 cg = CGAPI()
 人物 = cg.GetCharacterData
+宠物 = cg.GetBattlePetData
+# def 宠物(*args):
+#    if len(args)<1:
+#       return 0
+#    return cg.GetBattlePetData(args[0],args)
+#    return
+#    if len(args) == 1:
+#       cg.Renew(args[0])
+#    elif len(args)>=2:
+#       cg.RenewEx(args[0],args[1])
 日志 = cg.chat_log
 取当前地图编号 = cg.GetMapNumber
 取当前地图名 = cg.GetMapName
@@ -3137,7 +3157,15 @@ def 等待(nTime):
    time.sleep(nTime*0.001)
 回城 = cg.LogBack
 转向 = cg.TurnAbout
-对话选择 = cg.ClickNPCDialog
+def 对话选择(*args):
+   tArgs=[]
+   for i in range(len(args)):
+      if args[i] == "":
+         tArgs.append(0)
+      else:
+         tArgs.append(int(args[i]))
+   
+   cg.ClickNPCDialog(tArgs[0],tArgs[1])
 #对话选是 = cg.TalkNpcPosSelectYes
 def 对话选是(*args):
    if len(args) == 1:
@@ -3178,11 +3206,7 @@ def 回复(*args):
 取队伍人数=cg.GetTeammatesCount
 加入队伍=cg.AddTeammate
 离开队伍=cg.LeaveTeammate
-def 宠物(*args):
-   if len(args) == 1:
-      cg.Renew(args[0])
-   elif len(args)>=2:
-      cg.RenewEx(args[0],args[1])
+
 创建服务=cg.CreateServer
 启动服务=cg.StartServer
 信息打印=cg.BaseInfoPrint
