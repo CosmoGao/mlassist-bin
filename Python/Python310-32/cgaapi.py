@@ -22,6 +22,7 @@ import eventlet
 import asyncio
 from configparser import ConfigParser 
 from AStar import *
+import socket
 
 #封装元组，便于访问
 CGPoint = namedtuple("CGPoint","x,y")
@@ -781,12 +782,14 @@ class CGAPI(CGAPython.CGA):
                return True		
             time.sleep(1)
       elif type(name) == str:  
+         #print(name,"is str",flush=True)
          if name.isdigit():
+            #print(name,"is isdigit",flush=True)
             for i in range(timeout):
                if self.g_stop:
                   return False  
                curMapIndex = self.GetMapNumber()
-               if self.IsInNormalState() and curMapIndex == name:
+               if self.IsInNormalState() and curMapIndex == int(name):
                   return True		
                time.sleep(1)
          else:
@@ -3062,8 +3065,8 @@ class CGAPI(CGAPython.CGA):
       @self.sio.event
       def disconnect(sid):
          print('disconnect ', sid,flush=True)      
-      self.g_sockt=eventlet.listen(("127.0.0.1", 0))
-      host, port =self.g_sockt.getsockname()
+      self.g_socket=eventlet.listen(("127.0.0.1", 0))
+      host, port =self.g_socket.getsockname()
       #上报端口
       self.init_grpc()
       if self.g_stub:#暂时ip用回环
@@ -3072,29 +3075,51 @@ class CGAPI(CGAPython.CGA):
       
    def StartServer(self):
       def ServerListen(): 
-         print("listen socket ",self.g_sockt,flush=True)
-         eventlet.wsgi.server(self.g_sockt, self.app)
+         print("listen socket ",self.g_socket,flush=True)
+         eventlet.wsgi.server(self.g_socket, self.app)
          print("listen socket线程退出",flush=True)     
       t=threading.Thread(target=ServerListen)
       t.start()
 
-   def CreateMulticasSocket(self):
+   def CreateMulticastSocket(self,tgtHost,tgtPort,multicastGroupIp):
       client_id = random.randint(1000, 2000)
       # 创建UDP socket
-      s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+      self.g_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
       # 允许端口复用
-      s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      self.g_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
       # 绑定监听多播数据包的端口
-      s.bind((HOST, PORT))
+      self.g_socket .bind((tgtHost, tgtPort))
       # 声明该socket为多播类型
-      s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
+      self.g_socket.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 255)
       # 加入多播组，组地址由第三个参数制定
-      s.setsockopt(
+      self.g_socket.setsockopt(
          socket.IPPROTO_IP,
          socket.IP_ADD_MEMBERSHIP,
-         socket.inet_aton(DES_IP) + socket.inet_aton(HOST)
+         socket.inet_aton(multicastGroupIp) + socket.inet_aton(tgtHost)
       )
-      s.setblocking(False)
+      self.g_multicastIp=multicastGroupIp
+      self.g_multicastPort=tgtPort
+      self.g_socket.setblocking(False)
+   
+   #发送数据到组播
+   def SendToMulticastGroup(self,msg):
+      if self.g_socket == None:
+         self.debug_log("组播socket为空，请先CreateMulticastSocket")
+         return
+      if type(msg) == str:
+         self.g_socket.sendto(msg.encode(), (self.g_multicastIp, self.g_multicastPort))
+      elif type(msg) == dict:
+         transMsg = json.dumps(msg)
+         self.g_socket.sendto(transMsg.encode(), (self.g_multicastIp, self.g_multicastPort))
+
+   #接收组播数据
+   def RecvFromMulticastGroup(self):
+      if self.g_socket == None:
+         self.debug_log("组播socket为空，请先CreateMulticastSocket")
+         return
+      data, address = self.g_socket.recvfrom()
+      data = data.decode()
+      return data  #外层自己去翻译
 
    def SetPlayerInfo(self,*args):
       if len(args)<=1:
