@@ -241,14 +241,14 @@ class CGAPI(CGAPython.CGA):
    #构造函数
    def __init__(self):
       super().__init__()
-      self.log=print#logging.info
+      self.log=logging.info
       self.init_data()
       #self.debug_init_data(4397)      #如果要自己调试 打开这行代码 屏蔽上一行代码，把游戏端口号填入括号即可调试
 
    #打印日志
    def debug_log(self,txt):
       if(self.g_debug_log):
-         print(txt)#logging.info(txt)
+         print(txt,flush=True)#logging.info(txt)
 
    #初始化数据-指定调试端口
    def debug_init_data(self,port):
@@ -264,6 +264,7 @@ class CGAPI(CGAPython.CGA):
       print(len(sys.argv))
       print(sys.argv[0])
       if len(sys.argv) <= 1:
+         #self.log("参数错误！",flush=True)
          self.log("参数错误！")
          sys.exit()
       if(self.Connect(int(sys.argv[1]))==False):       #argv第一个程序路径 第二个参数是游戏端口
@@ -328,7 +329,7 @@ class CGAPI(CGAPython.CGA):
 
    #日志+喊话
    def chat_log(self,log,v1=2,v2=3,v3=5):      
-      self.log(log) 
+      self.log(log,flush=True) 
       self.chat(log,v1,v2,v3)
    #获取打卡时长
    def GetPunchClockStr(self,a, b):
@@ -1566,24 +1567,47 @@ class CGAPI(CGAPython.CGA):
          self.WaitForMapEx("法兰城", 162, 130)	     
       return
 
-   #开始遇敌
-   def begin_auto_action(self):
+   #开始遇敌 参数1：遇敌方向0-7  参数2：是否可见
+   def begin_auto_action(self,nDir=0,bVisible=False):
       self.debug_log("开始遇敌")
+      self.m_bIsShowAutoEncounterEnemy=bVisible#是否可见
       self.m_bAutoEncounterEnemy=True
+      self.m_nAutoEncounterDir=nDir
       t=threading.Thread(target=self.AutoEncounterEnemyThread)
       t.start()
 
+   #自动遇敌线程
    def AutoEncounterEnemyThread(self):
+      self.debug_log("开始自动遇敌线程")
       bMoveNext=False
       startPoint = self.GetMapCoordinate()
       preMapName = self.GetMapName()
       nDir = self.m_nAutoEncounterDir
       targetPos = self.GetDirectionPos(nDir, 1)
+      recordTime = time.perf_counter()
       while self.m_bAutoEncounterEnemy:
+         if (time.perf_counter() - recordTime) > 5:
+            recordTime=time.perf_counter()
+            if preMapName != self.GetMapName():
+               self.debug_log("地图变更，遇敌结束")
+               break
          if (bMoveNext):
-            self.ForceMoveTo(targetPos.x(), targetPos.y(), self.m_bIsShowAutoEncounterEnemy)
+            self.ForceMoveTo(targetPos.x, targetPos.y, self.m_bIsShowAutoEncounterEnemy)
          else:
-            self.ForceMoveTo(startPoint.x(), startPoint.y(), self.m_bIsShowAutoEncounterEnemy)
+            self.ForceMoveTo(startPoint.x, startPoint.y, self.m_bIsShowAutoEncounterEnemy)
+         bMoveNext=not bMoveNext
+         time.sleep(0.02)   #间隔
+      curPoint = self.GetMapCoordinate()
+      if (curPoint.x == startPoint.x and curPoint.y == startPoint.y):
+         self.debug_log("结束自动遇敌 起点一致 返回")
+         return
+      else: #回到原点
+         if (self.IsInNormalState()):
+            if (self.m_bIsShowAutoEncounterEnemy):
+               self.WalkTo(startPoint.x, startPoint.y())
+            else:
+               self.ForceMoveTo(startPoint.x, startPoint.y, False)	
+      self.debug_log("结束自动遇敌线程")
       
    def end_auto_action(self):
       self.debug_log("停止遇敌")
@@ -3082,7 +3106,7 @@ class CGAPI(CGAPython.CGA):
       t.start()
 
    def CreateMulticastSocket(self,tgtHost,tgtPort,multicastGroupIp):
-      client_id = random.randint(1000, 2000)
+      self.g_client_id = random.randint(1000, 1000000)
       # 创建UDP socket
       self.g_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
       # 允许端口复用
@@ -3117,9 +3141,12 @@ class CGAPI(CGAPython.CGA):
       if self.g_socket == None:
          self.debug_log("组播socket为空，请先CreateMulticastSocket")
          return
-      data, address = self.g_socket.recvfrom()
-      data = data.decode()
-      return data  #外层自己去翻译
+      try:
+         data, address = self.g_socket.recvfrom(2048)     
+         data = data.decode()
+         return data  #外层自己去翻译
+      except Exception as e:
+         return None
 
    def SetPlayerInfo(self,*args):
       if len(args)<=1:
@@ -3285,3 +3312,6 @@ def 队伍(*args):
 使用物品=cg.UseItem
 全部宠物信息=cg.GetPetsInfo
 设置个人简介=cg.SetPlayerInfo
+创建组播服务=cg.CreateMulticastSocket
+发送信息到组播=cg.SendToMulticastGroup
+从组播接收信息=cg.RecvFromMulticastGroup
