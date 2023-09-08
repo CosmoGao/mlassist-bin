@@ -32,7 +32,7 @@ CGRect = namedtuple("CGRect","x,y,width,height")
 #日志格式
 LOG_FORMAT = "%(asctime)s %(message)s"
 #配置日志
-logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
 
 #单例模式类
 def singleton(cls):
@@ -241,14 +241,15 @@ class CGAPI(CGAPython.CGA):
    #构造函数
    def __init__(self):
       super().__init__()
-      self.log=logging.info
+      self.log=logging.debug
       self.init_data()
       #self.debug_init_data(4397)      #如果要自己调试 打开这行代码 屏蔽上一行代码，把游戏端口号填入括号即可调试
 
    #打印日志
    def debug_log(self,txt):
       if(self.g_debug_log):
-         print(txt,flush=True)#logging.info(txt)
+         #print(txt,flush=True)#
+         logging.debug(txt)        
 
    #初始化数据-指定调试端口
    def debug_init_data(self,port):
@@ -329,7 +330,8 @@ class CGAPI(CGAPython.CGA):
 
    #日志+喊话
    def chat_log(self,log,v1=2,v2=3,v3=5):      
-      self.log(log,flush=True) 
+      #self.log(log,flush=True) 
+      self.log(log)      
       self.chat(log,v1,v2,v3)
    #获取打卡时长
    def GetPunchClockStr(self,a, b):
@@ -1400,9 +1402,9 @@ class CGAPI(CGAPython.CGA):
    def IsNearTarget(self,x,y,dis=1):
       curPos = self.GetMapCoordinate()
       if(abs(curPos.x) - x ) <= dis and (abs(curPos.y)-y) <= dis:
-         self.debug_log("目标附近")
+         #self.debug_log("目标附近")
          return True
-      self.debug_log("不在目标附近")
+      #self.debug_log("不在目标附近")
       return False
 
    def IsNearTargetEx(selx,srcx, srcy,tgtx, tgty, dis=1):
@@ -1567,18 +1569,22 @@ class CGAPI(CGAPython.CGA):
          self.WaitForMapEx("法兰城", 162, 130)	     
       return
 
-   #开始遇敌 参数1：遇敌方向0-7  参数2：是否可见
-   def begin_auto_action(self,nDir=0,bVisible=False):
+   #开始遇敌 
+   #参数1：遇敌方向0-7  
+   #参数2：遇敌间隔毫秒，不要太小，太小即使遇敌快，也会卡战斗
+   #参数3：是否可见
+   def begin_auto_action(self,nDir=0,encounterInterval=50,bVisible=False):
       self.debug_log("开始遇敌")
       self.m_bIsShowAutoEncounterEnemy=bVisible#是否可见
       self.m_bAutoEncounterEnemy=True
       self.m_nAutoEncounterDir=nDir
+      self.m_nEncounterInterval=encounterInterval/1000
       t=threading.Thread(target=self.AutoEncounterEnemyThread)
       t.start()
 
    #自动遇敌线程
    def AutoEncounterEnemyThread(self):
-      self.debug_log("开始自动遇敌线程")
+      self.debug_log("开始自动遇敌线程,间隔："+str(self.m_nEncounterInterval))
       bMoveNext=False
       startPoint = self.GetMapCoordinate()
       preMapName = self.GetMapName()
@@ -1595,8 +1601,10 @@ class CGAPI(CGAPython.CGA):
             self.ForceMoveTo(targetPos.x, targetPos.y, self.m_bIsShowAutoEncounterEnemy)
          else:
             self.ForceMoveTo(startPoint.x, startPoint.y, self.m_bIsShowAutoEncounterEnemy)
+         if not self.IsInNormalState():
+            self.WaitInNormalState()
          bMoveNext=not bMoveNext
-         time.sleep(0.02)   #间隔
+         time.sleep(self.m_nEncounterInterval)   #间隔
       curPoint = self.GetMapCoordinate()
       if (curPoint.x == startPoint.x and curPoint.y == startPoint.y):
          self.debug_log("结束自动遇敌 起点一致 返回")
@@ -3221,6 +3229,14 @@ cg = CGAPI()
 #    elif len(args)>=2:
 #       cg.RenewEx(args[0],args[1])
 日志 = cg.chat_log
+def 日志(*args):
+   if len(args)>=2:
+      if args[1] == 1:
+         cg.chat_log(args[0])
+      else:
+         cg.log(args[0])
+   else:
+      cg.log(args[0])
 取当前地图编号 = cg.GetMapNumber
 取当前地图名 = cg.GetMapName
 取当前坐标 = cg.GetMapCoordinate
