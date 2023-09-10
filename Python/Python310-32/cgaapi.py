@@ -4,6 +4,7 @@ import time
 import sys
 import os
 import logging
+import logging.handlers
 import glob
 import math
 import random
@@ -32,7 +33,7 @@ CGRect = namedtuple("CGRect","x,y,width,height")
 #日志格式
 LOG_FORMAT = "%(asctime)s %(message)s"
 #配置日志
-logging.basicConfig(level=logging.INFO, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
+#logging.basicConfig(level=logging.INFO, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
 
 #单例模式类
 def singleton(cls):
@@ -107,6 +108,24 @@ class GameItem:
       self.isDropInterval = False#是否扔区间
       self.dropMinCode = 0		#扔区间最小值			
       self.dropMaxCode = 0		#扔区间最大值
+class GamePet(GameInfo):
+   def __init__(self) -> None:         
+      self.index=""
+      self.index = -1 
+      self.flags = 0
+      self.battle_flags = 0
+      self.loyality = 0			 
+      self.default_battle = False 
+      #GameSkillList skills		 
+      self.detail=None#=CGAPython.cga_playerpet_detail_info_t
+      self.exist = False			 
+      self.state = 0
+      self.grade = -1 
+      self.lossMinGrade = -1
+      self.lossMaxGrade = -1
+      self.bCalcGrade = True 
+      self.race = 0			
+      self.skillslots = 0 
 
 #同步等待信息的类，队列实现
 class AsyncWaitNotify:
@@ -167,6 +186,7 @@ MOVE_DIRECTION_NorthWest = 7 #MOVE_DIRECTION_WestUP			西北
 @singleton
 class CGAPI(CGAPython.CGA):   
    
+   g_version="2023.9.10.1.1"
    #是否停止-寻路、技能、遇敌等等
    g_stop=False
       
@@ -241,45 +261,43 @@ class CGAPI(CGAPython.CGA):
    #构造函数
    def __init__(self):
       super().__init__()
-      self.log=logging.debug
+      self.log=logging.info
       self.init_data()
       #self.debug_init_data(4397)      #如果要自己调试 打开这行代码 屏蔽上一行代码，把游戏端口号填入括号即可调试
 
    #打印日志
-   def debug_log(self,txt):
-      if(self.g_debug_log):
-         #print(txt,flush=True)#
-         logging.debug(txt)        
+   def debug_log(self,txt):   
+      logging.debug(txt)        
 
    #初始化数据-指定调试端口
    def debug_init_data(self,port):
-      print(len(sys.argv))
-      print(sys.argv[0])      
+      #self.debug_log(len(sys.argv))
+      #self.debug_log(sys.argv[0])      
       if(self.Connect(int(port))==False):       #argv第一个程序路径 第二个参数是游戏端口
-         print('无法连接到本地服务端口，可能未附加到游戏或者游戏已经闪退！')
+         self.log('无法连接到本地服务端口，可能未附加到游戏或者游戏已经闪退！')
          sys.exit() 
       self.registerCallBackFuns()
 
    #初始化数据
    def init_data(self):     
-      print(len(sys.argv))
-      print(sys.argv[0])
+      #self.debug_log(len(sys.argv))
+      #self.debug_log(sys.argv[0])
       if len(sys.argv) <= 1:
          #self.log("参数错误！",flush=True)
-         self.log("参数错误！")
+         self.debug_log("参数错误！")
          sys.exit()
       if(self.Connect(int(sys.argv[1]))==False):       #argv第一个程序路径 第二个参数是游戏端口
-         print('无法连接到本地服务端口，可能未附加到游戏或者游戏已经闪退！')
+         self.debug_log('无法连接到本地服务端口，可能未附加到游戏或者游戏已经闪退！')
          sys.exit() 
-      self.debug_log(sys.argv[0])
-      self.debug_log(sys.argv[1])
-      self.debug_log(os.getenv("CGA_DIR_PATH"))
+      # self.debug_log(sys.argv[0])
+      # self.debug_log(sys.argv[1])
+      # self.debug_log(os.getenv("CGA_DIR_PATH"))
       self.g_gui_port = os.getenv("CGA_GUI_PORT")
       self.g_game_port = os.getenv("CGA_GAME_PORT")
       self.g_fz_Path = os.getenv("CGA_DIR_PATH")
-      self.debug_log("CGA_GUI_PORT:" + self.g_gui_port )
-      self.debug_log("CGA_GAME_PORT:" + self.g_game_port )
-      self.debug_log("CGA_GAME_PORT:" + self.g_fz_Path )
+      # self.debug_log("CGA_GUI_PORT:" + self.g_gui_port )
+      # self.debug_log("CGA_GAME_PORT:" + self.g_game_port )
+      # self.debug_log("CGA_DIR_PATH:" + self.g_fz_Path )
       pythonScriptPath = self.g_fz_Path + "/Python脚本/"
       pythonScriptFiles = glob.glob(pythonScriptPath+"/官方脚本/*")
       sys.path.append(pythonScriptPath+'./common/') 
@@ -287,9 +305,55 @@ class CGAPI(CGAPython.CGA):
       self.g_config = ConfigParser()  # 需要实例化一个ConfigParser对象
       self.g_config.read(self.g_fz_Path+'/config.ini',"utf-8")   
       for tFile in pythonScriptFiles:
-         self.debug_log(tFile)
+         #self.debug_log(tFile)
          sys.path.append(tFile)
+      petDatas = self.g_config.items("PETS")
+      #print(petDatas,flush=True)
+      initPetCalcDatas=[]
+      for petInfo in petDatas:
+         initPetCalcDatas.append(petInfo[1])
+      #print(initPetCalcDatas,flush=True)
+      self.InitCaclPetData(initPetCalcDatas)      
       self.registerCallBackFuns()
+
+   def init_log(self):
+      #配置日志
+      sLogState = self.g_config["Log"]["open"]
+      if sLogState.find(";") != -1:
+         sLogState = sLogState[0:sLogState.find(";")]
+         sLogState=sLogState.strip()
+      #print(f"日志开关：{sLogState}",flush=True)
+      if sLogState == "true" or sLogState == "1":
+         logPath=self.g_fz_Path+f"//log//{self.GetPlayerInfo().name}.log"
+         #print(logPath,flush=True)  
+
+         #logging.basicConfig(filemode="a",filename=".",level=logging.DEBUG, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S',force=True)
+         #logging.basicConfig(filemode="a",filename=logPath,level=logging.INFO, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
+         #写文件 最大10M 最多5个 循环写
+         #logging.getLogger("").removeHandler
+         tmpHandles = []
+         self.g_fileHandler = logging.handlers.RotatingFileHandler(filename=logPath, maxBytes=10*1024*1024, backupCount=5)
+         handlerFormatter = logging.Formatter('%(asctime)s %(message)s')
+         self.g_fileHandler.setFormatter(handlerFormatter)        
+         self.g_fileHandler.setLevel(logging.DEBUG)
+         logging.getLogger("").addHandler(self.g_fileHandler)    
+         tmpHandles.append(self.g_fileHandler)
+
+         #控制台 辅助会读取此信息 这里日期只到秒就够 上面的写文件到毫秒
+         self.g_consoleHandler = logging.StreamHandler()
+         self.g_consoleHandler.setLevel(logging.INFO)
+         consoleFormatter = logging.Formatter('%(asctime)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
+         self.g_consoleHandler.setFormatter(consoleFormatter)
+         logging.getLogger("").addHandler(self.g_consoleHandler)   
+         tmpHandles.append(self.g_consoleHandler) 
+         logging.basicConfig(handlers=tmpHandles,level=logging.DEBUG, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S',force=True)
+         self.g_fileHandler.setLevel(logging.DEBUG)
+         self.g_consoleHandler.setLevel(logging.INFO)
+
+      else:
+         #logging.basicConfig(level=logging.INFO, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S',force=True)
+         logging.basicConfig(level=logging.INFO, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
+      self.debug_log(f"****************Api version:{self.g_version}**************")
 
    def init_grpc(self):
       sToolIp = self.g_config["server"]["ip"]
@@ -594,7 +658,7 @@ class CGAPI(CGAPython.CGA):
    #获取宠物信息
    def GetBattlePetData(self,sType,*args):
       pet=self.GetBattlePet()      
-      #print(sType,pet,flush=True)
+      self.debug_log(f"获取宠物信息:{sType}宠物{pet}")
       match(sType):
          case("名称"):return pet.name if pet != None else ""
          case("name"):return pet.name if pet != None else ""
@@ -1005,6 +1069,9 @@ class CGAPI(CGAPython.CGA):
          return 0
       self.g_navigatorLoopCount=0      
       #如果是组队状态 并且不是队长 则退出
+      if self.GetTeammatesCount() > 0 and not self.IsTeamLeader():
+         self.debug_log("AutoMoveTo 队伍人数>0 或者 自己不是队长")
+         return 0
       return self.AutoMoveInternal(x, y, timeout)
 
    def AutoMoveToEx(self,x,y,mapName=None,timeout=100):
@@ -1020,21 +1087,22 @@ class CGAPI(CGAPython.CGA):
                if (len(mapName) > 0):
                   if (self.IsInNormalState() and (curMapName == mapName or (mapName.isdigit() and curMapNum == int(mapName)))):              
                      #到达目标地 返回1  否则尝试3次后返回0
+                     self.debug_log("目的地到达，返回1")
                      return 1                  
                tryNum=tryNum+1
-            self.log("尝试3次后，到达目标地图失败%s %d %d "%(mapName,x,y))
+            self.debug_log("尝试3次后，到达目标地图失败%s %d %d "%(mapName,x,y))
          elif type(mapName)==int:
             while tryNum < 3:
                self.AutoMoveTo(x,y,timeout)
                curMapName = self.GetMapName()
                curMapNum = self.GetMapNumber()
-               if (len(mapName) > 0):
+               if (mapName > 0):
                   if (self.IsInNormalState() and  curMapNum == int(mapName)):              
                      #到达目标地 返回1  否则尝试3次后返回0
                      return 1
                   
                tryNum=tryNum+1
-            self.log("尝试3次后，到达目标地图失败%s %d %d "%(mapName,x,y))
+            self.debug_log("尝试3次后，到达目标地图失败%s %d %d "%(mapName,x,y))
       return 0
    
 
@@ -1114,7 +1182,7 @@ class CGAPI(CGAPython.CGA):
                   #//重新执行一次重新寻路
                      self.debug_log( "还在原图：重新查找路径 进行寻路")
                      tgtPos = backPath.end()
-                     return self.AutoMoveInternal(tgtPos.x, tgtPos.y, False)
+                     return self.AutoMoveInternal(tgtPos.x, tgtPos.y,100, False)
                   else:				
                      self.debug_log("地图更改，寻路结束！")
                      if (self.IsInRandomMap()):
@@ -1128,16 +1196,17 @@ class CGAPI(CGAPython.CGA):
                      curPos = self.GetMapCoordinate()
                      findPath = self.CalculatePath(curPos.x, curPos.y, tarX, tarY)
                      if len(findPath) > 0 and isLoop:
-                           self.AutoNavigator(findPath, isSyncMap, False)
+                        self.AutoNavigator(findPath, isSyncMap, False)
                      else:
-                           self.debug_log("战斗/切图等待，再次寻路失败！%d %d" % (tarX,tarY))
+                        self.debug_log("战斗/切图等待，再次寻路失败！%d %d" % (tarX,tarY))
                   else:
                      if not self.IsReachableTarget(walkprePos.x, walkprePos.y):#用移动前点判断 不能到 说明换图成功，特别是ud这个图
-                           self.debug_log( "原坐标不可达，移动至目标点成功，寻路结束！")
-                           self.WaitInNormalState()
-                           return True
+                        self.debug_log( "原坐标不可达，移动至目标点成功，寻路结束！")
+                        self.WaitInNormalState()
+                        return True
                      else:
-                           self.WalkTo(tarX,tarY)
+                        self.debug_log(f"战斗/切图等待，再次寻路!WalkTo {tarX},{tarY}")
+                        self.WalkTo(tarX,tarY)
 
                   dwLastTime = 0
                   isNormal = True
@@ -1149,7 +1218,7 @@ class CGAPI(CGAPython.CGA):
                      tryNum=0
                      fixWarpTime = time.time()
                      while tryNum < 3:
-                           if time.time() - fixWarpTime > 5000:
+                           if time.time() - fixWarpTime > 5:
                               while (self.GetGameStatus() == 202):
                                  if lastWarpMap202==0:
                                        lastWarpMap202=lastWarpMap202+1
@@ -1185,10 +1254,10 @@ class CGAPI(CGAPython.CGA):
                                        bTryRet= False
                                        if curPos.x == tarX and curPos.y==tarY:
                                           tmpPos=self.GetRandomSpace(curPos.x,curPos.y,1)
-                                          self.AutoMoveInternal(tmpPos.x,tmpPos.y,False)
-                                          bTryRet = self.AutoMoveInternal(tarX, tarY, False)
+                                          self.AutoMoveInternal(tmpPos.x,tmpPos.y,100, False)
+                                          bTryRet = self.AutoMoveInternal(tarX, tarY,100,  False)
                                        else:
-                                          bTryRet = self.AutoMoveInternal(tarX, tarY, False)
+                                          bTryRet = self.AutoMoveInternal(tarX, tarY,100,  False)
                                        return bTryRet
                               tryNum=tryNum+1
                            else:
@@ -1215,21 +1284,27 @@ class CGAPI(CGAPython.CGA):
                #//4、判断玩家有没有自己点击坐标移动 有的话 等游戏人物不动时，重新执行最后一次移动
                dwCurTime=time.time()
                if lastX == curPos.x and lastY == curPos.y:
-                  if dwLastTime == 0:
+                  #self.debug_log(f"坐标未变，判断时间{dwLastTime},{dwCurTime}")
+                  if dwLastTime == 0:                     
                      dwLastTime= dwCurTime
+                     #self.debug_log(f"坐标未变，第一次进入，记录时间{dwLastTime},{dwCurTime}")
                   else:
-                     if dwLastTime - dwCurTime > 10:
+                     if dwCurTime -dwLastTime   > 10:
                            dwTimeoutTryCount=dwTimeoutTryCount+1
                            if dwTimeoutTryCount>=3:
+                              self.debug_log(f"短坐标自动寻路次数超3次，返回！{tarX},{tarY}")
                               return False
                            dwLastTime= dwCurTime
+                           self.debug_log(f"卡墙，短坐标自动寻路！{tarX},{tarY}")
                            self.WaitInNormalState()
                            curPos = self.GetMapCoordinate()
                            findPath = self.CalculatePath(curPos.x, curPos.y, tarX, tarY)
                            if len(findPath) == 1 or  not isLoop:
+                              self.debug_log(f"卡墙：WalkTo{tarX},{tarY}")
                               self.WalkTo(tarX,tarY)
                            elif len(findPath) > 1 and isLoop:
-                              if self.AutoMoveInternal(tarX,tarY,False) == False:
+                              self.debug_log(f"卡墙：AutoMoveInternal{tarX},{tarY}")
+                              if self.AutoMoveInternal(tarX,tarY,100, False) == False:
                                  return False
                               dwLastTime=dwCurTime                            
                            else:
@@ -1271,7 +1346,8 @@ class CGAPI(CGAPython.CGA):
       self.debug_log("起点:x:%d,y:%d 终点:x:%d,y:%d" % (frompos.x, frompos.y, topos.x, topos.y))
       path = aStarFindPath.FindPath(frompos.x, frompos.y, topos.x, topos.y, grid)  
       #return path 
-      findPath = AStarUtil.compressPath(path)		   
+      findPath = AStarUtil.compressPath(path)	
+      self.debug_log("计算路径Fini")	   
       return findPath
 
 
@@ -1401,7 +1477,8 @@ class CGAPI(CGAPython.CGA):
    #是否目标坐标附近
    def IsNearTarget(self,x,y,dis=1):
       curPos = self.GetMapCoordinate()
-      if(abs(curPos.x) - x ) <= dis and (abs(curPos.y)-y) <= dis:
+      #self.debug_log(f"当前坐标:{curPos.x},{curPos.y} 目标坐标:{x},{y}")
+      if abs(curPos.x - x ) <= dis and abs(curPos.y-y) <= dis:
          #self.debug_log("目标附近")
          return True
       #self.debug_log("不在目标附近")
@@ -1621,6 +1698,56 @@ class CGAPI(CGAPython.CGA):
       self.debug_log("停止遇敌")
       self.m_bAutoEncounterEnemy=False
 
+   def GetPetCalcBpData(self,pet):
+      petData=[]
+      if pet!=None:
+         petData.append(str(pet.realname))
+         petData.append(str(pet.maxhp))
+         petData.append(str(pet.maxmp))
+         petData.append(str(pet.detail.value_attack))
+         petData.append(str(pet.detail.value_defensive))
+         petData.append(str(pet.detail.value_agility))
+         petData.append(str(pet.detail.value_spirit))
+         petData.append(str(pet.detail.value_recovery))
+         petData.append(str(pet.detail.points_endurance))
+         petData.append(str(pet.detail.points_strength))
+         petData.append(str(pet.detail.points_defense))
+         petData.append(str(pet.detail.points_agility))
+         petData.append(str(pet.detail.points_magical))
+      #print(petData,flush=True)
+      return petData
+   #获取身上宠物信息 包含算档信息
+   def GetGamePets(self):
+      pets=self.GetPetsInfo()
+      tmpPets=[]
+      for pet in pets:
+         tmpPet = GamePet()       
+         tmpPet.name = pet.name
+         tmpPet.realname = pet.realname   
+         tmpPet.hp = pet.hp
+         tmpPet.maxhp = pet.maxhp
+         tmpPet.mp = pet.mp
+         tmpPet.maxmp = pet.maxmp       
+         tmpPet.xp = pet.xp   
+         tmpPet.maxxp = pet.maxxp   
+         tmpPet.index = pet.index   
+         tmpPet.state = pet.state   
+         tmpPet.battle_flags = pet.battle_flags   
+         tmpPet.skillslots = pet.skillslots   
+         tmpPet.loyality = pet.loyality   
+         tmpPet.race = pet.race   
+         tmpPet.flags = pet.flags   
+         tmpPet.level = pet.level   
+         tmpPet.health = pet.health   
+         tmpPet.detail = pet.detail   
+         calcData = self.GetPetCalcBpData(pet)
+         minGrade,maxGarde=self.ParsePetGrade(calcData)
+         tmpPet.grade=minGrade
+         tmpPet.lossMinGrade=minGrade
+         tmpPet.lossMaxGrade=maxGarde
+         tmpPets.append(tmpPet)
+      return tmpPets
+
    def GetBattlePet(self):
       pets=self.GetPetsInfo()
       for pet in pets:
@@ -1632,6 +1759,8 @@ class CGAPI(CGAPython.CGA):
    def RecallSoul(self):
       tryCount=0
       charInfo = self.GetPlayerInfo()
+      if charInfo.souls <= 0:
+         return
       while tryCount < 3:
          if charInfo.souls > 0:
             self.chat_log("人物掉魂：登出招魂")
@@ -1647,6 +1776,8 @@ class CGAPI(CGAPython.CGA):
             if charInfo.souls > 0  :			
                self.chat_log("没钱招魂了，去看看银行有没钱")
                self.CheckGold(人物("灵魂")*30000,1000001,200000)
+         else:
+            return
    #哥拉尔检查状态
    def GleCheckHealth(self,doctorName):   
       playerinfo = self.GetPlayerInfo()
@@ -1755,10 +1886,12 @@ class CGAPI(CGAPython.CGA):
          filterName.append(doctorName)
       elif(doctorName != None and type(doctorName) == list):		
          filterName += doctorName
+      self.debug_log(f"医生信息:{filterName}")
       self.ToCastle()      
-      self.AutoMoveTo(34, 89)
-      time.sleep(2)
-      self.Renew(1)		
+      if self.IsNeedSupply():
+         self.AutoMoveTo(34, 89)
+         time.sleep(2)
+         self.Renew(1)		
       while True:
          self.AutoMoveTo(29, 85)
          charInfo = self.GetPlayerInfo()
@@ -1768,7 +1901,7 @@ class CGAPI(CGAPython.CGA):
          units=self.GetMapUnits()     
          doctor=None		
          for u in units:
-            if ((u.flags & 256)!=0 and filterName.find(u.unit_name)!=-1) :
+            if ((u.flags & 256)!=0 and u.unit_name in filterName) :
                doctor = u
                break	 			
          if doctor ==None :#找周围医生
@@ -1780,20 +1913,17 @@ class CGAPI(CGAPython.CGA):
                   doctor = u
                   break						
          if doctor !=None :
-            self.MoveToNpcNear(doctor.x,doctor.y,1)	#最后一个距离
+            self.MoveToNpcNear(doctor.xpos,doctor.ypos,1)	#最后一个距离
             oldHealth=charInfo.health
             healTryNum=0
             self.AddTeammate(doctor.unit_name)
             if(self.GetTeammatesCount() > 1):
-               while(healTryNum < 4):
+               while(healTryNum < 30):
                   if self.GetPlayerInfo().health == 0 :
                      self.LeaveTeammate()
-                     return				
-                  time.sleep(8)	#等待8秒 还受伤 重新加队
-   #					if( oldHealth == 人物("健康")) : #医生水平太差没治好 或者是医德太差 站着不治疗
-   #						break
-   #					
-                  healTryNum = healTryNum+1               
+                     return				                 		
+                  healTryNum = healTryNum+1      
+                  time.sleep(1)	#等待30秒 还受伤 重新加队	         
                if self.GetPlayerInfo().health > 0 :				
                   self.LeaveTeammate()	#重新找医生
                   filterName.remove(doctor.unit_name)						
@@ -2293,8 +2423,9 @@ class CGAPI(CGAPython.CGA):
          newTeam.y = tmpTeam.ypos
          newTeam.unit_id = tmpTeam.unit_id
          pTeamInfoList.append(newTeam)
+         #self.debug_log(f"name:{tmpTeam.name},unit:{tmpTeam.unit_id}")
       for tmpTeam in pTeamInfoList:
-         for unit in units:
+         for unit in units:            
             if unit.type == 8 and unit.unit_id == tmpTeam.unit_id:			
                tmpTeam.name = unit.unit_name
                tmpTeam.nick_name = unit.nick_name
@@ -2303,7 +2434,9 @@ class CGAPI(CGAPython.CGA):
                tmpTeam.y = unit.ypos
                tmpTeam.injury = unit.injury
                tmpTeam.level = unit.level
-               break		
+               #self.debug_log(f"nick_name:{unit.nick_name},title_name:{unit.title_name},unit_name:{unit.unit_name},unit_id:{unit.unit_id}")
+               break	
+            
          if playerinfo.unitid == tmpTeam.unit_id:         
             tmpTeam.name = playerinfo.name
             tmpTeam.level = playerinfo.level
@@ -2432,6 +2565,7 @@ class CGAPI(CGAPython.CGA):
 
    #加入队伍
    def AddTeammate(self,sName:str,timeout=180):
+      self.debug_log(f"加入队伍函数,队长名称：{sName},超时时间:{timeout}")
       if (len(sName) == 0): #没有队长名称 直接加队返回
          self.DoCharacterAction(TCharacter_Action_JOINTEAM)
          return True
@@ -2494,15 +2628,16 @@ class CGAPI(CGAPython.CGA):
                if (sMatch[j] == sName):        
                   self.ClickNPCDialog(0, j)
                   time.sleep(1.5)
-                  break         
+                  break   
+            self.ClickNPCDialog(32, -1)
          else:
             self.debug_log("dlg == None")
          teamPlayers = self.GetTeamPlayers()
          if (len(teamPlayers) > 0 and teamPlayers[0].name == sName):
-            #self.debug_log("队伍数量%d,队长名称：%s"%(len(teamPlayers),teamPlayers[0].name))   
+            self.debug_log("队伍数量%d,队长名称：%s"%(len(teamPlayers),teamPlayers[0].name))   
             return True
          else:
-            #self.debug_log("离队")  
+            self.debug_log("离队")  
             self.DoCharacterAction(TCharacter_Action_LEAVETEAM)#离队
          time.sleep(1)
          #//坐标归位
@@ -3107,9 +3242,9 @@ class CGAPI(CGAPython.CGA):
       
    def StartServer(self):
       def ServerListen(): 
-         print("listen socket ",self.g_socket,flush=True)
+         self.debug_log(f"listen socket{self.g_socket} ")
          eventlet.wsgi.server(self.g_socket, self.app)
-         print("listen socket线程退出",flush=True)     
+         self.debug_log("listen socket线程退出")     
       t=threading.Thread(target=ServerListen)
       t.start()
 
@@ -3213,10 +3348,16 @@ class CGAPI(CGAPython.CGA):
          elif serverInfo.ip in self.g_serverNetcom:
             return 14
       return -1
+   #指定方向移动一格
+   def MoveGo(self,nDir):
+      tgtPos = self.GetDirectionPos(nDir, 1)
+	   #不进行移动遇敌判断 这些了
+      self.WalkTo(tgtPos.x, tgtPos.y)
 
 
 #返回单例对象
 cg = CGAPI()
+cg.init_log()
 人物 = cg.GetCharacterData
 宠物 = cg.GetBattlePetData
 # def 宠物(*args):
@@ -3228,7 +3369,17 @@ cg = CGAPI()
 #       cg.Renew(args[0])
 #    elif len(args)>=2:
 #       cg.RenewEx(args[0],args[1])
-日志 = cg.chat_log
+#说明：如果自己定义函数，需要游戏程序看到的错误信息，用日志()打印，不需要用户看到，但自己后续错误定位的日志，用调试日志()打印
+#调整控制台日志级别，调试日志()和日志都可以看到
+def 打开调试():
+   cg.g_consoleHandler.setLevel(logging.DEBUG)
+#调整控制台日志级别，调试日志()看不到，只有日志()输出的可以看到
+def 关闭调试():
+   cg.g_consoleHandler.setLevel(logging.INFO)
+调试日志=cg.debug_log
+调试=cg.debug_log
+#日志 = cg.chat_log
+喊话 = cg.chat_log
 def 日志(*args):
    if len(args)>=2:
       if args[1] == 1:
@@ -3267,8 +3418,12 @@ def 自动寻路(*args):
    if len(args) == 2:
       cg.AutoMoveTo(args[0],args[1])
    elif len(args)>=3:
-      cg.AutoMoveToEx(args[0],args[1])
-等待到指定地图 = cg.Nowhile
+      cg.AutoMoveToEx(args[0],args[1],args[2])
+def 等待到指定地图(*args):
+   if len(args) == 1:
+      cg.Nowhile(args[0])
+   elif len(args)>=3:
+      cg.NowhileEx(args[0],args[1],args[2])
 等待服务器返回 = cg.WaitRecvNpcDialog
 等待聊天信息返回 = cg.WaitRecvChatMsg
 等待工作返回 = cg.WaitRecvWorkingResult
@@ -3326,8 +3481,14 @@ def 队伍(*args):
 扔=cg.DropItem
 扔宠=cg.DropPet
 使用物品=cg.UseItem
-全部宠物信息=cg.GetPetsInfo
+全部宠物信息=cg.GetGamePets
 设置个人简介=cg.SetPlayerInfo
 创建组播服务=cg.CreateMulticastSocket
 发送信息到组播=cg.SendToMulticastGroup
 从组播接收信息=cg.RecvFromMulticastGroup
+菜单选择 = cg.PlayerMenuSelect
+移动一格=cg.MoveGo
+def 设置(*args):
+   if len(args)==2:
+      if args[0] == "移动速度":
+         cg.SetMoveSpeed(int(args[1]))

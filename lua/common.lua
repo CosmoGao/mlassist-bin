@@ -2,7 +2,7 @@
 -- 定义一个名为 common 的模块
 
 common={}
-
+cjson = require "cjson"
 
 --读取文件内容
 function common.ReadFileData(name)
@@ -104,45 +104,57 @@ function common.ToStringEx(value)
     end
 end
 --lua表转字符串
+-- function common.TableToStr(t)
+--     if t == nil then return "" end
+-- 	if type(t) == 'string' then return "" end
+--     local retstr= "{"
+
+--     local i = 1
+--     for key,value in pairs(t) do
+--         local signal = ","
+--         if i==1 then
+--           signal = ""
+--         end
+
+--         if key == i then
+--             retstr = retstr..signal..common.ToStringEx(value)
+--         else
+--             if type(key)=='number' or type(key) == 'string' then
+--                 retstr = retstr..signal..'['..common.ToStringEx(key).."]="..common.ToStringEx(value)
+--             else
+--                 if type(key)=='userdata' then
+--                     retstr = retstr..signal.."*s"..common.TableToStr(getmetatable(key)).."*e".."="..common.ToStringEx(value)
+--                 else
+--                     retstr = retstr..signal..key.."="..common.ToStringEx(value)
+--                 end
+--             end
+--         end
+
+--         i = i+1
+--     end
+
+--      retstr = retstr.."}"
+--      return retstr
+-- end
+--lua表转json字符串
 function common.TableToStr(t)
-    if t == nil then return "" end
-	if type(t) == 'string' then return "" end
-    local retstr= "{"
-
-    local i = 1
-    for key,value in pairs(t) do
-        local signal = ","
-        if i==1 then
-          signal = ""
-        end
-
-        if key == i then
-            retstr = retstr..signal..common.ToStringEx(value)
-        else
-            if type(key)=='number' or type(key) == 'string' then
-                retstr = retstr..signal..'['..common.ToStringEx(key).."]="..common.ToStringEx(value)
-            else
-                if type(key)=='userdata' then
-                    retstr = retstr..signal.."*s"..common.TableToStr(getmetatable(key)).."*e".."="..common.ToStringEx(value)
-                else
-                    retstr = retstr..signal..key.."="..common.ToStringEx(value)
-                end
-            end
-        end
-
-        i = i+1
-    end
-
-     retstr = retstr.."}"
-     return retstr
+	retstr = cjson.encode(t)
+	return retstr
 end
---字符串转表
+--json字符串转lua表
 function common.StrToTable(str)
     if str == nil or type(str) ~= "string" then
         return
     end    
-    return load("return " .. str)()
+    return cjson.decode(str)
 end
+-- --字符串转表
+-- function common.StrToTable(str)
+--     if str == nil or type(str) ~= "string" then
+--         return
+--     end    
+--     return load("return " .. str)()
+-- end
 --获取好友当前服务器线路
 function common.getFriendServerLine(friendName)
 	if(friendName == nil)then return 0 end
