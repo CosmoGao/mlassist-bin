@@ -1,41 +1,39 @@
 #基础包，用于连接游戏窗口，其他python文件引用此包即可
-import CGAPython
-import time
-import sys
-import os
-import logging
-import logging.handlers
-import glob
-import math
-import random
-import functools
-from collections import namedtuple
-import asyncio
-import threading
-import queue
-import enum
-import requests
-import json
-from  CGData_pb2 import *
-from CGData_pb2_grpc import *
-import socketio
-import eventlet
-import asyncio
-from configparser import ConfigParser 
-from AStar import *
-import socket
-
+import CGAPython  #c++层封装的python包
+import time       #python时间模块
+import sys        #python sys(system)系统模块
+import os         #python os(operating system)操作系统模块
+import logging    #python进阶日志模块
+import logging.handlers #python日志模块handlers部分，可以日志保存本地 网络 控制台等等
+import glob       #python文件和目录操作模块
+import math       #python数学模块
+import random     #python随机数模块
+import functools  #python高阶函数模块
+from collections import namedtuple  #python容器模块，这里只导入了namedtuple 坐标返回值用的它
+import asyncio    #python协程 异步 并发模块
+import threading  #python线程模块 遇敌函数使用了线程
+import queue      #python队列模块 注册回调用了此
+import enum       #python枚举模块 
+import requests   #python 网络http请求模块
+import json       #python json模块，字典和json互转用的它 
+from CGData_pb2 import *         #自定义的grpc数据结构包，和MLAssistTool搭配使用，可以向MLAssistTool查询当前其他角色数据
+from CGData_pb2_grpc import *    #自定义的grpc API，上报角色数据，查询角色数据 可以在游戏名片挂了时候用来同步队伍线路
+import socketio   #python网络通信模块-封装了收发接口类似js的Socket.IO
+import eventlet   #python网络通信事件模块
+from configparser import ConfigParser  #配置文件解析模块，ini格式读取/写入使用此模块
+from AStar import *  #自定义的A*算法库，源码在本目录，游戏寻路算法使用此
+import socket     #python网络通信基础模块
+from paho.mqtt import client as mqtt_client
 #封装元组，便于访问
 CGPoint = namedtuple("CGPoint","x,y")
 CGRect = namedtuple("CGRect","x,y,width,height")
-#from common.func import *
 
 #日志格式
 LOG_FORMAT = "%(asctime)s %(message)s"
-#配置日志
+#配置日志 放到initLog接口了
 #logging.basicConfig(level=logging.INFO, format=LOG_FORMAT,datefmt='%Y-%m-%d %H:%M:%S')
 
-#单例模式类
+#单例模式类 python官方推荐
 def singleton(cls):
     """
     将一个类作为单例
@@ -59,6 +57,8 @@ def singleton(cls):
     cls.__init__ = object.__init__
 
     return cls
+
+#游戏基础信息类
 class GameInfo:
    def __init__(self) -> None:
       self.name=""
@@ -73,6 +73,7 @@ class GameInfo:
       self.showname=""
       self.realname=""
       self.level=0
+#人物角色信息类-继承GameInfo，复用变量
 class GameTeamPlayer(GameInfo):
    def __init__(self) -> None:         
       self.nick_name=""
@@ -82,6 +83,7 @@ class GameTeamPlayer(GameInfo):
       self.x=0
       self.y=0
       self.unit_id=0      
+#游戏道具信息类-CGAPI基础上，增加了解析后的耐久度变量
 class GameItem:
    def __init__(self) -> None:       
       self.name=""   #				//名称
@@ -108,6 +110,7 @@ class GameItem:
       self.isDropInterval = False#是否扔区间
       self.dropMinCode = 0		#扔区间最小值			
       self.dropMaxCode = 0		#扔区间最大值
+#游戏宠物信息类-继承GameInfo，复用变量，在CGAPI基础上，扩充了档次
 class GamePet(GameInfo):
    def __init__(self) -> None:         
       self.index=""
@@ -153,40 +156,46 @@ class AsyncWaitNotify:
                 self._global_wait_list.remove(self)  
             return None  
 
-
+#没用枚举，这里直接定义了
+#人物动作
 TCharacter_Action_PK = 1			      #PK
 TCharacter_Action_JOINTEAM = 3		   #加入队伍
 TCharacter_Action_EXCAHNGECARD = 4     #交换名片
 TCharacter_Action_TRADE = 5		      #交易
 TCharacter_Action_KICKTEAM = 11	      #剔除队伍
-TCharacter_Action_LEAVETEAM = 12	   #离开队伍
-TCharacter_Action_TRADE_CONFIRM = 13  #交易确定
-TCharacter_Action_TRADE_REFUSE = 14   #交易取消
-TCharacter_Action_TEAM_CHAT = 15	   #队聊
+TCharacter_Action_LEAVETEAM = 12	      #离开队伍
+TCharacter_Action_TRADE_CONFIRM = 13   #交易确定
+TCharacter_Action_TRADE_REFUSE = 14    #交易取消
+TCharacter_Action_TEAM_CHAT = 15	      #队聊
 TCharacter_Action_REBIRTH_ON = 16	   #开始摆摊
 TCharacter_Action_REBIRTH_OFF = 17	   #停止摆摊
 TCharacter_Action_Gesture = 18		   #人物动作
 
+#宠物状态
 TPET_STATE_NONE = 0
 TPET_STATE_READY = 1  #待命
 TPET_STATE_BATTLE = 2 #战斗
 TPET_STATE_REST = 3   #休息
 TPET_STATE_WALK = 16  #散步
 
+#人物面朝方向
 MOVE_DIRECTION_Origin = 0	   #原地
-MOVE_DIRECTION_North = 0	   #MOVE_DIRECTION_North			北
-MOVE_DIRECTION_NorthEast = 1 #MOVE_DIRECTION_NorthEast		东北
-MOVE_DIRECTION_East = 2	   #MOVE_DIRECTION_RIGH				东
-MOVE_DIRECTION_SouthEast = 3 #MOVE_DIRECTION_SouthEast		东南
-MOVE_DIRECTION_South = 4	   #MOVE_DIRECTION_South			南
-MOVE_DIRECTION_SouthWest = 5 #MOVE_DIRECTION_WestDOWN			西南
-MOVE_DIRECTION_West = 6	   #MOVE_DIRECTION_West				西
-MOVE_DIRECTION_NorthWest = 7 #MOVE_DIRECTION_WestUP			西北
+MOVE_DIRECTION_North = 0	   #北
+MOVE_DIRECTION_NorthEast = 1  #东北
+MOVE_DIRECTION_East = 2	      #东
+MOVE_DIRECTION_SouthEast = 3  #东南
+MOVE_DIRECTION_South = 4	   #南
+MOVE_DIRECTION_SouthWest = 5  #西南
+MOVE_DIRECTION_West = 6	      #西
+MOVE_DIRECTION_NorthWest = 7  #西北
 
+#游戏API类
 @singleton
 class CGAPI(CGAPython.CGA):   
    
+   #API版本
    g_version="2023.9.10.1.1"
+
    #是否停止-寻路、技能、遇敌等等
    g_stop=False
       
@@ -201,9 +210,12 @@ class CGAPI(CGAPython.CGA):
 
    #是否打印调试日志
    g_debug_log=False
+
+   #GRPC连接MLAssistTool使用
    g_channel = None
    g_stub=None
 
+   #游戏注册回调数据队列
    g_chatMsg_asyncs=[]             #聊天回调
    g_npcDialog_asyncs=[]           #对话框回调
    g_serverShutdonw_asyncs=[]      #游戏窗口关闭通知
@@ -217,20 +229,29 @@ class CGAPI(CGAPython.CGA):
    g_downMap_asyncs=[]             #下载地图通知
    g_connectionState_asyncs=[]     #连接状态变更
    g_unitMenu_asyncs=[]            #菜单项通知
+   g_mqtt_msg_asyncs=[]            #mqtt订阅事件发布通知
 
+   #游戏辅助程序端口http通信用
    g_gui_port=0
+
+   #游戏注入Hook端口
    g_game_port=0
+
+   #辅助路径
    g_fz_Path=""
 
+   #socketio网络通信
    g_socket=None
 
-
+   #config.ini配置程序使用
    g_config=None
 
    #电信服务器列表
    g_serverTelecoms=["221.122.119.111","221.122.119.112","221.122.119.113","221.122.119.114","221.122.119.115"]
 	#网通服务器列表
    g_serverNetcom=["221.122.119.117","221.122.119.119","221.122.119.120","221.122.119.166","221.122.119.167"]
+
+   #称号预定义
    g_sPrestigeMap={"恶人":-3,	
    "受忌讳的人": -2,
 	"受挫折的人": -1,
@@ -315,6 +336,7 @@ class CGAPI(CGAPython.CGA):
       #print(initPetCalcDatas,flush=True)
       self.InitCaclPetData(initPetCalcDatas)      
       self.registerCallBackFuns()
+      self.init_mqtt()
 
    def init_log(self):
       #配置日志
@@ -371,6 +393,66 @@ class CGAPI(CGAPython.CGA):
       if self.g_channel == None:#配置文件读取ip，暂时设本地
          self.g_channel =grpc.insecure_channel(sToolIp + ":" + nPort)
          self.g_stub = CGRpcServiceStub(self.g_channel)
+
+   def get_client_id(self):
+      if self.g_client_id == None:
+         self.g_client_id = random.randint(1000, 1000000)
+      else:
+         return self.g_client_id
+      
+   def init_mqtt(self):
+      sMqttIp = self.g_config["server"]["mqttip"]
+      nMqttPort = self.g_config["server"]["mqttport"]
+      if sMqttIp.find(";") != -1:
+         sMqttIp = sMqttIp[0:sMqttIp.find(";")]
+         sMqttIp=sMqttIp.strip()
+      if len(sMqttIp) < 1:
+         sMqttIp = "127.0.0.1"
+      if nMqttPort.find(";") != -1:
+         nMqttPort = nMqttPort[0:nMqttPort.find(";")]
+         nMqttPort=nMqttPort.strip()
+      if len(nMqttPort) < 1:
+         nMqttPort = "1883"
+      if self.g_mqtt_client == None:#配置文件读取ip，暂时设本地        
+         self.g_mqtt_client = mqtt_client.Client(self.get_client_id())
+         self.g_mqtt_client.on_connect=self.on_mqtt_connect
+         self.g_mqtt_client.on_message=self.on_mqtt_message
+         self.g_mqtt_client.connect(sMqttIp,int(nMqttPort))
+         self.g_mqtt_client.loop_start()
+   #mqtt连接状态回调
+   def on_mqtt_connect(self,client,userData,flags,rc):
+      if rc==0:
+         self.debug_log("Connected To Mqtt successed")
+      else:
+         self.debug_log(f"Connected Mqtt Failed:{rc}")
+   #mqtt接收消息回调
+   def on_mqtt_message(self,client, userdata, msg):
+      self.debug_log(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+      recvData = json.loads(msg.payload.decode())      
+      self.MqttPublishNotify(msg)
+
+   #订阅主题
+   def AddNewMqttSubscribeTopic(self,topic):
+      if self.g_mqtt_client == None:
+         self.init_mqtt()
+      self.g_mqtt_client.subscribe(topic)
+
+   #发布主题
+   def PublishNewTopicData(self,topic,msg):
+      if self.g_mqtt_client == None:
+         self.init_mqtt()
+      msgData=None
+      if type(msg) == str:
+         msgData = msg
+      elif type(msg) == dict:
+         msgData = json.loads(msg)
+      result = self.g_mqtt_client.publish(topic, msgData)
+      status = result[0]
+      if status == 0:
+         self.debug_log(f"Send `{msg}` to topic `{topic}`")
+      else:
+         self.debug_log(f"Failed to send message to topic {topic}")
+
    #注册回调函数，接收游戏通知信息
    def registerCallBackFuns(self):
       #注册回调函数
@@ -540,13 +622,19 @@ class CGAPI(CGAPython.CGA):
          if friendCard.name == friendName:
             return friendCard.server
       return 0
-   #通过名片获取队长线路跟随换线
-   def ChangeLineFollowLeader(self,leaderName):
+   #通过名片获取队长线路跟随换线 默认使用名片 如果名片炸了，选tool工具同步即可
+   def ChangeLineFollowLeader(self,leaderName,useTool=None):
       if(leaderName==None):
          return
       if(self.GetPlayerInfo().name == leaderName):
          return
-      leaderServerLine = self.getFriendServerLine(leaderName)
+      leaderServerLine=0
+      if useTool == None:
+         leaderServerLine = self.getFriendServerLine(leaderName)
+      else:
+         leaderInfo = self.g_stub.SelectCharacterData(CGData__pb2.SelectCharacterDataRequest(char_name=leaderName,big_line=self.GetGameServerType()))
+         if leaderInfo!=None and leaderInfo.online!=0:
+            leaderServerLine = leaderInfo.character_data.server_line #当前线路
       if(leaderServerLine==0):
          return
       curLine=super().GetMapIndex()[1]
@@ -833,8 +921,10 @@ class CGAPI(CGAPython.CGA):
          if skill.name == name:
                return skill.index
       return -1
+   #等待到达指定地图
    def WaitForMap(self,name):
       self.Nowhile(name)
+   #等到到达指定地图-指定坐标
    def WaitForMapEx(self,name,x,y):
       self.NowhileEx(name,x,y)
    #等待到指定地图-地图名称，x坐标，y坐标
@@ -953,9 +1043,6 @@ class CGAPI(CGAPython.CGA):
                      else:       
                            pass                            #绿色 切换坐标点 传送门     
       return gateList
-   #def 开始遇敌():
-
-   #def 取包裹空格():
 
    #取当前地图可传送坐标点
    def GetMapEntranceList(self):
@@ -1074,6 +1161,7 @@ class CGAPI(CGAPython.CGA):
          return 0
       return self.AutoMoveInternal(x, y, timeout)
 
+   #自动寻路到指定地图
    def AutoMoveToEx(self,x,y,mapName=None,timeout=100):
       if mapName==None:
          return self.AutoMoveTo(x,y,timeout)
@@ -1350,9 +1438,6 @@ class CGAPI(CGAPython.CGA):
       self.debug_log("计算路径Fini")	   
       return findPath
 
-
-
-
    #聊天信息回调通知函数
    def ChatMsgNotify(self,msg):  #msg是聊天信息
       for q in self.g_chatMsg_asyncs:
@@ -1365,62 +1450,72 @@ class CGAPI(CGAPython.CGA):
          q.put_chat_msg(dlg)
       self.g_npcDialog_asyncs.clear()
       
-
+   #游戏退出通知
    def ServerShutdownNotify(self,val):
       for q in self.g_serverShutdonw_asyncs:
          q.put_chat_msg(val)
       self.g_serverShutdonw_asyncs.clear()
-
+   #游戏按键通知
    def GameWndKeyDownNotify(self,val):
       for q in self.g_gameWndKeyDown_asyncs:
          q.put_chat_msg(val)
       self.g_gameWndKeyDown_asyncs.clear()
-
+   #战斗通知
    def BattleActionNotify(self,val):
       for q in self.g_battleAction_asyncs:
          q.put_chat_msg(val)
       self.g_battleAction_asyncs.clear()
-
+   #人物菜单通知
    def PlayerMenuNotify(self,val):
       for q in self.g_playerMenu_asyncs:
          q.put_chat_msg(val)
       self.g_playerMenu_asyncs.clear()
-
+   #工作结果通知
    def WorkingResultNotify(self,val):
       for q in self.g_workingResult_asyncs:
          q.put_chat_msg(val)
       self.g_workingResult_asyncs.clear()
-
+   #交易物品通知
    def TradeStuffsNotify(self,val):
       for q in self.g_tradeStuffs_asyncs:
          q.put_chat_msg(val)
       self.g_tradeStuffs_asyncs.clear()
-
+   #交易对话框通知
    def TradeDialogNotify(self,val):
       for q in self.g_tradeDialog_asyncs:
          q.put_chat_msg(val)
       self.g_tradeDialog_asyncs.clear()
-
+   #交易状态通知
    def TradeStateNotify(self,val):
       for q in self.g_tradeState_asyncs:
          q.put_chat_msg(val)
       self.g_tradeState_asyncs.clear()
-
+   #下载地图通知
    def DownloadMapNotify(self,val):
       for q in self.g_downMap_asyncs:
          q.put_chat_msg(val)
       self.g_downMap_asyncs.clear()
-
+   #连接状态通知
    def ConnectionStateNotify(self,val):
       for q in self.g_connectionState_asyncs:
          q.put_chat_msg(val)
       self.g_connectionState_asyncs.clear()
-
+   #聊天信息通知
    def UnitMenuNotify(self,val):
       for q in self.g_unitMenu_asyncs:
          q.put_chat_msg(val)
       self.g_unitMenu_asyncs.clear()
+   #mqtt发布事件通知
+   def MqttPublishNotify(self,msg):
+      for q in self.g_mqtt_msg_asyncs:
+         q.put_chat_msg(msg)
+      self.g_mqtt_msg_asyncs.clear()
 
+   #API
+   def WaitRecvMqttMsg(self,tSecond=10):        
+      testWait = AsyncWaitNotify(self.g_mqtt_msg_asyncs)       
+      return testWait.wait_msg_timeout(tSecond)
+   
    #API
    def WaitRecvChatMsg(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_chatMsg_asyncs)       
@@ -1483,7 +1578,7 @@ class CGAPI(CGAPython.CGA):
          return True
       #self.debug_log("不在目标附近")
       return False
-
+   #是否目标坐标附近
    def IsNearTargetEx(selx,srcx, srcy,tgtx, tgty, dis=1):
       if (abs(srcx - tgtx) <= dis and abs(srcy - tgty) <= dis):
          return True
@@ -1502,7 +1597,7 @@ class CGAPI(CGAPython.CGA):
       else:
          return 1
        
-
+   #对话选择指定值
    def TalkNpcClicked(self,dlg,selectVal):
       if dlg==None:
          return False
@@ -1533,6 +1628,7 @@ class CGAPI(CGAPython.CGA):
          case _:
             return False
       return False
+   #对话选是
    def TalkNpcSelectYes(self,x,y,count=32):
       talkCount=3
       dlg=None
@@ -1547,7 +1643,7 @@ class CGAPI(CGAPython.CGA):
          bTalkNpc = self.TalkNpcClicked(dlg,4)
          count=count-1
       return bTalkNpc
-
+   #获取指定方向指定距离坐标
    def GetCoordinateDirectionPos(self,x,y,nDir,nVal): 
       if(nDir==0):
          x = x
@@ -1574,7 +1670,7 @@ class CGAPI(CGAPython.CGA):
          x = x - nVal
          y = y - nVal
       return CGPoint(x,y)      
-
+   #获取指定目标在坐标方向
    def GetDirection(self,x,y,tx, ty):
       if (x == tx and y == ty):
          return MOVE_DIRECTION_Origin
@@ -3249,7 +3345,7 @@ class CGAPI(CGAPython.CGA):
       t.start()
 
    def CreateMulticastSocket(self,tgtHost,tgtPort,multicastGroupIp):
-      self.g_client_id = random.randint(1000, 1000000)
+      
       # 创建UDP socket
       self.g_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
       # 允许端口复用
