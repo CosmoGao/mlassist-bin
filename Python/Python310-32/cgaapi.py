@@ -242,6 +242,9 @@ class CGAPI(CGAPython.CGA):
 
    #socketio网络通信
    g_socket=None
+   g_mqtt_client=None
+   g_client_id=None
+   g_mqtt_code=""
 
    #config.ini配置程序使用
    g_config=None
@@ -337,6 +340,12 @@ class CGAPI(CGAPython.CGA):
       self.InitCaclPetData(initPetCalcDatas)      
       self.registerCallBackFuns()
       self.init_mqtt()
+      openTool=self.g_config["server"]["openTool"]
+      if openTool.find(";") != -1:
+         openTool = openTool[0:openTool.find(";")]
+         openTool=openTool.strip()
+      if openTool=="true" or openTool == "1":
+         self.init_grpc()
 
    def init_log(self):
       #配置日志
@@ -401,8 +410,12 @@ class CGAPI(CGAPython.CGA):
          return self.g_client_id
       
    def init_mqtt(self):
-      sMqttIp = self.g_config["server"]["mqttip"]
-      nMqttPort = self.g_config["server"]["mqttport"]
+      sMqttIp = self.g_config["server"]["mqttIP"]
+      nMqttPort = self.g_config["server"]["mqttPort"]
+      self.g_mqtt_code = self.g_config["server"]["mqttcode"]
+      if self.g_mqtt_code.find(";") != -1:
+         self.g_mqtt_code = self.g_mqtt_code[0:self.g_mqtt_code.find(";")]
+         self.g_mqtt_code=self.g_mqtt_code.strip()
       if sMqttIp.find(";") != -1:
          sMqttIp = sMqttIp[0:sMqttIp.find(";")]
          sMqttIp=sMqttIp.strip()
@@ -429,13 +442,15 @@ class CGAPI(CGAPython.CGA):
    def on_mqtt_message(self,client, userdata, msg):
       self.debug_log(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
       recvData = json.loads(msg.payload.decode())      
-      self.MqttPublishNotify(msg)
+      self.MqttPublishNotify(msg.payload.decode())
 
    #订阅主题
    def AddNewMqttSubscribeTopic(self,topic):
       if self.g_mqtt_client == None:
          self.init_mqtt()
-      self.g_mqtt_client.subscribe(topic)
+      self.debug_log(topic)
+      self.debug_log(self.g_mqtt_code+str(topic))
+      self.g_mqtt_client.subscribe(self.g_mqtt_code+str(topic))
 
    #发布主题
    def PublishNewTopicData(self,topic,msg):
@@ -630,18 +645,24 @@ class CGAPI(CGAPython.CGA):
          return
       leaderServerLine=0
       if useTool == None:
+         self.debug_log(f"跟随换线：当前通过名片获取")
          leaderServerLine = self.getFriendServerLine(leaderName)
       else:
+         self.debug_log(f"跟随换线：当前通过Tool获取")       
+         if self.g_stub == None:
+            self.log("未打开配置文件openTool，或者连接tool失败！")
+            return
          leaderInfo = self.g_stub.SelectCharacterData(CGData__pb2.SelectCharacterDataRequest(char_name=leaderName,big_line=self.GetGameServerType()))
          if leaderInfo!=None and leaderInfo.online!=0:
             leaderServerLine = leaderInfo.character_data.server_line #当前线路
       if(leaderServerLine==0):
+         self.debug_log(f"跟随换线：获取队友线路失败")
          return
       curLine=super().GetMapIndex()[1]
       if(curLine == 0):
          return
-      if(leaderServerLine != curLine):         
-         requests.post("http://127.0.0.1:"+self.g_gui_port+'/cga/LoadAccount',{"server":leaderServerLine} ,json=True)
+      if(leaderServerLine != curLine):      
+         self.SwitchLoginInfo({"server":leaderServerLine})
          self.LogOut()	
          #登录游戏()	#--如果有自动登录 这步不需要
                 
@@ -3450,6 +3471,116 @@ class CGAPI(CGAPython.CGA):
 	   #不进行移动遇敌判断 这些了
       self.WalkTo(tgtPos.x, tgtPos.y)
 
+   #切换登录信息 
+   '''
+      {
+			user : "通行证",
+			pwd : "密码",
+			gid : "子账号",
+			game : 4, //区服
+			bigserver : 1, //电信or网通
+			server : 8, //线路
+			character : 1, //左边or右边
+			autologin : true, //自动登录开启
+			skipupdate : false, //禁用登录器更新开启
+		}'''
+   def SwitchLoginInfo(self,loginInfo):
+      if loginInfo == None:
+         self.debug_log("SwitchLoginInfo ：loginInfo is None")
+         return
+      if type(loginInfo) == str:
+         return requests.post("http://127.0.0.1:"+self.g_gui_port+'/cga/LoadAccount',loginInfo,json=True)
+      elif type(loginInfo) == dict:
+         return requests.post("http://127.0.0.1:"+self.g_gui_port+'/cga/LoadAccount',json.dumps(loginInfo) ,json=True)
+      return None
+
+   def gotoBankRecvTradeItemsAction(self,args):
+      self.AddNewMqttSubscribeTopic(args["topic"])
+      tryCount=0
+      recvData=None
+      while True:
+         msg=self.WaitRecvMqttMsg(10)             
+         if msg!=None:
+            self.debug_log(f"WaitRecvMqttMsg recvData{msg}")
+            recvData = json.loads(msg)
+         else:
+            time.sleep(1)
+            continue        
+         self.debug_log(f"gotoBankRecvTradeItemsAction recvData{recvData}")
+         
+       
+         if recvData["line"] != self.GetCharacterData("几线") :
+            self.SwitchLoginInfo(line=recvData["line"])
+            time.sleep(3)      
+            continue         
+               
+         if recvData["name"] != None and recvData["bagcount"] != None:
+            if self.GetMapNumber() != 1121:
+               self.GotoFalanBankTalkNpc()
+            tryCount=0
+            while tryCount < 3 :
+               tryCount=tryCount+1
+               topicMsg = {"name":人物("名称"),"bagcount":取包裹空格(),"line":人物("几线")}
+               self.PublishNewTopicData(args["publish"], topicMsg)
+               tradex=None
+               tradey=None
+               units=self.GetMapUnits()                   
+               for u in units:
+                  if(u.unit_name==tradeName):
+                     tradex=u.x
+                     tradey=u.y
+                     break                         
+               if(tradex != None and tradey != None):
+                  self.MoveToNpcNear(tradex,tradey)
+               else:
+                  break               
+               self.TurnAboutEx(tradex,tradey)		
+               #self.debug_log(tradeList)		
+               self.LaunchTrade(tradeName,"","",10000)
+               if self.GetBankItemCount(args["itemName"]) >= args["itemCount"]:
+                  tradeName=None
+                  tradeBagSpace=None
+                  tradePlayerLine=None	
+                  #回城()
+                  return
+   #发起交易                        
+   def LaunchTrade(self,sName):
+      timeout=10
+      self.DoCharacterAction(TCharacter_Action_TRADE)
+      rcvMenu = self.WaitRecvPlayerMenu(timeout)
+      bFind=False
+      if (rcvMenu == None):
+         self.debug_log("等待交易对话框超时！")
+         return False
+      self.debug_log(rcvMenu)
+      self.debug_log(len(rcvMenu))
+      if len(rcvMenu)>0:
+         if len(sName) <= 0:
+            bFind=True
+            self.debug_log(f"未设置交易名，默认第一个交易对象{sName},{rcvMenu[0].name}")
+            self.PlayerMenuSelect(rcvMenu[0].index,rcvMenu[0].name)
+         else:
+            for char in rcvMenu:
+               if char.name == sName:
+                  bFind=True
+                  self.PlayerMenuSelect(char.index,char.name)
+                  self.debug_log(f"交易对象:{sName},{char.name}")
+                  break
+      if (not bFind):
+         self.debug_log("未找到目标交易对象,交易取消")
+         self.DoCharacterAction(TCharacter_Action_TRADE_REFUSE)
+         return False
+      tradeDlg = self.WaitRecvTradeDialog(timeout)
+      if tradeDlg == None:
+         self.debug_log("等待交易对话框超时,交易取消")
+         self.DoCharacterAction(TCharacter_Action_TRADE_REFUSE)
+         return False
+      if tradeDlg.name != sName or tradeDlg.level <= 0:
+         self.debug_log(f"交易对象错误,交易取消,交易返回名称:{tradeDlg.name}传入对象名称:{sName}")
+         self.DoCharacterAction(TCharacter_Action_TRADE_REFUSE)
+         return False	
+      #return TradeInternal(sName, myTradeData, sTradeData, timeout)
+      
 
 #返回单例对象
 cg = CGAPI()
@@ -3588,3 +3719,4 @@ def 设置(*args):
    if len(args)==2:
       if args[0] == "移动速度":
          cg.SetMoveSpeed(int(args[1]))
+跟随换线=cg.ChangeLineFollowLeader
