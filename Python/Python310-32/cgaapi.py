@@ -460,7 +460,7 @@ class CGAPI(CGAPython.CGA):
       if type(msg) == str:
          msgData = msg
       elif type(msg) == dict:
-         msgData = json.loads(msg)
+         msgData = json.dumps(msg)
       result = self.g_mqtt_client.publish(topic, msgData)
       status = result[0]
       if status == 0:
@@ -662,8 +662,9 @@ class CGAPI(CGAPython.CGA):
       if(curLine == 0):
          return
       if(leaderServerLine != curLine):      
-         self.SwitchLoginInfo({"server":leaderServerLine})
-         self.LogOut()	
+         if self.SwitchLoginInfo({"server":leaderServerLine}):
+            time.sleep(3)     
+            self.LogOut()	
          #登录游戏()	#--如果有自动登录 这步不需要
                 
    #获取人物职业
@@ -1590,6 +1591,24 @@ class CGAPI(CGAPython.CGA):
       testWait = AsyncWaitNotify(self.g_serverShutdonw_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
    
+   def WaitSysMsg(self):
+      msg = self.WaitRecvChatMsg()
+      self.debug_log(msg)
+      if msg == None or msg.unitid != -1:
+            return self.WaitSysMsg()
+      else:
+         return msg
+
+   def WaitSysMsgTimeout(self,timeout):
+      if timeout < 1:
+         timeout = 10
+      for i in range(timeout):
+         msg = self.WaitRecvChatMsg(1)
+         self.debug_log(msg)
+         if msg != None and msg.unitid == -1:
+            return msg
+      return None
+      
    #是否目标坐标附近
    def IsNearTarget(self,x,y,dis=1):
       curPos = self.GetMapCoordinate()
@@ -3487,18 +3506,24 @@ class CGAPI(CGAPython.CGA):
    def SwitchLoginInfo(self,loginInfo):
       if loginInfo == None:
          self.debug_log("SwitchLoginInfo ：loginInfo is None")
-         return
+         return False
       if type(loginInfo) == str:
-         return requests.post("http://127.0.0.1:"+self.g_gui_port+'/cga/LoadAccount',loginInfo,json=True)
+         rsp = requests.post("http://127.0.0.1:"+self.g_gui_port+'/cga/LoadAccount',loginInfo,json=True)
+         if rsp.status_code == 200:
+            return True
       elif type(loginInfo) == dict:
-         return requests.post("http://127.0.0.1:"+self.g_gui_port+'/cga/LoadAccount',json.dumps(loginInfo) ,json=True)
-      return None
+         rsp = requests.post("http://127.0.0.1:"+self.g_gui_port+'/cga/LoadAccount',json.dumps(loginInfo) ,json=True)
+         if rsp.status_code == 200:
+            return True
+      return False
 
+   #领取
    def gotoBankRecvTradeItemsAction(self,args):
       self.AddNewMqttSubscribeTopic(args["topic"])
       tryCount=0
       recvData=None
       while True:
+         self.WaitInNormalState()
          msg=self.WaitRecvMqttMsg(10)             
          if msg!=None:
             self.debug_log(f"WaitRecvMqttMsg recvData{msg}")
@@ -3507,11 +3532,10 @@ class CGAPI(CGAPython.CGA):
             time.sleep(1)
             continue        
          self.debug_log(f"gotoBankRecvTradeItemsAction recvData{recvData}")
-         
-       
          if recvData["line"] != self.GetCharacterData("几线") :
-            self.SwitchLoginInfo(line=recvData["line"])
-            time.sleep(3)      
+            if self.SwitchLoginInfo({"server":recvData["line"]}):
+               time.sleep(3)      
+               self.LogOut()
             continue         
                
          if recvData["name"] != None and recvData["bagcount"] != None:
@@ -3536,15 +3560,30 @@ class CGAPI(CGAPython.CGA):
                   break               
                self.TurnAboutEx(tradex,tradey)		
                #self.debug_log(tradeList)		
-               self.LaunchTrade(tradeName,"","",10000)
-               if self.GetBankItemCount(args["itemName"]) >= args["itemCount"]:
+               def tgtTradeFun(tgtTradeStuffs):
+                  if tgtTradeStuffs==None:
+                     self.debug_log("gotoBankRecvTradeItemsAction-tgtTradeFun未收到交易物品")
+                  #筛选
+                  itemCount=0
+                  #统计满足物品信息数量
+                  for item in tgtTradeStuffs.items:
+                     self.debug_log(f"LaunchTrade-CallBack-tradeStuffs:{item.name} {item.count} {item.itemid}")
+                     if item.name == args["itemName"] and item.count== args["itemPileCount"]:
+                        itemCount=itemCount+1
+                  #数量达标 交易继续
+                  if itemCount == args["itemCount"]:
+                     self.debug_log(f"LaunchTrade-CallBack-tradeStuffs:数量达标")
+                     return True
+                  return False   #交易取消                 
+               self.LaunchTrade(tradeName,myTradeFun=None,tgtTradeFun=tgtTradeFun)
+               if self.GetBagItemCount(args["itemName"]) >= args["itemCount"]:
                   tradeName=None
                   tradeBagSpace=None
                   tradePlayerLine=None	
                   #回城()
                   return
    #发起交易                        
-   def LaunchTrade(self,sName):
+   def LaunchTrade(self,sName,myTradeFun=None,tgtTradeFun=None):
       timeout=10
       self.DoCharacterAction(TCharacter_Action_TRADE)
       rcvMenu = self.WaitRecvPlayerMenu(timeout)
@@ -3563,8 +3602,8 @@ class CGAPI(CGAPython.CGA):
             for char in rcvMenu:
                if char.name == sName:
                   bFind=True
-                  self.PlayerMenuSelect(char.index,char.name)
                   self.debug_log(f"交易对象:{sName},{char.name}")
+                  self.PlayerMenuSelect(char.index,char.name)                  
                   break
       if (not bFind):
          self.debug_log("未找到目标交易对象,交易取消")
@@ -3579,8 +3618,101 @@ class CGAPI(CGAPython.CGA):
          self.debug_log(f"交易对象错误,交易取消,交易返回名称:{tradeDlg.name}传入对象名称:{sName}")
          self.DoCharacterAction(TCharacter_Action_TRADE_REFUSE)
          return False	
-      #return TradeInternal(sName, myTradeData, sTradeData, timeout)
+      return self.TradeInternalCustomFun( myTradeFun, tgtTradeFun)
+
+   #交易物品函数 
+   #myTradeFun 调用方提供，返回我方交易物品：
+   #  物品：CGAPython.cga_sell_items_t() 
+   #  宠物：CGAPython.cga_sell_pets_t() 
+   #  金币：int
+   #tgtTradeFun 调用方提供，回调对方取出的交易物品信息，函数需返回Bool
+   def TradeInternalCustomFun(self,myTradeFun,tgtTradeFun):      
+      if myTradeFun==None:
+         myTradeItems = CGAPython.cga_sell_items_t()
+         myPets = CGAPython.IntVector()
+         myGold = 0   
+         myTradeItems.append(CGAPython.cga_sell_item_t())
+         super().TradeAddStuffs(myTradeItems,myPets,myGold)
+      else:
+         self.TradeAddStuffs(myTradeFun())
+      bWaitTradeRet = False
+      tradeItems = self.WaitRecvTradeStuffs(180)#80秒
+      if tradeItems==None:
+         self.debug_log("等待交易物品超时，取消交易！")
+         return None
+      #目标必须交易的物品
+      judgeRet = tgtTradeFun(tradeItems)#交易物品回调，由调用方自己判断,返回True确认交易，False取消交易
+      if judgeRet:
+         self.debug_log("交易确认动作")
+         self.DoCharacterAction(TCharacter_Action_TRADE_CONFIRM)         
+      else:
+         self.debug_log("交易取消动作")
+         self.DoCharacterAction(TCharacter_Action_TRADE_REFUSE)
+      self.WaitTradeMsg()
+
+   def WaitTradeMsg(self):
+      sMsgData = self.WaitSysMsg(15)   #等15秒
+      if sMsgData==None:
+         self.debug_log("未等到系统消息")
+         return False
+      if ("交易完成" in sMsgData.msg):
+         self.debug_log("交易成功！")
+         return True
+      elif "交易中止" in sMsgData.msg or "因物品栏已满所以无法交易" in sMsgData.msg or "没有可交易的对象" in sMsgData.msg:
+         self.DoCharacterAction(TCharacter_Action_TRADE_REFUSE)
+         self.debug_log(sMsgData.msg)
+         return False
+      return True    
+
+ #     return self.TradeInternal(sName, None, None)
+   def TradeInternal(self,myTradeStuffs,tgtTradeStuffs):
+      myTradeItems = CGAPython.cga_sell_items_t()
+      myPets = CGAPython.cga_sell_pets_t()
+      myGold = 0
+      if myTradeStuffs==None:
+         self.TradeAddStuffs(myTradeItems,myPets,myGold)
+      else:
+         if "items" in myTradeStuffs:
+            argItems = myTradeStuffs["items"]
+            for argItem in argItems:
+               myItem = CGAPython.cga_sell_item_t()
+               myItem.itemid= argItem["itemid"]
+               myItem.itempos= argItem["itempos"]
+               myItem.count= argItem["count"]
+               myTradeItems.append(myItem)
+         if "pets" in myTradeStuffs:
+            argPets = myTradeStuffs["pets"]
+            for argPet in argPets:         
+               myPets.append(argPet)
+         if "gold" in myTradeStuffs:
+            myGold = myTradeStuffs["gold"]
+         self.TradeAddStuffs(myTradeItems,myPets,myGold)
+      bWaitTradeRet = False
+      tradeItems = self.WaitRecvTradeStuffs(180)#80秒
+      if tradeItems==None:
+         self.debug_log("等待交易物品超时，取消交易！")
+         return None
+      #目标必须交易的物品
+      if tgtTradeStuffs!=None:
+         if "items" in tgtTradeStuffs:
+            argItems = myTradeStuffs["items"]
+            for argItem in argItems:
+               myItem = CGAPython.cga_sell_item_t()
+               myItem.itemid= argItem["itemid"]
+               myItem.itempos= argItem["itempos"]
+               myItem.count= argItem["count"]
+               myTradeItems.append(myItem)
+         if "pets" in tgtTradeStuffs:
+            argPets = myTradeStuffs["pets"]
+            for argPet in argPets:         
+               myPets.append(argPet)
+         if "gold" in tgtTradeStuffs:
+            myGold = myTradeStuffs["gold"]
+      self.DoCharacterAction(TCharacter_Action_TRADE_CONFIRM)
+      self.debug_log("交易确认完成！")
+      self.WaitTradeMsg()
       
+
 
 #返回单例对象
 cg = CGAPI()
