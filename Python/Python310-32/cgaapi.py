@@ -461,7 +461,7 @@ class CGAPI(CGAPython.CGA):
          msgData = msg
       elif type(msg) == dict:
          msgData = json.dumps(msg)
-      result = self.g_mqtt_client.publish(topic, msgData)
+      result = self.g_mqtt_client.publish(self.g_mqtt_code+topic, msgData)
       status = result[0]
       if status == 0:
          self.debug_log(f"Send `{msg}` to topic `{topic}`")
@@ -1497,18 +1497,28 @@ class CGAPI(CGAPython.CGA):
       for q in self.g_workingResult_asyncs:
          q.put_chat_msg(val)
       self.g_workingResult_asyncs.clear()
-   #交易物品通知
+   #交易物品通知 分开回调的
+   #type=1:物品
+   #type=2:宠物
+   #type=3:宠物技能
+   #type=4:金币
    def TradeStuffsNotify(self,val):
+      self.debug_log(f"recv trade stuffs:type:{val.type} gold:{val.gold} ")
       for q in self.g_tradeStuffs_asyncs:
          q.put_chat_msg(val)
       self.g_tradeStuffs_asyncs.clear()
    #交易对话框通知
    def TradeDialogNotify(self,val):
+      self.debug_log(f"recv trade dlg:name:{val.name} level:{val.level}")
       for q in self.g_tradeDialog_asyncs:
          q.put_chat_msg(val)
       self.g_tradeDialog_asyncs.clear()
    #交易状态通知
+   # 0交易取消 1交易物准备完成 2交易确认 3交易成功   
+   # 这个值是对面操作状态和己方没有关系 1状态变化时，有可能交易物品回调已经过来了 要注意
+   # 不过可以根据值做对应回应，比如对面状态1时，代表已经准备好交易的物品 本方需要拿出对应物取出物品，此时可以查看对面的物品
    def TradeStateNotify(self,val):
+      self.debug_log(f"recv trade state:{val} ")
       for q in self.g_tradeState_asyncs:
          q.put_chat_msg(val)
       self.g_tradeState_asyncs.clear()
@@ -1558,7 +1568,7 @@ class CGAPI(CGAPython.CGA):
    def WaitRecvTradeStuffs(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_tradeStuffs_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
-   #API
+   #API 
    def WaitRecvTradeState(self,tSecond=10):        
       testWait = AsyncWaitNotify(self.g_tradeState_asyncs)       
       return testWait.wait_msg_timeout(tSecond)
@@ -3550,15 +3560,16 @@ class CGAPI(CGAPython.CGA):
                tradey=None
                units=self.GetMapUnits()                   
                for u in units:
-                  if(u.unit_name==tradeName):
-                     tradex=u.x
-                     tradey=u.y
+                  if(u.unit_name==recvData["name"]):
+                     tradex=u.xpos
+                     tradey=u.ypos
                      break                         
                if(tradex != None and tradey != None):
                   self.MoveToNpcNear(tradex,tradey)
                else:
                   break               
                self.TurnAboutEx(tradex,tradey)		
+               time.sleep(1)
                #self.debug_log(tradeList)		
                def tgtTradeFun(tgtTradeStuffs):
                   if tgtTradeStuffs==None:
@@ -3568,18 +3579,16 @@ class CGAPI(CGAPython.CGA):
                   #统计满足物品信息数量
                   for item in tgtTradeStuffs.items:
                      self.debug_log(f"LaunchTrade-CallBack-tradeStuffs:{item.name} {item.count} {item.itemid}")
-                     if item.name == args["itemName"] and item.count== args["itemPileCount"]:
+                     if item.name == args["itemName"] and (item.count== args["itemPileCount"] or item.count==0):
                         itemCount=itemCount+1
                   #数量达标 交易继续
                   if itemCount == args["itemCount"]:
                      self.debug_log(f"LaunchTrade-CallBack-tradeStuffs:数量达标")
                      return True
+                  self.debug_log(f"LaunchTrade-CallBack-tradeStuffs:数量不符：{len(tgtTradeStuffs.items)} : need:"+str(args["itemCount"]))
                   return False   #交易取消                 
-               self.LaunchTrade(tradeName,myTradeFun=None,tgtTradeFun=tgtTradeFun)
-               if self.GetBagItemCount(args["itemName"]) >= args["itemCount"]:
-                  tradeName=None
-                  tradeBagSpace=None
-                  tradePlayerLine=None	
+               self.LaunchTrade(recvData["name"],myTradeFun=None,tgtTradeFun=tgtTradeFun)
+               if self.GetBagItemCount(args["itemName"]) >= args["itemCount"]:              
                   #回城()
                   return
    #发起交易                        
@@ -3626,17 +3635,16 @@ class CGAPI(CGAPython.CGA):
    #  宠物：CGAPython.cga_sell_pets_t() 
    #  金币：int
    #tgtTradeFun 调用方提供，回调对方取出的交易物品信息，函数需返回Bool
-   def TradeInternalCustomFun(self,myTradeFun,tgtTradeFun):      
+   async def TradeInternalCustomFun(self,myTradeFun,tgtTradeFun):      
       if myTradeFun==None:
-         myTradeItems = CGAPython.cga_sell_items_t()
-         myPets = CGAPython.IntVector()
-         myGold = 0   
-         myTradeItems.append(CGAPython.cga_sell_item_t())
-         super().TradeAddStuffs(myTradeItems,myPets,myGold)
+         myTradeItems = []
+         myPets = []
+         myGold = 0            
+         self.TradeAddStuffs(myTradeItems,myPets,myGold)
       else:
          self.TradeAddStuffs(myTradeFun())
       bWaitTradeRet = False
-      tradeItems = self.WaitRecvTradeStuffs(180)#80秒
+      tradeItems = self.WaitRecvTradeStuffs(10)#80秒
       if tradeItems==None:
          self.debug_log("等待交易物品超时，取消交易！")
          return None
@@ -3650,8 +3658,8 @@ class CGAPI(CGAPython.CGA):
          self.DoCharacterAction(TCharacter_Action_TRADE_REFUSE)
       self.WaitTradeMsg()
 
-   def WaitTradeMsg(self):
-      sMsgData = self.WaitSysMsg(15)   #等15秒
+   async def WaitTradeMsg(self):
+      sMsgData = self.WaitSysMsg()   #等15秒
       if sMsgData==None:
          self.debug_log("未等到系统消息")
          return False
