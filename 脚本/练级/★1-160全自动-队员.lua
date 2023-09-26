@@ -31,7 +31,7 @@ local 走路还原值=100	--防止掉线 还原速度
 local 卖店物品列表="魔石|卡片？|锹型虫的卡片|狮鹫兽的卡片|水蜘蛛的卡片|虎头蜂的卡片|水晶怪的卡片|哥布林的卡片|红帽哥布林的卡片|迷你蝙蝠的卡片|绿色口臭鬼的卡片|锥形水晶"		--可以增加多个 不影响速度
 	--可以增加多个 不影响速度
 local 水晶名称="水火的水晶（5：5）"
-local 是否自动购买水晶=0
+local 是否自动购买水晶=1
 local 满金币存银行数=950000	--95万存银行
 local 身上最少金币数=1000	--身上最少5万  判断会用这个判断 取得话 会用这个的2倍取 防止来回判断
 local 多少金币去拿钱=10000	--1w
@@ -282,6 +282,10 @@ function 布拉基姆高地练级(目标等级,练级地名称)
 	if(取当前地图名() ~= "医院")then
 		goto begin
 	end
+	--切换练级地检测
+	if(leaderSetLv ~= nil and leaderSetLv ~= 目标等级) then
+		goto ting
+	end
 	if(人物("灵魂") > 0)then
 		回城()
 		等待(2000)
@@ -372,6 +376,8 @@ function 洞窟练级(目标等级)
 		 goto addTeam
 	elseif (当前地图名=="艾夏岛" )then	
 		goto aiXiaDao
+	elseif(取队伍人数() > 1)then
+		goto yudi		
 	end
 	回城()
 	等待(1000)
@@ -434,8 +440,14 @@ function 雪塔练级(目标等级)
 	清除系统消息()
 	练级前经验=人物("经验")
 	练级前宠经验=宠物("经验")
-	练级前金币=人物("金币")
+	练级前金币=人物("金币")	
 	水晶名称="地水的水晶（5：5）"	
+	if(目标等级==50 or 目标等级==55 or 目标等级==60)then		
+		水晶名称="地水的水晶（5：5）"
+	elseif(目标等级==65 or 目标等级==70  or 目标等级==80)then	
+		水晶名称="火风的水晶（5：5）"
+	end	
+	设置("自动加血",0)
 ::begin::	
 	等待空闲()
 	common.changeLineFollowLeader(队长名称)
@@ -467,7 +479,8 @@ function 雪塔练级(目标等级)
 	自动寻路(110,43)	
 	卖(110,42, 卖店物品列表)		
 	自动寻路(109,51)
-	回复(108,52)	
+	回复(108,52)
+	--转向(108,52)
 	自动寻路(109,50)
 ::checkAddTeam::
 	common.changeLineFollowLeader(队长名称)
@@ -479,9 +492,13 @@ function 雪塔练级(目标等级)
 			离开队伍()
 		end				
 	end		
+	--切换练级地检测
+	if(leaderSetLv ~= nil and leaderSetLv ~= 目标等级) then
+		goto ting
+	end
 	自动寻路(113,50)
 	等待(2000)
-	common.joinTeam(队长名称)
+	common.joinTeam(队长名称,300)
 	goto begin  	
              
 ::scriptstart::
@@ -517,7 +534,8 @@ function 回廊练级(目标等级)
 	
 ::begin::	
 	等待空闲()
-	common.changeLineFollowLeader(队长名称)
+	common.changeLineFollowLeader(队长名称)	
+	common.supplyCastle()
 	common.checkHealth(医生名称)
 	local 当前地图名 = 取当前地图名()
 	local x,y=取当前坐标()	
@@ -530,6 +548,8 @@ function 回廊练级(目标等级)
 		等待服务器返回()
 		对话选择(4,0)
 		等待到指定地图("里谢里雅堡")
+		common.toCastle()
+		common.sellCastle(卖店物品列表)	
 		goto liBao
 	elseif (当前地图名=="里谢里雅堡" )then	
 		goto liBao	
@@ -538,11 +558,7 @@ function 回廊练级(目标等级)
 	end
 	回城()
 	goto begin
-::liBao::
-	common.supplyCastle()
-	common.checkHealth(医生名称)
-	common.toCastle()
-	common.sellCastle(卖店物品列表)	
+::liBao::	
 	自动寻路(52, 72)	
 	对话选是(2)	
 ::addTeam::
@@ -556,12 +572,17 @@ function 回廊练级(目标等级)
 			离开队伍()
 		end				
 	end	
+	--切换练级地检测
+	leaderSetLv=getLeaderSetLv()
+	if(leaderSetLv ~= nil and leaderSetLv ~= 目标等级) then
+		goto ting
+	end
 	自动寻路(10, 20)
 	common.changeLineFollowLeader(队长名称)
 	common.joinTeam(队长名称)
 	goto begin
 ::yudi::	
-	local leaderSetLv=getLeaderSetLv()
+	leaderSetLv=getLeaderSetLv()
 	if(人物("血") < 补血值) then goto  ting end
 	if(人物("魔") < 补魔值) then goto  ting end
 	if(宠物("血") < 宠补血值) then goto  ting end
@@ -579,8 +600,8 @@ function 回廊练级(目标等级)
 ::ting::	
 	-- 结束战斗	
 	--喊话("共遇敌次数"..遇敌总次数,2,3,5)
-	--common.statistics(练级前时间,练级前经验)	--统计脚本效率
-	回城()
+	--common.statistics(练级前时间,练级前经验)	--统计脚本效率	
+	回城()		
 	等待(2000)
 	goto begin 
 end
@@ -1279,7 +1300,9 @@ end
 function getLeaderSetLv()
 	local 队长名片 = 取好友名片(队长名称)
 	if( 队长名片 ~= nil)then
-		return tonumber(队长名片.title)
+		lv = tonumber(队长名片.title)
+		日志("队长等级:"..lv)
+		return lv
 	end
 	喊话("队长不在线",2,3,5)
 	return nil
@@ -1376,8 +1399,8 @@ function main()
 		common.changeLineFollowLeader(队长名称)		
 		if(avgLevel ~= nil)then
 			喊话("队长当前设置练级等级："..avgLevel,2,3,5)
-			if(avgLevel == 5)then		--森林
-				布拉基姆高地练级(5,"森林")	
+			if(avgLevel == 20)then		--森林
+				布拉基姆高地练级(20,"森林")	
 			elseif(avgLevel == 27)then		--鸡场
 				布拉基姆高地练级(27,"鸡场")			
 			elseif(avgLevel == 32)then		--龙骨
@@ -1390,10 +1413,18 @@ function main()
 				雪塔练级(50)					
 			elseif(avgLevel==55)then		--洞穴
 				雪塔练级(55)			
-			-- elseif(avgLevel==60)then		--T59
-				-- 雪塔练级(60)
-			-- elseif(avgLevel==63)then		--T59
-				-- 雪塔练级(63)				
+			elseif(avgLevel==60)then		--T59
+				雪塔练级(60)
+			elseif(avgLevel==65)then		--T59
+				雪塔练级(65)				
+			elseif(avgLevel==70)then		--回廊
+				雪塔练级(70)
+			elseif(avgLevel==75)then		--回廊
+				雪塔练级(75)	
+			elseif(avgLevel==80)then		--回廊
+				雪塔练级(80)	
+			elseif(avgLevel==85)then		--回廊
+				雪塔练级(85)	
 			elseif(avgLevel==60)then		--回廊
 				 回廊练级(60)	
 			elseif(avgLevel==71)then		--营地

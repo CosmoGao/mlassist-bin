@@ -73,6 +73,7 @@ local goldNum=0
 		if(人物("金币") > 200000)then
 			goldNum = 人物("金币")-200000
 			if(goldNum > tradeBagSpace)then goldNum = tradeBagSpace end
+			goldNum=math.floor(goldNum)
 			tradeList="金币:"..goldNum	
 			日志(tradeList)		
 			交易(tradeName,tradeList,"",10000)

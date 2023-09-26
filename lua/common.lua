@@ -918,11 +918,13 @@ function common.healPlayer(doctorName)
 ::liBao::
 	自动寻路(34, 89)
 	等待(2000)
-	回复(1)			
+	回复(1)		
+	设置("timer",1)
 ::reTry::	
 	自动寻路(29, 85)
 	if 人物("健康") == 0 then
 		离开队伍()
+		设置("timer",100)
 		return
 	end	
 	local units = 取周围信息()
@@ -954,6 +956,7 @@ function common.healPlayer(doctorName)
 				while(healTryNum < 4) do
 					if 人物("健康") == 0 then
 						离开队伍()
+						设置("timer",100)
 						return
 					end
 					等待(8000)	--等待8秒 还受伤 重新加队
@@ -977,6 +980,7 @@ function common.healPlayer(doctorName)
 		end
 	end
 	if tryNum >= 10 then
+		设置("timer",100)
 		return
 	end
 	tryNum = tryNum+1
@@ -1091,7 +1095,9 @@ function common.checkHealth(doctorName)
 		common.recallSoul()	
 		common.healPlayer(doctorName)
 		common.healPet()
+		return true
 	end
+	return false
 end
 --去哥拉尔
 function common.toGle()
@@ -1804,7 +1810,8 @@ end
 function common.autoLearnSkill(skillName)
 	skill = common.findSkillData(skillName)
 	if(skill ~= nil)then
-		日志("已存在技能【"..skillName.."】")		
+		日志("已存在技能【"..skillName.."】")	
+		return	
 	end		
 	if(skillName=="气功弹")then		
 		if(取队伍人数()>1)then
@@ -3130,7 +3137,7 @@ common.waitTradeGoldAction=function(args)
 	topicMsg = {name=人物("名称",false),gold=1000000-人物("金币"),line=人物("几线")}
 	发布消息(args.topic, common.TableToStr(topicMsg))
 	等待交易("","","",10000)
-	if(人物("金币") > 900000)then
+	if(人物("金币") > 999900)then
 		goto cun
 	end	
 	goto bankWait
@@ -3151,7 +3158,7 @@ common.waitTradeGoldAction=function(args)
 		银行("存钱",1)
 	end	
 	等待(2000)
-	if(人物("金币")>=1000000)then		--如果金币满了 就退出
+	if(人物("金币")>=999900)then		--如果金币满了 就退出
 		return	--登出 切换仓库
 	end
 	goto bankWait	
