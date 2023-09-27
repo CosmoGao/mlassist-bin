@@ -3087,6 +3087,8 @@ function common.warehouseOnlineWait(tFileName,functionAction,funArg)
 	if(lastGidInfo==nil or type(lastGidInfo) ~= "table")then 
 		lastGidInfo={gid="",role=0,roleName="",index=1}
 	end
+	lastGidInfo.index = math.floor(lastGidInfo.index)
+	lastGidInfo.role = math.floor(lastGidInfo.role)
 	日志("上次仓库index".. lastGidInfo.index.." gid"..lastGidInfo.gid.." 角色"..lastGidInfo.role)	
 	if(lastGidInfo.gid ~= 人物("gid"))then
 		登出服务器()
@@ -3440,8 +3442,8 @@ common.gotoBankRecvTradeItemsAction=function(args)
 	if(topic == args.topic)then
 		recvTbl = common.StrToTable(msg)		
 		tradeName=recvTbl.name
-		tradeBagSpace=recvTbl.bagcount
-		tradePlayerLine=recvTbl.line
+		tradeBagSpace=math.floor(recvTbl.bagcount)
+		tradePlayerLine=math.floor(recvTbl.line)
 	else
 		等待(5000)
 		goto begin
@@ -3527,8 +3529,8 @@ common.gotoBankRecvTradeGoldAction=function(args)
 	if(topic == args.topic)then
 		recvTbl = common.StrToTable(msg)		
 		tradeName=recvTbl.name
-		tradeGold=recvTbl.gold
-		tradePlayerLine=recvTbl.line
+		tradeGold=math.floor(recvTbl.gold)
+		tradePlayerLine=math.floor(recvTbl.line)
 	else
 		等待(5000)
 		goto begin
@@ -3620,8 +3622,8 @@ common.gotoBankStoreItemsAction=function(args)
 	if(topic == args.topic)then
 		recvTbl = common.StrToTable(msg)		
 		tradeName=recvTbl.name
-		tradeBagSpace=recvTbl.bagcount
-		tradePlayerLine=recvTbl.line
+		tradeBagSpace=math.floor(recvTbl.bagcount)
+		tradePlayerLine=math.floor(recvTbl.line)
 	else
 		等待(5000)		--给内部时间  去接收收到的信息
 		goto begin
@@ -3726,8 +3728,8 @@ common.gotoBankStorePetsAction=function(args)
 	if(topic == args.topic)then
 		recvTbl = common.StrToTable(msg)		
 		tradeName=recvTbl.name
-		tradeBagSpace=recvTbl.pets
-		tradePlayerLine=recvTbl.line
+		tradeBagSpace=math.floor(recvTbl.pets)
+		tradePlayerLine=math.floor(recvTbl.line)
 	else
 		等待(5000)		--给内部时间  去接收收到的信息
 		goto begin

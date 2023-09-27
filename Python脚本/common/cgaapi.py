@@ -331,6 +331,12 @@ class CGAPI(CGAPython.CGA):
 	"万物创造者": 10,
 	"持石之贤者": 11}
 
+   g_game_data_map={"名称":"name","name":"name","血":"hp","hp":"hp","魔":"mp","mp":"mp","等级":"level","level":"level",
+   "最大血":"maxhp","maxhp":"maxhp","最大魔":"maxmp","maxmp":"maxmp","健康":"health","health":"health","经验":"exp",
+   "下一级经验":"maxexp","灵魂":"souls","gid":"gid","金币":"gold","外观":"image_id","角色":"player_index","卡时":"punchclock",
+   "打卡状态":"usingpunchclock","职称":"job","忠诚":"loyality","状态":"battle_flags"
+   }    
+
    #构造函数
    def __init__(self):
       super().__init__()
@@ -775,132 +781,97 @@ class CGAPI(CGAPython.CGA):
    #获取人物信息
    def GetCharacterData(self,sType):
       playerinfo = self.GetPlayerInfo()
-      match(sType):        
-         case("名称"):return playerinfo.name
-         case("name"):return playerinfo.name
-         case("血"):return playerinfo.hp
-         case("hp"):return playerinfo.hp
-         case("魔"):return playerinfo.mp
-         case("mp"):return playerinfo.hp
-         case("等级"):return playerinfo.level
-         case("level"):return playerinfo.level
-         case("最大血"):return playerinfo.maxhp
-         case("maxhp"):return playerinfo.maxhp
-         case("最大魔"):return playerinfo.maxmp
-         case("maxmp"):return playerinfo.maxhp
-         case("健康"):return playerinfo.health
-         case("health"):return playerinfo.health
-         case("经验"):return playerinfo.exp
-         case("下一级经验"):return playerinfo.maxexp
-         case("宠物数量"):return len(self.GetPetsInfo())
-         case("几线"):return super().GetMapIndex()[1]
-         case("大线"):return super().GetMapIndex()[0]
-         case("灵魂"):return playerinfo.souls
-         case("gid"):return playerinfo.gid
-         case("坐标"):
-            mapPos=self.GetMapCoordinate()
-            return mapPos.x,mapPos.y
-         case("4转属组"):return playerinfo.x
-         case("性别"):return playerinfo.x
-         case("外观"):return playerinfo.image_id
-         case("角色"):return playerinfo.player_index
-         case("金币"):return playerinfo.gold
-         case("银行金币"):return self.GetBankGold()
-         case("卡时"):return playerinfo.punchclock
-         case("打卡状态"):return playerinfo.usingpunchclock
-         case("职业"):return self.GetCharacterProfession()
-         case("职称"):return playerinfo.job
-         case("职称等级"):return self.GetCharacterRank()
-         case("声望"):return self.GetCharacterPrestige(playerinfo.titles)
-         case("称号"):return self.GetCharacterPrestige(playerinfo.titles)         
-         case("声望等级"):return self.GetCharacterPrestigeLv(playerinfo.titles)
-         case("称号等级"):return self.GetCharacterPrestigeLv(playerinfo.titles)
+      if sType in self.g_game_data_map:
+         return getattr(playerinfo,self.g_game_data_map[sType])
+      elif sType == "宠物数量":
+         return len(self.GetPetsInfo())
+      elif sType == "几线":
+         return super().GetMapIndex()[1]
+      elif sType == "大线":
+         return super().GetMapIndex()[0]
+      elif sType == "坐标":
+         mapPos=self.GetMapCoordinate()
+         return mapPos.x,mapPos.y
+      elif sType == "4转属组":
+         return len(self.GetPetsInfo())
+      elif sType == "性别":
+         return len(self.GetPetsInfo())
+      elif sType == "银行金币":
+         return self.GetBankGold()
+      elif sType == "职业":
+         return self.GetCharacterProfession()
+      elif sType == "职称等级":
+         return self.GetCharacterRank()
+      elif sType == "声望" or sType == "称号":
+         return self.GetCharacterPrestige(playerinfo.titles)   
+      elif sType == "声望等级" or sType == "称号等级":
+         return self.GetCharacterPrestigeLv(playerinfo.titles)
    
    #获取宠物信息
    def GetBattlePetData(self,sType,*args):
       pet=self.GetBattlePet()      
       self.debug_log(f"获取宠物信息:{sType}宠物{pet}")
-      match(sType):
-         case("名称"):return pet.name if pet != None else ""
-         case("name"):return pet.name if pet != None else ""
-         case("血"):return pet.hp if pet != None else -1
-         case("hp"):return pet.hp if pet != None else -1
-         case("魔"):return pet.mp if pet != None else -1
-         case("mp"):return pet.hp if pet != None else -1
-         case("等级"):return pet.level if pet != None else -1
-         case("level"):return pet.level if pet != None else -1
-         case("最大血"):return pet.maxhp if pet != None else -1
-         case("maxhp"):return pet.maxhp if pet != None else -1
-         case("最大魔"):return pet.maxmp if pet != None else -1
-         case("maxmp"):return pet.maxhp if pet != None else -1
-         case('健康'):return pet.health if pet != None else -1
-         case("health"):return pet.health if pet != None else -1
-         case("经验"):return pet.exp if pet != None else -1
-         case("最大经验"):return pet.maxexp if pet != None else -1
-         case("档次"):return -1#pet.maxexp  if pet != None else -1
-         case("忠诚"):return pet.loyality  if pet != None else -1
-         case("状态"):return pet.battle_flags if pet != None else -1
-         case("检查图鉴"):
-            if len(args) == 0:
-               return False
-            elif len(args)>=1:
-               tgtPetName = args[0]
-               books = self.GetPicBooksInfo()
-               for petBook in books:
-                  if petBook.name == tgtPetName:
-                     return True
+      if sType in self.g_game_data_map:         
+         return getattr(pet,self.g_game_data_map[sType]) if pet != None else -1
+      elif sType == "档次":
+         return pet.grade if pet != None else -1
+      elif sType == "检查图鉴":
+         if len(args) == 0:
             return False
-         case("改状态"):
-            if len(args) == 0:
-               return -1
-            tgtPetVal=0
-            if type(args[0]) == str:
-               if args[0] == "待命":
-                  tgtPetVal = 1
-               elif (args[0] == "战斗"):
-                  tgtPetVal = 2
-               elif (args[0]  == "休息"):
-                  tgtPetVal = 3
-               elif (args[0]  == "散步"):
-                  tgtPetVal = 16
-            else:
-               tgtPetVal=args[0]
-            if (tgtPetVal != 1 and tgtPetVal != 2 and tgtPetVal != 3 and tgtPetVal != 16):
-               return pet.battle_flags if pet != None else -1
-            else:
-               petIndex = -1
-               petList =self.GetPetsInfo()
-               if (len(args) <= 1):
-                  petIndex =  pet.index if pet != None else -1
-               else:
-                  petIndex = args[1]                 
-                  pPet=None
-                  if (petIndex == 5):# //等级高
-                     nLv = 0
-                     for battlePet in petList:                     
-                        if (battlePet.level > nLv):
-                           nLv = battlePet.level
-                           pPet = battlePet                      
-                     if (nLv != 0 and pPet != None):
-                        petIndex = pPet.index                  
-                  elif (petIndex == 6):# //等级低                  
-                     nLv = 200
-                     for battlePet in petList:  
-                        if (battlePet.level < nLv):                        
-                           nLv = battlePet.level
-                           pPet = battlePet
-                     if (nLv != 200 and pPet!=None):                     
-                        petIndex = pPet.index              
-               if (petIndex < 0):
-                  return -1
-               if (tgtPetVal == TPET_STATE_BATTLE) :#//必须把当前战斗宠物设置为其余状态
-                  for battlePet in petList:                 
-                     if (battlePet.battle_flags == TPET_STATE_BATTLE):# //默认出战宠物                   
-                        self.ChangePetState(battlePet.index, TPET_STATE_READY)
-                        time.sleep(1)
-                        break     
-               self.ChangePetState(petIndex, tgtPetVal)
-               return 0
+         elif len(args)>=1:
+            tgtPetName = args[0]
+            books = self.GetPicBooksInfo()
+            for petBook in books:
+               if petBook.name == tgtPetName:
+                  return True
+      elif sType == "改状态":    
+         if len(args) == 0:
+            return -1
+         tgtPetVal=0
+         if type(args[0]) == str:
+            if args[0] == "待命":
+               tgtPetVal = 1
+            elif (args[0] == "战斗"):
+               tgtPetVal = 2
+            elif (args[0]  == "休息"):
+               tgtPetVal = 3
+            elif (args[0]  == "散步"):
+               tgtPetVal = 16
+         else:
+            tgtPetVal=args[0]         
+         petIndex = -1
+         petList =self.GetPetsInfo()
+         if (len(args) <= 1):
+            petIndex =  pet.index if pet != None else -1
+         else:
+            petIndex = args[1]                 
+            pPet=None
+            if (petIndex == 5):# //等级高
+               nLv = 0
+               for battlePet in petList:                     
+                  if (battlePet.level > nLv):
+                     nLv = battlePet.level
+                     pPet = battlePet                      
+               if (nLv != 0 and pPet != None):
+                  petIndex = pPet.index                  
+            elif (petIndex == 6):# //等级低                  
+               nLv = 200
+               for battlePet in petList:  
+                  if (battlePet.level < nLv):                        
+                     nLv = battlePet.level
+                     pPet = battlePet
+               if (nLv != 200 and pPet!=None):                     
+                  petIndex = pPet.index              
+         if (petIndex < 0):
+            return -1
+         if (tgtPetVal == TPET_STATE_BATTLE) :#//必须把当前战斗宠物设置为其余状态
+            for battlePet in petList:                 
+               if (battlePet.battle_flags == TPET_STATE_BATTLE):# //默认出战宠物                   
+                  self.ChangePetState(battlePet.index, TPET_STATE_READY)
+                  time.sleep(1)
+                  break     
+         self.ChangePetState(petIndex, tgtPetVal)
+         return 0
 
    #人物转向
    def TurnAbout(self,nDir):  
@@ -1795,33 +1766,31 @@ class CGAPI(CGAPython.CGA):
    def TalkNpcClicked(self,dlg,selectVal):
       if dlg==None:
          return False
-      match(dlg.options):
-         case 12:
-            self.ClickNPCDialog(selectVal, -1)
-            return True
-         case 32:
-            self.ClickNPCDialog(32, -1)
-            return True
-         case 1:
-            self.ClickNPCDialog(1, -1)
-            return True
-         case 2:
-            self.ClickNPCDialog(2, -1)
-            return True
-         case 3:
-            self.ClickNPCDialog(1, -1)
-            return True
-         case 4:
-            self.ClickNPCDialog(4, -1)
-            return True
-         case 8:
-            self.ClickNPCDialog(8, -1)
-            return True
-         case 0:
-            return True
-         case _:
-            return False
-      return False
+      if(dlg.options == 12):         
+         self.ClickNPCDialog(selectVal, -1)
+         return True
+      elif dlg.options == 32:
+         self.ClickNPCDialog(32, -1)
+         return True
+      elif dlg.options ==  1:
+         self.ClickNPCDialog(1, -1)
+         return True
+      elif dlg.options ==  2:
+         self.ClickNPCDialog(2, -1)
+         return True
+      elif dlg.options ==  3:
+         self.ClickNPCDialog(1, -1)
+         return True
+      elif dlg.options ==  4:
+         self.ClickNPCDialog(4, -1)
+         return True
+      elif dlg.options ==  8:
+         self.ClickNPCDialog(8, -1)
+         return True
+      elif dlg.options ==  0:
+         return True
+      else:
+         return False    
    #对话选是
    def TalkNpcSelectYes(self,x,y,count=32):
       talkCount=3
@@ -2037,7 +2006,7 @@ class CGAPI(CGAPython.CGA):
       return tmpPets
 
    def GetBattlePet(self):
-      pets=self.GetPetsInfo()
+      pets=self.GetGamePets()#self.GetPetsInfo()
       for pet in pets:
          if pet.battle_flags == TPET_STATE_BATTLE:
             return pet
