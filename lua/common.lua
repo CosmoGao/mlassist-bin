@@ -3041,12 +3041,12 @@ function common.登录游戏id(游戏id,tFileName,lastGidInfo,functionAction,fun
 	获取仓库信息()
 	保存仓库信息()
 	左右角色=左右角色+1
-	if(左右角色 > 1)then	--左右都已获取仓库 去下一个
-		lastGidInfo.role=人物("左右角色")
-		lastGidInfo.gid=人物("gid")
-		lastGidInfo.roleName=人物("名称",false)
-		lastGidInfo.index=common.findTableIndex(获取游戏子账户(),人物("gid"))		
-		common.WriteFileData(tFileName,common.TableToStr(lastGidInfo))
+	lastGidInfo.role=人物("左右角色")
+	lastGidInfo.gid=人物("gid")
+	lastGidInfo.roleName=人物("名称",false)
+	lastGidInfo.index=common.findTableIndex(获取游戏子账户(),人物("gid"))		
+	common.WriteFileData(tFileName,common.TableToStr(lastGidInfo))
+	if(左右角色 > 1)then	--左右都已获取仓库 去下一个		
 		登出服务器()
 		return
 	end
