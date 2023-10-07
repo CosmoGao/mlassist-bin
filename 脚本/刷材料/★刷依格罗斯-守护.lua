@@ -297,6 +297,7 @@ function main()
 	自动寻路(100,70,"辛梅尔")	
 	goto begin	
 ::出发::	
+	设置穿越迷宫范围(13,12)
 	common.checkEquipDurable(0,sEquipHatName,20)
 	common.checkEquipDurable(2,sEquipWeaponName,20)
 	common.checkEquipDurable(1,sEquipClothesName,20)
@@ -667,6 +668,9 @@ function main()
 		上次迷宫楼层=当前迷宫楼层
 		自动迷宫()
 		等待(1000)
+		if mapName == 取当前地图名() then
+			设置穿越迷宫范围(10,9)
+		end
 	else
 		if(队伍("人数") < 2)then		--队友掉线回城
 			回城()		

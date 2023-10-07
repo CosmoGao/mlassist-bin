@@ -121,6 +121,7 @@ function main()
 	日志("队长名称："..队长名称.." 角色名称:" .. 人物("名称",false))	
 	local mapNum=0
 	local mapName=""
+	设置穿越迷宫范围(13,12)
 ::begin::	
 	等待空闲()
 	mapNum=取当前地图编号()
@@ -443,7 +444,11 @@ function main()
 	goto begin 
 
 ::crossMaze::
-	自动穿越迷宫()
+	mapName = 取当前地图名()
+	自动迷宫()
+	if mapName == 取当前地图名() then
+		设置穿越迷宫范围(10,9)
+	end
 	goto begin
 end
 main()
