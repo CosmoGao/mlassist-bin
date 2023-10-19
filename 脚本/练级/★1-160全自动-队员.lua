@@ -498,7 +498,7 @@ function 雪塔练级(目标等级)
 	end
 	自动寻路(113,50)
 	等待(2000)
-	common.joinTeam(队长名称,300)
+	common.joinTeam(队长名称,60)
 	goto begin  	
              
 ::scriptstart::
@@ -845,6 +845,7 @@ function 营地练级(目标等级,练级地名称)
 			营地存取金币(-身上最少金币数*2,"取")	--取出后 身上总30万
 			goto begin
 		end	
+		common.checkHealth(医生名称)
 	end	
 	等待(2000)
 	goto scriptstart  
@@ -1301,7 +1302,7 @@ function getLeaderSetLv()
 	local 队长名片 = 取好友名片(队长名称)
 	if( 队长名片 ~= nil)then
 		lv = tonumber(队长名片.title)
-		日志("队长等级:"..lv)
+		--日志("队长等级:"..lv)
 		return lv
 	end
 	喊话("队长不在线",2,3,5)
@@ -1423,8 +1424,8 @@ function main()
 				雪塔练级(75)	
 			elseif(avgLevel==80)then		--回廊
 				雪塔练级(80)	
-			elseif(avgLevel==85)then		--回廊
-				雪塔练级(85)	
+			-- elseif(avgLevel==85)then		--回廊
+				-- 雪塔练级(85)	
 			elseif(avgLevel==60)then		--回廊
 				 回廊练级(60)	
 			elseif(avgLevel==71)then		--营地
@@ -1441,8 +1442,8 @@ function main()
 				营地练级(115,"黑一")
 			elseif(avgLevel == 135)then		--龙顶 或 旧日 
 				旧日练级(135)
-			-- elseif(avgLevel == 160)then		--龙顶		
-				-- 营地练级(160,"龙顶")
+			elseif(avgLevel == 160)then		--龙顶		
+				营地练级(160,"龙顶")
 			elseif(avgLevel == 160)then		--半山		
 				半山练级(160)
 			elseif(avgLevel >= 160)then	

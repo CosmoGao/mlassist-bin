@@ -19,7 +19,7 @@ function 等待游戏窗口()
 end
 function 登录游戏id(游戏id)
 	if(是否空闲中())then --登出服务器
-		登出服务器()	
+		登出服务器()			
 	end
 	左右角色=0
 	--切换游戏id
@@ -30,6 +30,8 @@ function 登录游戏id(游戏id)
 	重置登录状态()
 	设置登录子账号(游戏id)
 	设置登录角色(左右角色)	--左边
+	登出服务器()
+	回到选择线路()
 	登录游戏()
 ::checkCharacter::	--检查游戏角色和状态
 	worldStatus=世界状态()
@@ -48,12 +50,10 @@ function 登录游戏id(游戏id)
 		loginState,loginMsg = 取登录状态()
 		if(loginState == 3 and string.find(loginMsg,"no character") ~= nil)then
 			左右角色=左右角色+1				
-			回到选择线路()
 			goto switchCharacter
 		elseif((loginState == 10000 or loginState == 0) and string.find(loginMsg,"角色数据读取失败") ~= nil)then
 			--跳过 游戏已经登录
 			左右角色=左右角色+1				
-			回到选择线路()
 			goto switchCharacter
 		end	
 	elseif(worldStatus ==2  and gameStatus == 1)then  --没有连接线
@@ -80,6 +80,8 @@ function 登录游戏id(游戏id)
 		goto faLan
 	elseif (当前地图名=="召唤之间" )then	--登出 bank
 		goto saveData
+	elseif (当前地图名=="哥拉尔镇" )then	--登出 bank
+		goto map43100
 	end	
 	goto waitlogin
 ::star1::
@@ -101,6 +103,7 @@ function 登录游戏id(游戏id)
 ::saveData::
 	获取仓库信息()
 	保存仓库信息()
+	上报仓库信息()
 	登出服务器()
 	左右角色=左右角色+1
 	等待(1000)	
@@ -129,7 +132,13 @@ function 登录游戏id(游戏id)
 	面向("东")
 	等待服务器返回()
     goto saveData	
-
+::map43100::
+	自动寻路(167,66,"银行")
+	自动寻路(25,10)
+	转向(2)
+	等待(2000)		
+	日志("银行现有【"..银行("金币").."】金币",1)
+	goto saveData
 
 ::w2::	-- 西2登录点
 	转向(2)			-- 转向东	

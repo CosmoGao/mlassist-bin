@@ -1242,9 +1242,11 @@ function 读取声望进度()
 	local playerInfo = 人物信息()	
 	if(playerInfo.persdesc) then
 		local descText = playerInfo.persdesc.descString
+		if string.find(descText,"{") ~= nil then
 		--日志(descText)
-		local 进度表 = common.StrToTable(descText)
-		return 进度表
+			local 进度表 = common.StrToTable(descText)
+			return 进度表
+		end
 	end
 	return nil
 end
