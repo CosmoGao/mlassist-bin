@@ -89,6 +89,8 @@ function main()
 	if(当前地图名=="艾尔莎岛")then
 		goto start
 	elseif(当前地图名 == "里谢里雅堡")then	
+		扔("誓言的烛台")
+		common.checkHealth()
 		goto libao 
 	elseif(当前地图名 == "莎莲娜")then	
 		goto shalianla 

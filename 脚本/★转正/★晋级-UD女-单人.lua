@@ -37,7 +37,7 @@ function GetOathGroup()
 	goto begin
 end
 function main()
-	扔("誓言的烛台")
+	
 	--取队伍中ud男信息
 	GetOathGroup()
 	--失败则获取脚本界面数据
@@ -55,9 +55,11 @@ function main()
 	当前地图名=取当前地图名()
 	x,y=取当前坐标()
 	mapNum=取当前地图编号()
-	if(当前地图名=="艾尔莎岛")then
+	if(当前地图名=="艾尔莎岛")then		
 		goto start
 	elseif(当前地图名 == "里谢里雅堡")then	
+		扔("誓言的烛台")
+		common.checkHealth()
 		goto libao 
 	elseif(当前地图名 == "莎莲娜")then	
 		goto shalianla 

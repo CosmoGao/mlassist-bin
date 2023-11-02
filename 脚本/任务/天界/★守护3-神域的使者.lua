@@ -440,7 +440,7 @@ function main()
 	等待服务器返回()
 	对话选择("1", "", "")
 	
-	if(人物("坐标")  == "188,70")then	goto pd end
+	--if(人物("坐标")  == "188,70")then	goto pd end
 	goto begin 
 
 ::crossMaze::
